@@ -12,8 +12,6 @@ PID::PID()
 {
   consoleWarnTimeout = 0;
   lastControlTime = 0;
-  output_ramp = 0;
-  yold = 0;
 }
     
 PID::PID(float Kp, float Ki, float Kd){
@@ -24,9 +22,8 @@ PID::PID(float Kp, float Ki, float Kd){
 
 
 void PID::reset(void) {
-  eold = 0;
-  esum = 0;
-  yold = 0;
+  this->eold = 0;
+  this->esum = 0;
   lastControlTime = millis();
 }
 
@@ -61,18 +58,6 @@ float PID::compute() {
   if (y > y_max) y = y_max;
   if (y < y_min) y = y_min;
 
-  // if output ramp defined
-  if(output_ramp > 0){
-      // limit the acceleration by ramping the output
-      float output_rate = (y - yold)/Ta;
-      if (output_rate > output_ramp)
-          y = yold + output_ramp*Ta;
-      else if (output_rate < -output_ramp)
-          y = yold - output_ramp*Ta;
-  }
-
-  yold = y;  
-
   return y;
 }
 
@@ -81,7 +66,6 @@ float PID::compute() {
 
 VelocityPID::VelocityPID()
 {
-  output_ramp = 0;
 }
     
 VelocityPID::VelocityPID(float Kp, float Ki, float Kd){
@@ -113,16 +97,6 @@ float VelocityPID::compute()
   // restrict output to min/max 
   if (y > y_max) y = y_max;
   if (y < y_min) y = y_min; 
-
-  // if output ramp defined
-  if(output_ramp > 0){
-      // limit the acceleration by ramping the output
-      float output_rate = (y - yold)/Ta;
-      if (output_rate > output_ramp)
-          y = yold + output_ramp*Ta;
-      else if (output_rate < -output_ramp)
-          y = yold - output_ramp*Ta;
-  }
 
   // save variable for next time
   eold2 = eold1;

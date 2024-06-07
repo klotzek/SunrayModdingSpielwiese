@@ -16,6 +16,7 @@ ErrorOp errorOp;
 DockOp dockOp;
 IdleOp idleOp;
 MowOp mowOp;
+EscapeLawnOp escapeLawnOp; 		//MrTree
 EscapeReverseOp escapeReverseOp;
 EscapeForwardOp escapeForwardOp;
 KidnapWaitOp kidnapWaitOp;
@@ -187,10 +188,12 @@ void Op::run(){
 void Op::onKidnapped(bool state){
 }
 
-void Op::onGpsNoSignal(){    
+void Op::onGpsNoSignal(){
+	int iterationcounter = 0;
 }
 
 void Op::onGpsFixTimeout(){
+	int iterationcounter = 0;
 }
 
 void Op::onRainTriggered(){
@@ -205,13 +208,14 @@ void Op::onLiftTriggered(){
 void Op::onOdometryError(){
 }
 
-
 void Op::onMotorOverload(){
 }
-    
+
+void Op::onMowRPMStall(){					//MrTree
+}    										//MrTree
+
 void Op::onMotorError(){    
 }
-
 
 void Op::onObstacle(){
 }

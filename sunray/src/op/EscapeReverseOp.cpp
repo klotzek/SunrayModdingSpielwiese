@@ -8,7 +8,7 @@
 #include "../../robot.h"
 #include "../../StateEstimator.h"
 #include "../../map.h"
-
+#include "../../config.h"
 
 
 String EscapeReverseOp::name(){
@@ -17,7 +17,18 @@ String EscapeReverseOp::name(){
 
 void EscapeReverseOp::begin(){
     // obstacle avoidance
-    driveReverseStopTime = millis() + 3000;                           
+    driveReverseStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000); //+500); 	//MrTree just take a deadtime of 500ms to compensate deadtimes
+	//if ((!MOWMOTORSTOPONOBSTACLE) && (previousOp == &mowOp)) {
+	//	if (!motor.switchedOn) {
+	//	  CONSOLE.println("EscapeReverseOp:: Overriding mowmotor stop! (MOWMOTORSTOPONOBSTACLE = false)");
+	//	  motor.setMowState(true);	
+	//	}
+	//} else {																						//MrTree
+	//	if (motor.switchedOn) {
+	//	CONSOLE.println("EscapeReverseOp:: Switch Off mow");
+	//	motor.setMowState(false);  																	//MrTree  	
+	//	}
+	//}
 }
 
 
@@ -27,9 +38,22 @@ void EscapeReverseOp::end(){
 
 void EscapeReverseOp::run(){
     battery.resetIdle();
-    motor.setLinearAngularSpeed(-0.1,0);
-    if (DISABLE_MOW_MOTOR_AT_OBSTACLE)  motor.setMowState(false);                                       
-
+	if (!detectObstacle()){ 			//Mr.Tree
+        detectObstacleRotation();       //Mr.Tree                       
+    }
+	//if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){
+       // wait until mowing motor is running
+    //   if (!buzzer.isPlaying()) buzzer.sound(SND_WARNING, true);
+    //    motor.setLinearAngularSpeed(0,0,false);
+	//	driveReverseStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000);
+    //  }
+	//else {
+       motor.setLinearAngularSpeed(-OBSTACLEAVOIDANCESPEED,0,false);				
+	//}																			
+	if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (motor.switchedOn)) {	//MrTree
+      CONSOLE.println("EscapeReverseOp:: switch OFF mowmotor");			//MrTree
+	  motor.setMowState(false);  																	  	
+	}  																                                   																					
     if (millis() > driveReverseStopTime){
         CONSOLE.println("driveReverseStopTime");
         motor.stopImmediately(false); 

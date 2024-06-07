@@ -34,6 +34,7 @@ void DockOp::begin(){
   bool error = false;
   bool routingFailed = false;      
   
+  CONSOLE.println("DockOp::begin switch OFF all motors --> Docking");
   motor.setLinearAngularSpeed(0,0);
   motor.setMowState(false);                
 
@@ -62,7 +63,8 @@ void DockOp::begin(){
   if (error){
     stateSensor = SENS_MAP_NO_ROUTE;
     //op = OP_ERROR;
-    routingFailed = true;        
+    routingFailed = true;
+    CONSOLE.println("DockOp::begin switch OFF mowmotor --> error: no map route");        
     motor.setMowState(false);
   }
 
@@ -125,8 +127,9 @@ void DockOp::onGpsNoSignal(){
 
 void DockOp::onKidnapped(bool state){
     if (state){
-        stateSensor = SENS_KIDNAPPED;      
-        motor.setLinearAngularSpeed(0,0, false); 
+        stateSensor = SENS_KIDNAPPED;
+        CONSOLE.println("DockOp::onKidnapped switch OFF all motors --> kidnapped");
+        motor.setLinearAngularSpeed(0,0, false);
         motor.setMowState(false);    
         changeOp(kidnapWaitOp, true); 
     }
@@ -162,8 +165,8 @@ void DockOp::onObstacle(){
     }
 }
 
-void DockOp::onChargerConnected(){            
-  battery.setIsDocked(true);    
+void DockOp::onChargerConnected(){
+  battery.setIsDocked(true);                
   changeOp(chargeOp);
 }
 

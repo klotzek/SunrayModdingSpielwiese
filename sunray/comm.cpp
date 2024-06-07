@@ -86,29 +86,6 @@ void cmdTuneParam(){
             case 3: 
               stanleyTrackingSlowK = floatValue;
               break;
-            case 4:
-              motor.motorLeftPID.Kp = floatValue;
-              motor.motorRightPID.Kp = floatValue;              
-              break;
-            case 5:
-              motor.motorLeftPID.Ki = floatValue;
-              motor.motorRightPID.Ki = floatValue;
-              break;
-            case 6:
-              motor.motorLeftPID.Kd = floatValue;
-              motor.motorRightPID.Kd = floatValue;              
-              break;
-            case 7:
-              motor.motorLeftLpf.Tf = floatValue;
-              motor.motorRightLpf.Tf = floatValue;              
-              break;
-            case 8:
-              motor.motorLeftPID.output_ramp = floatValue;
-              motor.motorRightPID.output_ramp = floatValue;              
-              break;
-            case 9:
-              motor.pwmMax = floatValue;
-              break;
           } 
       } 
       counter++;
@@ -138,7 +115,8 @@ void cmdControl(){
       if (counter == 1){                            
           if (intValue >= 0) {
             motor.enableMowMotor = (intValue == 1);
-            motor.setMowState( (intValue == 1) );
+            CONSOLE.println("comm.cpp cmdControl() changes mowMotor state");
+            motor.setMowState( (intValue == 1) );           
           }
       } else if (counter == 2){                                      
           if (intValue >= 0) op = intValue; 
@@ -161,7 +139,7 @@ void cmdControl(){
       } else if (counter == 8){
           if (intValue >= 0) sonar.enabled = (intValue == 1);
       } else if (counter == 9){
-         if (intValue >= 0) motor.setMowMaxPwm(intValue);
+         if (intValue >= 0) motor.setMowPwm(intValue);
       }
       counter++;
       lastCommaIdx = idx;
@@ -417,13 +395,15 @@ void cmdPosMode(){
       counter++;
       lastCommaIdx = idx;
     }    
-  }        
-  CONSOLE.print("absolutePosSource=");
-  CONSOLE.print(absolutePosSource);
-  CONSOLE.print(" lon=");
-  CONSOLE.print(absolutePosSourceLon, 8);
-  CONSOLE.print(" lat=");
-  CONSOLE.println(absolutePosSourceLat, 8);
+  }
+  if (OUTPUT_ENABLED){        
+    CONSOLE.print("absolutePosSource=");
+    CONSOLE.print(absolutePosSource);
+    CONSOLE.print(" lon=");
+    CONSOLE.print(absolutePosSourceLon, 8);
+    CONSOLE.print(" lat=");
+    CONSOLE.println(absolutePosSourceLat, 8);
+  }
   String s = F("P");
   cmdAnswer(s);
 }
@@ -468,10 +448,12 @@ void cmdVersion(){
   s += mcuFwVer;
   s += F(",");  
   s += id;
-  CONSOLE.print("sending encryptMode=");
-  CONSOLE.print(encryptMode);
-  CONSOLE.print(" encryptChallenge=");  
-  CONSOLE.println(encryptChallenge);
+  if (OUTPUT_ENABLED){
+    CONSOLE.print("sending encryptMode=");
+    CONSOLE.print(encryptMode);
+    CONSOLE.print(" encryptChallenge=");  
+    CONSOLE.println(encryptChallenge);
+  }
   cmdAnswer(s);
 }
 
@@ -591,7 +573,7 @@ void cmdObstacles(){
 // request summary
 void cmdSummary(){
   String s = F("S,");
-  s += battery.batteryVoltage;  
+  s += battery.batteryVoltage;
   s += ",";
   s += stateX;
   s += ",";
@@ -697,18 +679,6 @@ void cmdStats(){
   s += statMowGPSMotionTimeoutCounter;
   s += ",";
   s += statMowDurationMotorRecovery;
-  s += ",";
-  s += statMowLiftCounter;
-  s += ",";
-  s += statMowGPSNoSpeedCounter;  
-  s += ",";
-  s += statMowToFCounter;
-  s += ",";
-  s += statMowDiffIMUWheelYawSpeedCounter;
-  s += ",";
-  s += statMowImuNoRotationSpeedCounter;
-  s += ",";
-  s += statMowRotationTimeoutCounter;
   cmdAnswer(s);  
 }
 
@@ -738,12 +708,6 @@ void cmdClearStats(){
   statMowLiftCounter = 0;
   statMowGPSMotionTimeoutCounter = 0;
   statGPSJumps = 0;
-  statMowToFCounter = 0;
-  statMowDiffIMUWheelYawSpeedCounter = 0;
-  statMowImuNoRotationSpeedCounter = 0;
-  statMowGPSNoSpeedCounter = 0;
-  statMowRotationTimeoutCounter = 0;
-  statMowToFCounter = 0;
   cmdAnswer(s);  
 }
 

@@ -9,6 +9,7 @@
 
 #include <Arduino.h>
 #include <SD.h>
+#include "LineTracker.h"  // Svol0: included for gps-reboot at specified docking point by undocking action
 
 
 // waypoint type
@@ -47,7 +48,7 @@ class Polygon
     void dealloc();
     void dump();
     long crc();
-    void getCenter(Point &pt);
+	  void getCenter(Point &pt);
     bool read(File &file);
     bool write(File &file);
 };
@@ -127,6 +128,9 @@ class Map
     //int targetPointIdx; // index of target point    
     bool trackReverse; // get to target in reverse?
     bool trackSlow;    // get to target slowly?
+    //bool trackPerimeter;  //MrTree would be a good idea......
+    //bool trackExclusion; //MrTree
+    //bool trackDock;  //MrTree
     bool useGPSfloatForPosEstimation;    // use GPS float solution for position estimation?
     bool useGPSfloatForDeltaEstimation;  // use GPS float solution for delta estimation?
     bool useGPSfixForPosEstimation;  // use GPS fix solution for position estimation?
@@ -139,12 +143,12 @@ class Map
     int freePointsIdx;   // next free point in free point polygon
     int percentCompleted;
     
-    Polygon points;      // all points in one list (mowPoints, perimeterPoints, dockPoints) transfered to robot
-    Polygon perimeterPoints;  // all perimeter points
-    Polygon mowPoints;        // all mowing points
-    Polygon dockPoints;       // all docking points
+    Polygon points;
+    Polygon perimeterPoints;
+    Polygon mowPoints;    
+    Polygon dockPoints;
     Polygon freePoints;
-    PolygonList exclusions;   // list of exclusion points
+    PolygonList exclusions;     
     PolygonList obstacles;     
     PolygonList pathFinderObstacles;
     NodeList pathFinderNodes;
@@ -172,7 +176,6 @@ class Map
     bool load();
     bool save();
     void stressTest();
-    void stressTestMapTransfer();
     long calcMapCRC();
 
     // -------mowing operation--------------------------------------

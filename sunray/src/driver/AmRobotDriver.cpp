@@ -21,7 +21,7 @@
 #endif
 
 
-//#define SUPER_SPIKE_ELIMINATOR 1  // advanced spike elimination  (experimental, comment out to disable)
+//#define SUPER_SPIKE_ELIMINATOR 1  // advanced spike elimination  (experimental, comment out to disable)  //MrTree moved to config.h
 
 
 volatile int odomTicksLeft  = 0;
@@ -101,50 +101,54 @@ float AmRobotDriver::getCpuTemperature(){
 // odometry signal change interrupt
 
 void OdometryMowISR(){			  
+  
+ 
   if (digitalRead(pinMotorMowRpm) == LOW) return;
-  if (millis() < motorMowTicksTimeout) return; // eliminate spikes  
-  #ifdef SUPER_SPIKE_ELIMINATOR
-    unsigned long duration = millis() - motorMowTransitionTime;
-    if (duration > 5) duration = 0;
-    motorMowTransitionTime = millis();
-    motorMowDurationMax = 0.7 * max(motorMowDurationMax, ((float)duration));
-    motorMowTicksTimeout = millis() + motorMowDurationMax;
-  #else
-    motorMowTicksTimeout = millis() + 1;
-  #endif
-  odomTicksMow++;    
+  //if (millis() < motorMowTicksTimeout) return; // eliminate spikes  
+  //#ifdef SUPER_SPIKE_ELIMINATOR
+  //  unsigned long duration = millis() - motorMowTransitionTime;
+  //  if (duration > 5) duration = 0;
+  //  motorMowTransitionTime = millis();
+  //  motorMowDurationMax = 0.7 * max(motorMowDurationMax, ((float)duration));
+  //  motorMowTicksTimeout = millis() + motorMowDurationMax;
+  //#else
+    //motorMowTicksTimeout = millis() + 1;
+  //#endif
+  odomTicksMow++; 
+  asm("dsb");  
 }
 
 
 void OdometryLeftISR(){			  
   if (digitalRead(pinOdometryLeft) == LOW) return;
-  if (millis() < motorLeftTicksTimeout) return; // eliminate spikes  
-  #ifdef SUPER_SPIKE_ELIMINATOR
-    unsigned long duration = millis() - motorLeftTransitionTime;
-    if (duration > 5) duration = 0;
-    motorLeftTransitionTime = millis();
-    motorLeftDurationMax = 0.7 * max(motorLeftDurationMax, ((float)duration));
-    motorLeftTicksTimeout = millis() + motorLeftDurationMax;
-  #else
-    motorLeftTicksTimeout = millis() + 1;
-  #endif
-  odomTicksLeft++;    
+  //if (millis() < motorLeftTicksTimeout) return; // eliminate spikes  
+  //#ifdef SUPER_SPIKE_ELIMINATOR
+    //unsigned long duration = millis() - motorLeftTransitionTime;
+    //if (duration > 5) duration = 0;
+    //motorLeftTransitionTime = millis();
+    //motorLeftDurationMax = 0.7 * max(motorLeftDurationMax, ((float)duration));
+    //motorLeftTicksTimeout = millis() + motorLeftDurationMax;
+  //#else
+  //  motorLeftTicksTimeout = millis() + 1;
+  //#endif
+  odomTicksLeft++;
+  asm("dsb");    
 }
 
 void OdometryRightISR(){			
   if (digitalRead(pinOdometryRight) == LOW) return;  
-  if (millis() < motorRightTicksTimeout) return; // eliminate spikes
-  #ifdef SUPER_SPIKE_ELIMINATOR
-    unsigned long duration = millis() - motorRightTransitionTime;
-    if (duration > 5) duration = 0;  
-    motorRightTransitionTime = millis();
-    motorRightDurationMax = 0.7 * max(motorRightDurationMax, ((float)duration));  
-    motorRightTicksTimeout = millis() + motorRightDurationMax;
-  #else
-    motorRightTicksTimeout = millis() + 1;
-  #endif
+  //if (millis() < motorRightTicksTimeout) return; // eliminate spikes
+  //#ifdef SUPER_SPIKE_ELIMINATOR
+    //unsigned long duration = millis() - motorRightTransitionTime;
+    //if (duration > 5) duration = 0;  
+    //motorRightTransitionTime = millis();
+    //motorRightDurationMax = 0.7 * max(motorRightDurationMax, ((float)duration));  
+    //motorRightTicksTimeout = millis() + motorRightDurationMax;
+  //#else
+    //motorRightTicksTimeout = millis() + 1;
+  //#endif
   odomTicksRight++;        
-  
+  asm("dsb");
   #ifdef TEST_PIN_ODOMETRY
     testValue = !testValue;
     digitalWrite(pinKeyArea2, testValue);  
@@ -240,11 +244,11 @@ AmMotorDriver::AmMotorDriver(){
   JYQD.reversePwmInvert = false; // invert PWM signal for reverse? (false or true)
   JYQD.reverseDirLevel = HIGH;   // logic level for reverse (LOW or HIGH)
   JYQD.usePwmRamp = false;       // use a ramp to get to PWM value?    
-  JYQD.faultActive = LOW;        // fault active level (LOW or HIGH)
-  JYQD.resetFaultByToggleEnable = true; // reset a fault by toggling enable? 
-  JYQD.enableActive = HIGH;       // enable active level (LOW or HIGH)
+  JYQD.faultActive = HIGH;        // fault active level (LOW or HIGH)
+  JYQD.resetFaultByToggleEnable = false; // reset a fault by toggling enable?
+  JYQD.enableActive = LOW;       // enable active level (LOW or HIGH) //MrTree changed to LOW
   JYQD.disableAtPwmZeroSpeed = false;  // disable driver at PWM zero speed? (brake function)
-  JYQD.keepPwmZeroSpeed = false;  // keep PWM zero value (disregard minPwmSpeed at zero speed)?
+  JYQD.keepPwmZeroSpeed = true;  // keep PWM zero value (disregard minPwmSpeed at zero speed)? //MrTree changed to true
   JYQD.minPwmSpeed = 0;          // minimum PWM speed your driver can operate
   JYQD.maxPwmSpeed = 255;            
   JYQD.pwmFreq = PWM_FREQ_3900;  // choose between PWM_FREQ_3900 and PWM_FREQ_29300 here   
@@ -313,7 +317,7 @@ void AmMotorDriver::begin(){
       mowDriverChip = BLDC8015A;    
     #elif MOTOR_DRIVER_BRUSHLESS_MOW_JYQD
       mowDriverChip = JYQD;
-    #elif MOTOR_DRIVER_BRUSHLESS_MOW_OWL
+	#elif MOTOR_DRIVER_BRUSHLESS_MOW_OWL
       mowDriverChip = OWL;
     #else 
       mowDriverChip = CUSTOM;
@@ -327,7 +331,7 @@ void AmMotorDriver::begin(){
       gearsDriverChip = BLDC8015A;    
     #elif MOTOR_DRIVER_BRUSHLESS_GEARS_JYQD
       gearsDriverChip = JYQD;
-    #elif MOTOR_DRIVER_BRUSHLESS_GEARS_OWL
+	#elif MOTOR_DRIVER_BRUSHLESS_GEARS_OWL
       gearsDriverChip = OWL;
     #else 
       gearsDriverChip = CUSTOM;
@@ -371,7 +375,7 @@ void AmMotorDriver::begin(){
   //pinMode(pinOdometryRight2, INPUT_PULLUP);
 
   // lift sensor
-  pinMode(pinLift, INPUT_PULLUP);
+  //pinMode(pinLift, INPUT_PULLUP); //MrTree using for RC Mowrpm
 
   // enable interrupts
   attachInterrupt(pinOdometryLeft, OdometryLeftISR, CHANGE);  
@@ -728,7 +732,7 @@ void AmLiftSensorDriver::run(){
   unsigned long t = millis();
   if (t < nextControlTime) return;
   nextControlTime = t + 100;                                       // save CPU resources by running at 10 Hz
-  isLifted = (digitalRead(pinLift)== LOW);
+  isLifted = false;//(digitalRead(pinLift)== LOW);
 }
 
 bool AmLiftSensorDriver::triggered(){

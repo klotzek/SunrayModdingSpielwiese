@@ -20,11 +20,10 @@ double stateCRC = 0;
 double calcStateCRC(){
  return (stateOp *10 + maps.mowPointsIdx + maps.dockPointsIdx + maps.freePointsIdx + ((byte)maps.wayMode) 
    + sonar.enabled + fixTimeout + setSpeed + ((byte)sonar.enabled)
-   + ((byte)absolutePosSource) + absolutePosSourceLon + absolutePosSourceLat + motor.pwmMaxMow 
+   + ((byte)absolutePosSource) + absolutePosSourceLon + absolutePosSourceLat + motor.mowPwm 
    + ((byte)finishAndRestart) + ((byte)motor.motorMowForwardSet) + ((byte)battery.docked)
    + timetable.crc() );
 }
-
 
 void dumpState(){
   CONSOLE.print("dumpState: ");
@@ -58,8 +57,8 @@ void dumpState(){
   CONSOLE.print(absolutePosSourceLon);
   CONSOLE.print(" lat=");
   CONSOLE.print(absolutePosSourceLat);
-  CONSOLE.print(" pwmMaxMow=");
-  CONSOLE.print(motor.pwmMaxMow);
+  CONSOLE.print(" mowPwm=");
+  CONSOLE.print(motor.mowPwm);
   CONSOLE.print(" finishAndRestart=");
   CONSOLE.print(finishAndRestart);
   CONSOLE.print(" motorMowForwardSet=");
@@ -153,7 +152,7 @@ bool loadState(){
   res &= (stateFile.read((uint8_t*)&absolutePosSource, sizeof(absolutePosSource)) != 0);
   res &= (stateFile.read((uint8_t*)&absolutePosSourceLon, sizeof(absolutePosSourceLon)) != 0);
   res &= (stateFile.read((uint8_t*)&absolutePosSourceLat, sizeof(absolutePosSourceLat)) != 0);
-  res &= (stateFile.read((uint8_t*)&motor.pwmMaxMow, sizeof(motor.pwmMaxMow)) != 0);
+  res &= (stateFile.read((uint8_t*)&motor.mowPwm, sizeof(motor.mowPwm)) != 0);
   res &= (stateFile.read((uint8_t*)&finishAndRestart, sizeof(finishAndRestart)) != 0); 
   res &= (stateFile.read((uint8_t*)&motor.motorMowForwardSet, sizeof(motor.motorMowForwardSet)) != 0); 
   res &= (stateFile.read((uint8_t*)&timetable.timetable, sizeof(timetable.timetable)) != 0);
@@ -209,7 +208,7 @@ bool saveState(){
   res &= (stateFile.write((uint8_t*)&absolutePosSource, sizeof(absolutePosSource)) != 0);
   res &= (stateFile.write((uint8_t*)&absolutePosSourceLon, sizeof(absolutePosSourceLon)) != 0);
   res &= (stateFile.write((uint8_t*)&absolutePosSourceLat, sizeof(absolutePosSourceLat)) != 0);
-  res &= (stateFile.write((uint8_t*)&motor.pwmMaxMow, sizeof(motor.pwmMaxMow)) != 0);  
+  res &= (stateFile.write((uint8_t*)&motor.mowPwm, sizeof(motor.mowPwm)) != 0);  
   res &= (stateFile.write((uint8_t*)&finishAndRestart, sizeof(finishAndRestart)) != 0);  
   res &= (stateFile.write((uint8_t*)&motor.motorMowForwardSet, sizeof(motor.motorMowForwardSet)) != 0);
   res &= (stateFile.write((uint8_t*)&timetable.timetable, sizeof(timetable.timetable)) != 0);  
@@ -224,6 +223,3 @@ bool saveState(){
 #endif
   return res; 
 }
-
-
-

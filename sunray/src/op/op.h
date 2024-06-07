@@ -33,7 +33,7 @@ class Op {
     // returns chained op's as a string (starting with active op, going until goal op) 
     // (example: "ImuCalibration->GpsWaitFix->Mow")
     String getOpChain();
-    String OpChain;
+	String OpChain;
 
     // op's can be chained, this returns the current goal op:
     // examples:    
@@ -67,6 +67,7 @@ class Op {
     virtual void onLiftTriggered();
     virtual void onOdometryError();
     virtual void onMotorOverload();
+	virtual void onMowRPMStall();		//MrTree
     virtual void onMotorError();
     virtual void onObstacle();
     virtual void onObstacleRotation();
@@ -76,7 +77,7 @@ class Op {
     virtual void onBatteryUndervoltage();
     virtual void onBatteryLowShouldDock();  
     virtual void onTimetableStopMowing();
-    virtual void onTimetableStartMowing();  
+    virtual void onTimetableStartMowing();      
     virtual void onChargerDisconnected();
     virtual void onBadChargingContactDetected();    
     virtual void onChargerConnected();    
@@ -110,9 +111,10 @@ class ImuCalibrationOp: public Op {
 
 // mowing op (optionally, also undocking dock points)
 class MowOp: public Op {
-  public:
+  public:	
     bool lastMapRoutingFailed;
     int mapRoutingFailedCounter;
+	int iterationcounter = 0;
     MowOp();
     virtual String name() override;
     virtual void begin() override;
@@ -121,13 +123,14 @@ class MowOp: public Op {
     virtual void onGpsNoSignal() override;
     virtual void onGpsFixTimeout() override;
     virtual void onOdometryError() override;
-    virtual void onMotorOverload() override; 
+    virtual void onMotorOverload() override;
+	virtual void onMowRPMStall() override;		//MrTree
     virtual void onMotorError() override;
     virtual void onRainTriggered() override;
     virtual void onTempOutOfRangeTriggered() override;    
     virtual void onBatteryLowShouldDock() override;
-    virtual void onTimetableStartMowing() override;    
-    virtual void onTimetableStopMowing() override;    
+	virtual void onTimetableStartMowing() override;    
+    virtual void onTimetableStopMowing() override; 
     virtual void onObstacle() override;
     virtual void onObstacleRotation() override;
     virtual void onTargetReached() override;    
@@ -161,12 +164,17 @@ class DockOp: public Op {
 
 // charging op
 class ChargeOp: public Op {
-  public:     
-    unsigned long retryTouchDockSpeedTime;
+  public:
+	unsigned long retryTouchDockSpeedTime;
     unsigned long retryTouchDockStopTime;
     unsigned long betterTouchDockStopTime;
+	unsigned long nextMoveTime;
+	unsigned long movingTime;
     bool retryTouchDock;
     bool betterTouchDock;
+	bool Moving;
+	bool Vor;
+	bool Once;
     unsigned long nextConsoleDetailsTime;   
     virtual String name() override;
     virtual void begin() override;
@@ -176,9 +184,9 @@ class ChargeOp: public Op {
     virtual void onBadChargingContactDetected() override;
     virtual void onBatteryUndervoltage() override;    
     virtual void onRainTriggered() override;   
-    virtual void onChargerConnected() override; 
-    virtual void onTimetableStartMowing() override;    
-    virtual void onTimetableStopMowing() override;    
+    virtual void onChargerConnected() override;
+	virtual void onTimetableStartMowing() override;    
+    virtual void onTimetableStopMowing() override;   
 };
 
 // wait for undo kidnap (gps jump) 
@@ -222,6 +230,20 @@ class GpsWaitFloatOp: public Op {
     virtual void run() override;
 };
 
+// escape high lawn (drive backwards without virtual obstace)
+class EscapeLawnOp: public Op {					//MrTree
+  public:        								//**
+	int escapeLawnCounter = 0;							
+	unsigned long escapeLawnStartTime;
+    unsigned long driveReverseStopTime;
+	unsigned long escapeLawnWaitTime;
+    virtual String name() override;
+    virtual void begin() override;
+    virtual void end() override;
+    virtual void run() override;
+    virtual void onImuTilt() override;
+    virtual void onImuError() override;
+};												//**
 
 // escape obstacle (drive backwards)
 class EscapeReverseOp: public Op {
@@ -262,6 +284,7 @@ extern ErrorOp errorOp;
 extern DockOp dockOp;
 extern IdleOp idleOp;
 extern MowOp mowOp;
+extern EscapeLawnOp escapeLawnOp;			//MrTree
 extern EscapeReverseOp escapeReverseOp;
 extern EscapeForwardOp escapeForwardOp;
 extern KidnapWaitOp kidnapWaitOp;

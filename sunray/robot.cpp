@@ -36,7 +36,6 @@
 #include "gps.h"
 #include "src/ublox/ublox.h"
 #include "src/skytraq/skytraq.h"
-#include "src/lidar/lidar.h"
 #include "helper.h"
 #include "buzzer.h"
 #include "rcmodel.h"
@@ -60,12 +59,10 @@ const signed char orientationMatrix[9] = {
 
 #ifdef DRV_SIM_ROBOT
   SimImuDriver imuDriver(robotDriver);
-#elif defined(GPS_LIDAR)
-  LidarImuDriver imuDriver;
 #elif defined(BNO055)
-  BnoDriver imuDriver;
+  BnoDriver imuDriver;  
 #elif defined(ICM20948)
-  IcmDriver imuDriver;
+  IcmDriver imuDriver;  
 #else
   MpuDriver imuDriver;
 #endif
@@ -111,8 +108,6 @@ Battery battery;
 PinManager pinMan;
 #ifdef DRV_SIM_ROBOT
   SimGpsDriver gps(robotDriver);
-#elif GPS_LIDAR
-  LidarGpsDriver gps;
 #elif GPS_SKYTRAQ
   SKYTRAQ gps;
 #else 
@@ -130,6 +125,12 @@ TimeTable timetable;
 int stateButton = 0;  
 int stateButtonTemp = 0;
 unsigned long stateButtonTimeout = 0;
+
+float escapeLawnDistance = ESCAPELAWNDISTANCE; //MrTree
+bool escapeFinished = true; //MrTree
+unsigned long escapeLawnTriggerTime = 0; //MrTree
+bool RC_Mode = false; //MrTree
+
 
 OperationType stateOp = OP_IDLE; // operation-mode
 Sensor stateSensor = SENS_NONE; // last triggered sensor
@@ -167,6 +168,7 @@ unsigned long nextImuTime = 0;
 unsigned long nextTempTime = 0;
 unsigned long imuDataTimeout = 0;
 unsigned long nextSaveTime = 0;
+unsigned long nextOutputTime = 0; //MrTree
 unsigned long nextTimetableTime = 0;
 
 //##################################################################################
@@ -178,6 +180,7 @@ int loopTimeMin = 99999;
 unsigned long loopTimeTimer = 0;
 unsigned long wdResetTimer = millis();
 //##################################################################################
+
 
 bool wifiFound = false;
 char ssid[] = WIFI_SSID;      // your network SSID (name)
@@ -196,7 +199,7 @@ PubSubClient mqttClient(espClient);
 #endif
 
 int motorErrorCounter = 0;
-
+int motormowRPMStallCounter = 0; //MrTree
 
 RunningMedian<unsigned int,3> tofMeasurements;
 
@@ -224,6 +227,8 @@ void resetOverallMotionTimeout(){
 void updateGPSMotionCheckTime(){
   nextGPSMotionCheckTime = millis() + GPS_MOTION_DETECTION_TIMEOUT * 1000;     
 }
+
+
 
 
 
@@ -416,10 +421,10 @@ void outputConfig(){
   #endif 
   #ifdef MOTOR_DRIVER_BRUSHLESS_MOW_JYQD
     CONSOLE.println("MOTOR_DRIVER_BRUSHLESS_MOW_JYQD");
-  #endif 
+  #endif
   #ifdef MOTOR_DRIVER_BRUSHLESS_MOW_OWL
     CONSOLE.println("MOTOR_DRIVER_BRUSHLESS_MOW_OWL");
-  #endif 
+  #endif  
 
   #ifdef MOTOR_DRIVER_BRUSHLESS_GEARS_DRV8308
     CONSOLE.println("MOTOR_DRIVER_BRUSHLESS_GEARS_DRV8308");
@@ -455,9 +460,9 @@ void outputConfig(){
   #ifdef MOTOR_RIGHT_SWAP_DIRECTION
     CONSOLE.println("MOTOR_RIGHT_SWAP_DIRECTION");
   #endif
-  #ifdef MAX_MOW_PWM
-    CONSOLE.print("MAX_MOW_PWM: ");
-    CONSOLE.println(MAX_MOW_PWM);
+  #ifdef MOW_PWM
+    CONSOLE.print("MOW_PWM: ");
+    CONSOLE.println(MOW_PWM);
   #endif
   CONSOLE.print("MOW_FAULT_CURRENT: ");
   CONSOLE.println(MOW_FAULT_CURRENT);
@@ -560,7 +565,8 @@ void outputConfig(){
 
 // robot start routine
 void start(){    
-  pinMan.begin();         
+  pinMan.begin();
+  pinMode(pinRemoteSpeed, OUTPUT);      //********* Relais Board K1 LED LIGHT          
   // keep battery switched ON
   batteryDriver.begin();  
   CONSOLE.begin(CONSOLE_BAUDRATE);    
@@ -686,17 +692,16 @@ bool robotShouldMove(){
   /*CONSOLE.print(motor.linearSpeedSet);
   CONSOLE.print(",");
   CONSOLE.println(motor.angularSpeedSet / PI * 180.0);  */
-  return ( fabs(motor.linearSpeedSet) > 0.001 );
+  return ( fabs(motor.linearSpeedSet) >= MOTOR_MIN_SPEED ); //MrTree changed from 0.001
 }
 
-
 bool robotShouldMoveForward(){
-   return ( motor.linearSpeedSet > 0.001 );
+   return ( motor.linearSpeedSet >= MOTOR_MIN_SPEED );   //MrTree changed from 0.001
 }
 
 // should robot rotate?
 bool robotShouldRotate(){
-  return ( (fabs(motor.linearSpeedSet) < 0.001) &&  (fabs(motor.angularSpeedSet) > 0.001) );
+  return ( (fabs(motor.linearSpeedSet) < MOTOR_MIN_SPEED) &&  (fabs(motor.angularSpeedSet) > 0.01) ); //MrTree changed from 0.001 and 0.001
 }
 
 // should robot be in motion? NOTE: function ignores very short motion pauses (with motion low-pass filtering)
@@ -711,13 +716,34 @@ bool robotShouldBeInMotion(){
   return stateInMotionLP;
 }
 
+// drive reverse on high lawn and retry   //MrTree
+void triggerMowRPMStall(){                 //MrTree
+  activeOp->onMowRPMStall();               //MrTree
+}                                         //MrTree
 
 // drive reverse if robot cannot move forward
 void triggerObstacle(){
   activeOp->onObstacle();
 }
 
-
+void detectLawn(){
+  if (ENABLE_RPM_FAULT_DETECTION){
+    if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.motorMowRPMTrigFlag){                                                                                //MrTree
+      escapeLawnTriggerTime = millis();                                                                                                           //MrTree             
+      //RPM stalled, reverse from lawn                                                                          //MrTree
+      CONSOLE.println("detectLawn(): RPM of mow motor stalled!"); //MrTree     
+      if (ESCAPELAWNDISTANCE > lastTargetDist) escapeLawnDistance = lastTargetDist;                                                             //MrTree(svol0) Wenn die Entfernung zum letzten Wegpunkt kleiner als die Strecke zur Reversieren ist, wird nur bis zum Wegpunkt reversiert
+        else escapeLawnDistance = ESCAPELAWNDISTANCE;                                                                                             //MrTree  wegpunkt funktioniert leider nicht, da die lasttarget distance immer zum mäher geupdatet wird??     
+      //if (activeOp != &escapeLawnOp){ //Only allow trigger if escapeop finished ?  
+      if (escapeFinished){
+        escapeFinished = false;
+        triggerMowRPMStall();
+        //activeOp->onMowRPMStall();                                                                                                             //MrTree
+      }
+    return;                                                                                                                                   //MrTree                                                                                                                                               //MrTree
+    }
+  }
+}
 // detect sensor malfunction
 void detectSensorMalfunction(){  
   if (ENABLE_ODOMETRY_ERROR_DETECTION){
@@ -727,6 +753,21 @@ void detectSensorMalfunction(){
       return;      
     }
   }
+  //if ((ESCAPE_LAWN)&&(ENABLE_RPM_FAULT_DETECTION)){                                                                                               //MrTree
+  //  if (millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME) && motor.motorMowRPMTrigFlag){                                                                                //MrTree
+  //    escapeLawnTriggerTime = millis();                                                                                                           //MrTree             
+  //    //RPM stalled, reverse from lawn                                                                          //MrTree
+  //    CONSOLE.println("detectSensorMalfunction: RPM of mow motor stalled!"); //MrTree     
+  //    if (ESCAPELAWNDISTANCE > lastTargetDist) escapeLawnDistance = lastTargetDist;                                                             //MrTree(svol0) Wenn die Entfernung zum letzten Wegpunkt kleiner als die Strecke zur Reversieren ist, wird nur bis zum Wegpunkt reversiert
+  //      else escapeLawnDistance = ESCAPELAWNDISTANCE;                                                                                             //MrTree  wegpunkt funktioniert leider nicht, da die lasttarget distance immer zum mäher geupdatet wird??     
+  //    //if (activeOp != &escapeLawnOp){ //Only allow trigger if escapeop finished ?  
+  //    if (escapeFinished){
+  //      escapeFinished = false;
+  //      activeOp->onMowRPMStall();                                                                                                             //MrTree
+  //   }
+  //   return;                                                                                                                                   //MrTree                                                                                                                                               //MrTree
+  //  }
+  //}
   if (ENABLE_OVERLOAD_DETECTION){
     if (motor.motorOverloadDuration > 20000){
       // one motor is taking too much current over a long time (too high gras etc.) and we should stop mowing
@@ -750,7 +791,7 @@ void detectSensorMalfunction(){
 bool detectLift(){  
   #ifdef ENABLE_LIFT_DETECTION
     if (liftDriver.triggered()) {
-      CONSOLE.println("LIFT triggered");
+	    CONSOLE.println("LIFT triggered");
       return true;            
     }  
   #endif 
@@ -772,7 +813,6 @@ bool detectObstacle(){
           //CONSOLE.println(avg);
           if (avg < TOF_OBSTACLE_CM * 10){
             CONSOLE.println("ToF obstacle!");    
-            statMowToFCounter++;
             triggerObstacle();                
             return true; 
           }
@@ -785,14 +825,13 @@ bool detectObstacle(){
     #ifdef LIFT_OBSTACLE_AVOIDANCE
       if ( (millis() > linearMotionStartTime + BUMPER_DEADTIME) && (liftDriver.triggered()) ) {
         CONSOLE.println("lift sensor obstacle!");    
-        //statMowBumperCounter++;
-        statMowLiftCounter++;
+        statMowBumperCounter++;
         triggerObstacle();    
         return true;
       }
     #endif
   #endif
-
+  
   if ( (millis() > linearMotionStartTime + BUMPER_DEADTIME) && (bumper.obstacle()) ){  
     CONSOLE.println("bumper obstacle!");    
     statMowBumperCounter++;
@@ -801,9 +840,9 @@ bool detectObstacle(){
   }
   
   if (sonar.obstacle() && (maps.wayMode != WAY_DOCK)){
+    //CONSOLE.println("sonar obstacle!");    
+    statMowSonarCounter++;
     if (SONAR_TRIGGER_OBSTACLES){
-      CONSOLE.println("sonar obstacle!");            
-      statMowSonarCounter++;
       triggerObstacle();
       return true;
     }        
@@ -816,7 +855,7 @@ bool detectObstacle(){
     float dX = lastGPSMotionX - stateX;
     float dY = lastGPSMotionY - stateY;
     float delta = sqrt( sq(dX) + sq(dY) );    
-    if (delta < 0.05){
+    if (delta < GPS_MOTION_DETECTION_DELTA){ //MrTree 0.05
       if (GPS_MOTION_DETECTION){
         CONSOLE.println("gps no motion => obstacle!");
         statMowGPSMotionTimeoutCounter++;
@@ -842,10 +881,9 @@ bool detectObstacleRotation(){
     return false;
   }  
   if (!OBSTACLE_DETECTION_ROTATION) return false; 
-  if (millis() > angularMotionStartTime + 15000) { // too long rotation time (timeout), e.g. due to obstacle
+  if (millis() > angularMotionStartTime + ROTATION_TIMEOUT) { // too long rotation time (timeout), e.g. due to obstacle
     CONSOLE.println("too long rotation time (timeout) for requested rotation => assuming obstacle");
-    statMowRotationTimeoutCounter++;
-    triggerObstacleRotation();
+    triggerObstacle(); //MrTree changed to escape reverse?
     return true;
   }
   /*if (BUMPER_ENABLE){
@@ -859,17 +897,15 @@ bool detectObstacleRotation(){
     }
   }*/
   if (imuDriver.imuFound){
-    if (millis() > angularMotionStartTime + 3000) {                  
+    if (millis() > angularMotionStartTime + ROTATION_TIME) {                  
       if (fabs(stateDeltaSpeedLP) < 3.0/180.0 * PI){ // less than 3 degree/s yaw speed, e.g. due to obstacle
         CONSOLE.println("no IMU rotation speed detected for requested rotation => assuming obstacle");    
-        statMowImuNoRotationSpeedCounter++;
         triggerObstacleRotation();
         return true;      
       }
     }
     if (diffIMUWheelYawSpeedLP > 10.0/180.0 * PI) {  // yaw speed difference between wheels and IMU more than 8 degree/s, e.g. due to obstacle
       CONSOLE.println("yaw difference between wheels and IMU for requested rotation => assuming obstacle");            
-      statMowDiffIMUWheelYawSpeedCounter++;
       triggerObstacleRotation();
       return true;            
     }    
@@ -877,7 +913,47 @@ bool detectObstacleRotation(){
   return false;
 }
 
-
+//MrTree: added function to output tuning function parameters
+void tuningOutput(){
+  CONSOLE.println();
+  CONSOLE.println("TUNING_LOG (disable in config.h): ");
+  CONSOLE.println("---------------------------------------------------->");
+  CONSOLE.print("motor.cpp: adaptive_speed() -- ");
+      CONSOLE.print("motorMowRpmSet: ");     
+      CONSOLE.print(motor.motorMowRpmSet);
+      CONSOLE.print(" RPM, Batt: ");
+      CONSOLE.print(battery.batteryVoltage);
+      //CONSOLE.print(" V, mowMotorSense: ");
+      //CONSOLE.print(motor.motorMowSense);
+      CONSOLE.print(" V, mowMotorPower: ");
+      CONSOLE.print(motor.mowPowerAct);
+      CONSOLE.println(" Watt");
+      CONSOLE.print("                               speedcurr: ");
+      CONSOLE.print(motor.speedcurr);
+      CONSOLE.print(" m/s, Speedfactor: ");
+      CONSOLE.println(motor.SpeedFactor);
+      CONSOLE.println();
+  CONSOLE.print("motor.cpp: sense()          -- ");
+      CONSOLE.print("mowPowerAct: ");     
+      CONSOLE.print(motor.mowPowerAct);
+      CONSOLE.print(" Watt, motorMowSense: ");     
+      CONSOLE.print(motor.motorMowSense);
+      CONSOLE.print(" A, motorMowSenseLP: ");
+      CONSOLE.print(motor.motorMowSenseLP);
+      CONSOLE.println(" A");
+      CONSOLE.print("                               motorLeftSense: ");
+      CONSOLE.print(motor.motorLeftSense);
+      CONSOLE.print(" A, motorLeftSenseLP: ");
+      CONSOLE.print(motor.motorLeftSenseLP);;
+      CONSOLE.println(" A");
+      CONSOLE.print("                               motorRightSense: ");
+      CONSOLE.print(motor.motorRightSense);
+      CONSOLE.print(" A, motorRightSenseLP: ");
+      CONSOLE.print(motor.motorRightSenseLP);
+      CONSOLE.println(" A");
+      CONSOLE.println("<----------------------------------------------------");
+      CONSOLE.println();
+}
 
 
 // robot main loop
@@ -902,11 +978,22 @@ void run(){
   maps.run();  
   rcmodel.run();
   bumper.run();
+
+  if (stateChargerConnected) {          //************ LED LIGHTS
+    digitalWrite(pinRemoteSpeed, HIGH);
+  } else {
+    digitalWrite(pinRemoteSpeed, LOW);          //************ LED LIGHTS
+  } 
   
   // state saving
   if (millis() >= nextSaveTime){  
     nextSaveTime = millis() + 5000;
     saveState();
+  }
+
+  if (millis() >= nextOutputTime){
+    nextOutputTime = millis() + TUNING_LOG_TIME;
+    tuningOutput();
   }
   
   // temp
@@ -914,10 +1001,13 @@ void run(){
     nextTempTime = millis() + 60000;    
     float batTemp = batteryDriver.getBatteryTemperature();
     float cpuTemp = robotDriver.getCpuTemperature();    
-    CONSOLE.print("batTemp=");
-    CONSOLE.print(batTemp,0);
-    CONSOLE.print("  cpuTemp=");
-    CONSOLE.print(cpuTemp,0);    
+    if (OUTPUT_ENABLED) {
+      CONSOLE.print("batTemp=");
+      CONSOLE.print(batTemp,0);
+      CONSOLE.print("  cpuTemp=");
+      CONSOLE.print(cpuTemp,0);     
+    }
+    
     //logCPUHealth();
     CONSOLE.println();    
     if (batTemp < -999){
@@ -931,8 +1021,10 @@ void run(){
   
   // IMU
   if (millis() > nextImuTime){
-    int ims = 750 / IMU_FIFO_RATE;
-    nextImuTime = millis() + ims;        
+        int ims = 750 / IMU_FIFO_RATE;
+    nextImuTime = millis() + ims; 
+	//nextImuTime = millis() + IMUUPDATETIME;
+  
     //imu.resetFifo();    
     if (imuIsCalibrating) {
       activeOp->onImuCalibration();             
@@ -950,14 +1042,14 @@ void run(){
   }
 
   gps.run();
-
+  
   if (millis() > nextTimetableTime){
     nextTimetableTime = millis() + 30000;
     gps.decodeTOW();
     timetable.setCurrentTime(gps.hour, gps.mins, gps.dayOfWeek);
     timetable.run();
   }
-
+  
   calcStats();  
   
   
@@ -996,6 +1088,7 @@ void run(){
         activeOp->onChargerDisconnected();
       }            
     }
+
     if (millis() > nextBadChargingContactCheck) {
       if (battery.badChargerContact()){
         nextBadChargingContactCheck = millis() + 60000; // 1 min.
@@ -1075,38 +1168,39 @@ void run(){
     
   // ----- read serial input (BT/console) -------------
   processComm();
-  outputConsole();    
+  if (OUTPUT_ENABLED) outputConsole();    
 
-  //##############################################################################
-
+  // reset watchdog, keep calm
   if(millis() > wdResetTimer + 1000){
-    watchdogReset();
-  }   
+      watchdogReset();
+  } 
+  //##############################################################################
+  if (CALC_LOOPTIME){
+    loopTimeNow = millis() - loopTime;
+    loopTimeMin = min(loopTimeNow, loopTimeMin); 
+    loopTimeMax = max(loopTimeNow, loopTimeMax);
+    loopTimeMean = 0.99 * loopTimeMean + 0.01 * loopTimeNow; 
+    loopTime = millis();
 
-  loopTimeNow = millis() - loopTime;
-  loopTimeMin = min(loopTimeNow, loopTimeMin); 
-  loopTimeMax = max(loopTimeNow, loopTimeMax);
-  loopTimeMean = 0.99 * loopTimeMean + 0.01 * loopTimeNow; 
-  loopTime = millis();
-
-  if(millis() > loopTimeTimer + 10000){
-    if(loopTimeMax > 500){
-      CONSOLE.print("WARNING - LoopTime: ");
-    }else{
-      CONSOLE.print("Info - LoopTime: ");
-    }
-    CONSOLE.print(loopTimeNow);
-    CONSOLE.print(" - ");
-    CONSOLE.print(loopTimeMin);
-    CONSOLE.print(" - ");
-    CONSOLE.print(loopTimeMean);
-    CONSOLE.print(" - ");
-    CONSOLE.print(loopTimeMax);
-    CONSOLE.println("ms");
-    loopTimeMin = 99999; 
-    loopTimeMax = 0;
-    loopTimeTimer = millis();
-  }   
+    if(millis() > loopTimeTimer + 10000){
+      if(loopTimeMax > 500){
+        CONSOLE.print("WARNING - LoopTime: ");
+      }else{
+        CONSOLE.print("Info - LoopTime: ");
+      }
+      CONSOLE.print(loopTimeNow);
+      CONSOLE.print(" - ");
+      CONSOLE.print(loopTimeMin);
+      CONSOLE.print(" - ");
+      CONSOLE.print(loopTimeMean);
+      CONSOLE.print(" - ");
+      CONSOLE.print(loopTimeMax);
+      CONSOLE.println("ms");
+      loopTimeMin = 99999; 
+      loopTimeMax = 0;
+      loopTimeTimer = millis();
+    }   
+  }
   //##############################################################################
 
   // compute button state (stateButton)

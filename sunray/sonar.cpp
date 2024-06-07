@@ -124,14 +124,18 @@ void Sonar::run() {
     sonarLeftMeasurements.getMedian(distanceLeft);
     //sonar1Measurements.getAverage(avg);
     distanceLeft = convertCm(distanceLeft);
-
+    //CONSOLE.print("DistanceLeft: =");
+    //CONSOLE.println(distanceLeft);
     //sonarRightMeasurements.getLowest(distanceRight);
     sonarRightMeasurements.getMedian(distanceRight);
     distanceRight = convertCm(distanceRight);
-
+    //CONSOLE.print("DistanceRight: =");
+    //CONSOLE.println(distanceRight);
     //sonarCenterMeasurements.getLowest(distanceCenter);
     sonarCenterMeasurements.getMedian(distanceCenter);
     distanceCenter = convertCm(distanceCenter);
+    //CONSOLE.print("DistanceCenter: =");
+    //CONSOLE.println(distanceCenter);
 
   }
 #endif
@@ -180,7 +184,7 @@ bool Sonar::nearObstacle()
 {
 #ifdef SONAR_INSTALLED
   if (!enabled) return false;
-  int nearZone = 30; // cm
+  int nearZone = 0; // cm //MrTree no need for that (30)
   if ((nearObstacleTimeout != 0) && (millis() < nearObstacleTimeout)) return true;
   nearObstacleTimeout = 0;
   bool res = ((distanceLeft < triggerLeftBelow + nearZone) || (distanceCenter < triggerCenterBelow + nearZone) || (distanceRight < triggerRightBelow + nearZone));

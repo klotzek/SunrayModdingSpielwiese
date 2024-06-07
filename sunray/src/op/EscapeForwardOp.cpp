@@ -7,7 +7,7 @@
 #include <Arduino.h>
 #include "../../robot.h"
 #include "../../map.h"
-
+#include "../../config.h" //MrTree
 
 String EscapeForwardOp::name(){
     return "EscapeForward";
@@ -15,7 +15,18 @@ String EscapeForwardOp::name(){
 
 void EscapeForwardOp::begin(){
     // rotate stuck avoidance
-    driveForwardStopTime = millis() + 2000;
+    driveForwardStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000); 												//MrTree just add a constant time?
+	//if ((!MOWMOTORSTOPONOBSTACLE) && (previousOp == &mowOp)) {
+	//  if (!motor.switchedOn) {
+	//	  CONSOLE.println("EscapeForwardOp:: Overriding mowmotor stop! (MOWMOTORSTOPONOBSTACLE = false)");
+	//	  motor.setMowState(true);	
+	//	}
+	//} else {																		//MrTree
+	//  if (motor.switchedOn) {
+	//	CONSOLE.println("EscapeForwardOp:: Switch Off mow");
+	//	motor.setMowState(false);  																	//MrTree  	
+	//  }														//MrTree              				
+	//}	
 }
 
 
@@ -25,12 +36,24 @@ void EscapeForwardOp::end(){
 
 void EscapeForwardOp::run(){
     battery.resetIdle();
-    motor.setLinearAngularSpeed(0.1,0);
-    if (DISABLE_MOW_MOTOR_AT_OBSTACLE)  motor.setMowState(false);
-
+	//if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){
+       // wait until mowing motor is running
+    //   if (!buzzer.isPlaying()) buzzer.sound(SND_WARNING, true);
+    //    motor.setLinearAngularSpeed(0,0,false);
+	//	driveForwardStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000);
+    //  }
+	//else {
+    motor.setLinearAngularSpeed(OBSTACLEAVOIDANCESPEED,0,true);	//MrTree
+ 	//}						
+    if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (motor.switchedOn)) {	//MrTree
+      CONSOLE.println("EscapeForwardOp:: Switch Off mow");			//MrTree
+	  motor.setMowState(false);  																	  	
+	}  																							
+											
     if (millis() > driveForwardStopTime){
         CONSOLE.println("driveForwardStopTime");
-        motor.stopImmediately(false);  
+        motor.setLinearAngularSpeed(0,0,true);  //MrTree changed
+		//motor.stopImmediately(false);  
         driveForwardStopTime = 0;
         /*maps.addObstacle(stateX, stateY);
         Point pt;

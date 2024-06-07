@@ -7,7 +7,7 @@
 #define MOTOR_H
 
 #include "pid.h"
-#include "lowpass_filter.h"
+
 
 // selected motor
 enum MotorSelect {MOTOR_LEFT, MOTOR_RIGHT, MOTOR_MOW} ;
@@ -16,10 +16,16 @@ typedef enum MotorSelect MotorSelect;
 
 class Motor {
   public:
+    bool motorMowRPMTrigFlag;
+    bool speedUpTrig;
+    bool switchedOn;    //MrTree
+    int mowRPM_RC; //MrTree
+    bool motorMowRpmError;//MrTree
     float robotPitch;  // robot pitch (rad)
     float wheelBaseCm;  // wheel-to-wheel diameter
     int wheelDiameter;   // wheel diameter (mm)
     int ticksPerRevolution; // ticks per revolution
+    int mowticksPerRevolution; //MrTree
     float ticksPerCm;  // ticks per cm
     bool activateLinearSpeedRamp;  // activate ramp to accelerate/slow down linear speed?
     bool toggleMowDir; // toggle mowing motor direction each mow motor start?    
@@ -28,21 +34,33 @@ class Motor {
     bool motorError;
     bool motorLeftOverload; 
     bool motorRightOverload; 
-    bool motorMowOverload; 
+    bool motorMowOverload;
+    bool motorMowRPMStall;       //MrTree has RPM of mowmotor Stalled?
     bool tractionMotorsEnabled;       
     bool enableMowMotor;
-    bool motorMowForwardSet; 
-    bool odometryError;    
+    bool odometryError;       
     unsigned long motorOverloadDuration; // accumulated duration (ms)
+    unsigned long motorMowRPMStallDuration; //MrTree RPM of mowmotor stalled duration (ms)
     int  pwmMax;
-    int  pwmMaxMow;  
-    float  pwmSpeedOffset;
+    int  mowPwm; 
+    bool motorMowSpunUp; //MrTree 
+    float  mowRpm;//mrTree
     float mowMotorCurrentAverage;
+    float mowPowerAct; //MrTree
+	float speedcurr; //MrTree
     float currentFactor;
+    float SpeedFactor; //MrTree
+    bool keepslow;   //MrTree
+    bool retryslow; //MrTree
+    float y_before;//MrTree
+    float keepslow_y;//MrTree
     bool pwmSpeedCurveDetection;
     unsigned long motorLeftTicks;
     unsigned long motorRightTicks;
-    unsigned long motorMowTicks;    
+    unsigned long motorMowTicks;
+    float linearCurrSet;// MrTree helper
+    bool motorMowRpmCheck; //MrTree    
+    float motorMowRpmSet;//MrTree  
     float linearSpeedSet; // m/s
     float angularSpeedSet; // rad/s
     float motorLeftSense; // left motor current (amps)
@@ -55,53 +73,69 @@ class Motor {
     float motorLeftSenseLPNorm; 
     float motorRightSenseLPNorm;
     unsigned long motorMowSpinUpTime;
-    bool motorRecoveryState;    
-    PID motorLeftPID;
-    PID motorRightPID;    
-    LowPassFilter motorLeftLpf;
-    LowPassFilter motorRightLpf;        
+    unsigned long keepSlowTime; //MrTree adaptive_Speed keep slow speed after RPM stall of mow motor
+    unsigned long retrySlowTime;  //MrTree
+    bool motorRecoveryState;
+    bool motorMowForwardSet;    
     void begin();
     void run();      
     void test();
     void plot();
     void enableTractionMotors(bool enable);
     void setLinearAngularSpeed(float linear, float angular, bool useLinearRamp = true);
-    void setMowState(bool switchOn);   
-    void setMowMaxPwm( int val );
-    void stopImmediately(bool includeMowerMotor);
+    void setMowState(bool switchOn); 
+    void setMowPwm( int val );  
+    void stopImmediately(bool includeMowerMotor);    
+     
   protected: 
     float motorLeftRpmSet; // set speed
-    float motorRightRpmSet;   
+    float motorRightRpmSet;
+    
+    float motorMowPWMSet;  
     float motorLeftRpmCurr;
     float motorRightRpmCurr;
     float motorMowRpmCurr;    
     float motorLeftRpmCurrLP;
     float motorRightRpmCurrLP;    
-    float motorMowRpmCurrLP;    
+    float motorMowRpmCurrLP;
+    float motorMowRpmCurrLPFast;    
     float motorLeftRpmLast;
     float motorRightRpmLast;
-    float motorMowPWMSet;  
-    float motorMowPWMCurr; 
+    
+
+    
+   
+    int motorMowPWMCurr; 
     int motorLeftPWMCurr;
     int motorRightPWMCurr;    
     float motorMowPWMCurrLP; 
     float motorLeftPWMCurrLP;
     float motorRightPWMCurrLP;    
     unsigned long lastControlTime;    
-    unsigned long nextSenseTime;          
+    unsigned long nextSenseTime;
+    unsigned long lastMowRPMCheckTime;  //MrTree
+    unsigned long drvfixtimer; //MrTree 
+    bool drvfixreset; //MrTree 
+    unsigned int drvfixcounter;      
     bool recoverMotorFault;
     int recoverMotorFaultCounter;
     unsigned long nextRecoverMotorFaultTime;
     int motorLeftTicksZero;    
     int motorRightTicksZero;    
+    PID motorLeftPID;
+    PID motorRightPID;
+    PID motorMowPID;       //MrTree  
     bool setLinearAngularSpeedTimeoutActive;
     unsigned long setLinearAngularSpeedTimeout;    
     void speedPWM ( int pwmLeft, int pwmRight, int pwmMow );
     void control();    
     bool checkFault();
-    void checkOverload();
+    void checkOverload();   
     bool checkOdometryError();
     bool checkMowRpmFault();
+    void drvfix();                   //MrTree
+    void checkmotorMowRPMStall();    //MrTree
+    float adaptiveSpeed();           //MrTree
     bool checkCurrentTooHighError();    
     bool checkCurrentTooLowError();
     void sense();

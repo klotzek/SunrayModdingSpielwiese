@@ -22,11 +22,9 @@ class PID
     float esum; // error sum
     float eold; // last error
     float y;   // control output
-    float yold;   // last control output    
     float y_min; // minimum control output
     float y_max; // maximum control output
     float max_output; // maximum output 
-    float output_ramp; // maximum output derivative (limits output acceleration)
     float Kp;   // proportional control
     float Ki;   // integral control
     float Kd;   // differential control
@@ -51,7 +49,6 @@ class VelocityPID
     int y_min; // minimum control output
     int y_max; // maximum control output
     int max_output; // maximum output 
-    float output_ramp; // maximum output derivative (limits output acceleration)
     float Kp;   // proportional control
     float Ki;   // integral control
     float Kd;   // differential control

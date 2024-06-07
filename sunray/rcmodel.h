@@ -15,13 +15,17 @@
 class RCModel {
     public:
       void begin();      
-      void run();      
+      void run(); 
+      int mowPWM_RC;
+      //bool RC_Mode;     
     protected:
       float lin_PPM ;                                            
       float linearPPM ;                                         
       float ang_PPM ;                                            
-      float angularPPM ;                                         
-      bool RC_Mode ; 
+      float angularPPM ;
+      float mow_PPM ;                                            
+      float mowPPM ;                                     
+                                               
       unsigned long nextControlTime ;
     private:
 #ifdef RC_DEBUG
@@ -31,4 +35,3 @@ class RCModel {
 
 
 #endif
-

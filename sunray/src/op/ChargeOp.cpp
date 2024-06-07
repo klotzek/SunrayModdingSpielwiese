@@ -28,7 +28,14 @@ void ChargeOp::begin(){
     //motor.stopImmediately(true); // do not use PID to get to stop 
     motor.setLinearAngularSpeed(0,0, false); 
     motor.setMowState(false);     
-    //motor.enableTractionMotors(false); // keep traction motors off (motor drivers tend to generate some incorrect encoder values when stopped while not turning)                 
+    if (SWITCH_OFF_TRACTION_MOTORS) motor.enableTractionMotors(false); // keep traction motors off (motor drivers tend to generate some incorrect encoder values when stopped while not turning) 
+    
+	nextMoveTime = 0;													//
+    if (MOVE_REGULARLY){												//
+        nextMoveTime = millis() + MOVE_AGAIN_AFTER * 60 * 1000;			//
+        CONSOLE.print("------->Docking started: ");						//
+        CONSOLE.println(nextMoveTime);									//
+    }																	
 }
 
 
@@ -36,6 +43,42 @@ void ChargeOp::end(){
 }
 
 void ChargeOp::run(){
+	
+	//--------------------> move it, move it!
+    if (MOVE_REGULARLY){
+        movingTime= MOVING_TIME;
+        if ((millis() > nextMoveTime)){
+			if (!Moving) CONSOLE.println("------->Mower moving for DRV8038 Antistuck: Starting...");             
+			if (!Moving) motor.enableTractionMotors(true);  			// allow traction motors to operate                               
+            if (millis() < nextMoveTime + movingTime) {
+				motor.setLinearAngularSpeed(-0.10, 0, true); 			//move out of docking station
+				Moving = true; //Moving process is running
+            }
+			if ((millis() > nextMoveTime + movingTime) && (!DOCK_RETRY_TOUCH)){
+				motor.setLinearAngularSpeed(0.10, 0, true); 			//move into docking station only if dock retry touch is deactivated
+				Moving = true; //Moving process is running
+			}
+			if (millis() > nextMoveTime + 2 * movingTime) {
+				nextMoveTime = millis() + MOVE_AGAIN_AFTER * 60 * 1000;
+				motor.setLinearAngularSpeed(0.0, 0, false);
+				if (SWITCH_OFF_TRACTION_MOTORS) motor.enableTractionMotors(false);  // allow traction motors to operate
+				Moving = false;
+				CONSOLE.println("------->Mower moving for  DRV8038 Antistuck: Operation finished!");
+			}
+			//motor.setMowState(false);
+			
+           
+            
+        } else {
+			Moving = false;
+		}
+        //motor.setMowState(false);
+        //motor.enableTractionMotors(false); // keep traction motors off (motor drivers tend to generate some incorrect encoder values when stopped while not turning)                 
+        //nextMoveTime = millis() + MOVE_AGAIN_AFTER * 60 * 1000;
+        //Moving = false;
+        //Vor = true; //kann nun wieder aus der station herausfahren
+        //Once = true;                
+    }
 
     if ((retryTouchDock) || (betterTouchDock)){
         if (millis() > retryTouchDockSpeedTime){                            
@@ -78,7 +121,7 @@ void ChargeOp::run(){
                 nextConsoleDetailsTime = millis() + 30000;
                 CONSOLE.print("ChargeOp: charging completed (DOCKING_STATION=");
                 CONSOLE.print(DOCKING_STATION);
-                CONSOLE.print(", battery.isDocked=");
+				CONSOLE.print(", battery.isDocked=");
                 CONSOLE.print(battery.isDocked());
                 CONSOLE.print(", dockOp.initiatedByOperator=");
                 CONSOLE.print(dockOp.initiatedByOperator);        
@@ -89,18 +132,18 @@ void ChargeOp::run(){
                 CONSOLE.print(", dockOp.dockReasonRainTriggered=");
                 CONSOLE.print(dockOp.dockReasonRainTriggered);
                 CONSOLE.print(", dockOp.dockReasonRainAutoStartTime(min remain)=");
-                CONSOLE.print( ((int)(dockOp.dockReasonRainAutoStartTime - millis())) / 60000 );                                
-                CONSOLE.print(", timetable.mowingCompletedInCurrentTimeFrame=");                
+                CONSOLE.print( ((int)(dockOp.dockReasonRainAutoStartTime - millis())) / 60000 ); 
+				CONSOLE.print(", timetable.mowingCompletedInCurrentTimeFrame=");                
                 CONSOLE.print(timetable.mowingCompletedInCurrentTimeFrame);
                 CONSOLE.print(", timetable.mowingAllowed=");                
                 CONSOLE.print(timetable.mowingAllowed());
                 CONSOLE.print(", finishAndRestart=");                
-                CONSOLE.print(finishAndRestart);                
+                CONSOLE.print(finishAndRestart);
                 CONSOLE.println(")");
             }
             if (timetable.shouldAutostartNow()){
                 CONSOLE.println("DOCK_AUTO_START: will automatically continue mowing now");
-                changeOp(mowOp); // continue mowing                                                    
+                changeOp(mowOp); // continue mowing                	
             }
         }
     }        
@@ -139,6 +182,7 @@ void ChargeOp::onChargerConnected(){
         CONSOLE.println("ChargeOp: retryTouchDock succeeded");        
         motor.setLinearAngularSpeed(0, 0);
         retryTouchDock = false;
+		if (SWITCH_OFF_TRACTION_MOTORS) motor.enableTractionMotors(false); // allow traction motors to switch off 
     }
 }
 

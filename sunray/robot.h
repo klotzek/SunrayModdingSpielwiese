@@ -28,7 +28,6 @@
 #include "map.h"   
 #include "src/ublox/ublox.h"
 #include "src/skytraq/skytraq.h"
-#include "src/lidar/lidar.h"
 #ifdef __linux__
   #include <BridgeClient.h>
   #include "src/ntrip/ntripclient.h"
@@ -39,7 +38,7 @@
 #include "timetable.h"
 
 
-#define VER "Sunray,1.0.322"
+#define VER "Sunray,1.0.319"
 
 // operation types
 enum OperationType {
@@ -97,6 +96,11 @@ extern bool stateInMotionLP; // robot is in angular or linear motion? (with moti
 
 extern unsigned long lastFixTime;
 
+extern float escapeLawnDistance;       //MrTree
+extern bool escapeFinished;            //MrTree               
+//unsigned long escapeLawnTriggerTime; //MrTree
+extern bool RC_Mode;                   //MrTree
+
 extern WiFiEspClient client;
 extern WiFiEspServer server;
 extern PubSubClient mqttClient;
@@ -105,7 +109,7 @@ extern bool hasClient;
 extern unsigned long controlLoops;
 extern bool wifiFound;
 extern int motorErrorCounter;
-
+extern int motormowRPMStallCounter; //MrTree
 
 #ifdef DRV_SERIAL_ROBOT
   extern SerialRobotDriver robotDriver;
@@ -147,12 +151,10 @@ extern int motorErrorCounter;
 
 #ifdef DRV_SIM_ROBOT
   extern SimImuDriver imuDriver;
-#elif defined(GPS_LIDAR)
-  LidarImuDriver imuDriver;
 #elif defined(BNO055)
-  extern BnoDriver imuDriver;  
+  extern BnoDriver imuDriver; 
 #elif defined(ICM20948)
-  extern IcmDriver imuDriver;  
+  extern IcmDriver imuDriver;   
 #else
   extern MpuDriver imuDriver;
 #endif
@@ -169,8 +171,6 @@ extern Map maps;
 extern TimeTable timetable;
 #ifdef DRV_SIM_ROBOT
   extern SimGpsDriver gps;
-#elif GPS_LIDAR
-  extern LidarGpsDriver gps;
 #elif GPS_SKYTRAQ
   extern SKYTRAQ gps;
 #else
@@ -181,14 +181,16 @@ int freeMemory();
 void start();
 void run();
 void setOperation(OperationType op, bool allowRepeat = false);
+void triggerMowRPMStall(); //MrTree
 void triggerObstacle();
 void sensorTest();
 void updateStateOpText();
 void detectSensorMalfunction();
+void detectLawn(); //MrTree
 bool detectLift();
 bool detectObstacle();
 bool detectObstacleRotation();
-
+void resetLinearMotionMeasurement(); //Svol0
 
 
 #endif

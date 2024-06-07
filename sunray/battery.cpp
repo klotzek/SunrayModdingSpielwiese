@@ -24,7 +24,7 @@
 // alfred:   Samsung INR18650-15M, 7 cells in series, nominal voltage 3.6v 
 
 void Battery::begin()
-{  
+{
   startupPhase = 0;
   nextBatteryTime = 0;
   nextCheckTime = 0;
@@ -39,12 +39,13 @@ void Battery::begin()
   badChargerContactState = false;      
   chargingCompleted = false;
   chargingEnabled = true;
-  docked = false;
 
+  docked = false;
+  
   batMonitor = true;              // monitor battery and charge voltage?      
   batGoHomeIfBelow = GO_HOME_VOLTAGE; // 21.5  drive home voltage (Volt)  
-  batSwitchOffIfBelow = 18.9;  // switch off battery if below voltage (Volt)  
-  batSwitchOffIfIdle = 300;      // switch off battery if idle (seconds)
+  batSwitchOffIfBelow = BAT_SWITCH_OFF_VOLTAGE;  // switch off battery if below voltage (Volt)  
+  batSwitchOffIfIdle = BAT_SWITCH_OFF_IDLE_TIME; //MrTree 300;      // switch off battery if idle (seconds)
   // The battery will charge if both battery voltage is below that value and charging current is above that value.
   batFullCurrent  = BAT_FULL_CURRENT;  // 0.2  current flowing when battery is fully charged (A)
   batFullVoltage = BAT_FULL_VOLTAGE;  //28.7  voltage when battery is fully charged (we charge to only 90% to increase battery life time)
@@ -133,6 +134,8 @@ void Battery::run(){
   }  
   chargingVoltage = 0.9 * chargingVoltage + 0.1* voltage;  
 
+  //actual_voltage = batteryDriver.getBatteryVoltage();
+  //voltage = 0.1 * voltage + (1.0-0.1) * actual_voltage;
   voltage = batteryDriver.getBatteryVoltage();
   if (abs(batteryVoltage-voltage) > 10) {
     batteryVoltage = voltage;
@@ -186,7 +189,7 @@ void Battery::run(){
       if ((switchOffAllowedIdle) || (switchOffByOperator)) batteryDriver.keepPowerOn(false);
     } else batteryDriver.keepPowerOn(true);              
 
-    // battery volage slope 
+    // battery voltage slope 
     float w = 0.999; 
     batteryVoltageSlope = w * batteryVoltageSlope + (1-w) * (batteryVoltage - batteryVoltageLast) * 60.0/5.0;   // 5s => 1min  
     batteryVoltageLast = batteryVoltage;
@@ -196,7 +199,7 @@ void Battery::run(){
       badChargerContactState = false;
       if (chargerConnectedState){
         if (!chargingCompleted){
-          if (chargingVoltBatteryVoltDiff < -3.0){  // allow larger resistance (as mower chassis is getting older) 
+          if (chargingVoltBatteryVoltDiff < -3.0){
           //if (batteryVoltageSlope < 0){
             badChargerContactState = true;
             DEBUG(F("CHARGER BAD CONTACT chgV="));
@@ -210,39 +213,34 @@ void Battery::run(){
           }      
         } 
       }
-      if (abs(batteryVoltageSlope) < BAT_FULL_SLOPE){
+      if (abs(batteryVoltageSlope) < 0.002){
         batteryVoltageSlopeLowCounter = min(10, batteryVoltageSlopeLowCounter + 1);
       } else {
         batteryVoltageSlopeLowCounter = 0; //max(0, batteryVoltageSlopeLowCounter - 1);
-      }
+      } 
     }
 
 		if (millis() >= nextPrintTime){
 			nextPrintTime = millis() + 60000;  // 1 minute  	   	   	
-			//if (chargerConnectedState){      
-        //print();			
-        DEBUG(F("charger conn="));
-        DEBUG(chargerConnected());
-        DEBUG(F(" chgEnabled="));
-        DEBUG(chargingEnabled);
-        DEBUG(F(" chgTime="));      
-        DEBUG(timeMinutes);
-        DEBUG(F(" charger: "));      
-        DEBUG(chargingVoltage);
-        DEBUG(F(" V  "));    
-        DEBUG(chargingCurrent);   
-        DEBUG(F(" A "));         
-        DEBUG(F(" bat: "));
-        DEBUG(batteryVoltage);
-        DEBUG(F(" V  "));    
-        DEBUG(" diffV=");
-        DEBUG(chargingVoltBatteryVoltDiff);
-        DEBUG(" slope(v/min)=");
-        DEBUG(batteryVoltageSlope);
-        DEBUG(" slopeLowCounter=");
-        DEBUG(batteryVoltageSlopeLowCounter);
-        DEBUGLN();      
-     // }
+			
+      //print();			
+			/*DEBUG(F("charger conn="));
+			DEBUG(chargerConnected());
+			DEBUG(F(" chgEnabled="));
+			DEBUG(chargingEnabled);
+			DEBUG(F(" chgTime="));      
+			DEBUG(timeMinutes);
+			DEBUG(F(" charger: "));      
+			DEBUG(chargingVoltage);
+			DEBUG(F(" V  "));    
+			DEBUG(chargingCurrent);   
+			DEBUG(F(" A "));         
+			DEBUG(F(" bat: "));
+			DEBUG(batteryVoltage);
+			DEBUG(F(" V  "));    
+			DEBUG(F("switchOffAllowed="));   
+			DEBUG(switchOffAllowed);      
+			DEBUGLN();      */					
     }	
   }
   
@@ -255,16 +253,16 @@ void Battery::run(){
           //if ((timeMinutes > 180) || (chargingCurrent < batFullCurrent)) {   
           // https://github.com/Ardumower/Sunray/issues/32               
           if (chargingCompletedDelay > 5) {  // chargingCompleted check first after 6 * 5000ms = 30sec. 
-            chargingCompleted = ((chargingCurrent <= batFullCurrent) || (batteryVoltage >= batFullVoltage) || (batteryVoltageSlopeLowCounter > 5)); 
+            chargingCompleted = ((chargingCurrent <= batFullCurrent) || (batteryVoltage >= batFullVoltage)); 
           } 
           else {           
             chargingCompletedDelay++;  
           }          
           if (chargingCompleted) {
             // stop charging
-            nextEnableTime = millis() + 1000 * enableChargingTimeout;   // check charging current again in 30 minutes
-            chargingCompleted = true;
-            enableCharging(false);
+            nextEnableTime = millis() + 1000 * enableChargingTimeout;   // check charging current again in 30 minutes  
+            chargingCompleted = true;           
+            enableCharging(false);  
           } 
         } else {
            //if (batteryVoltage < startChargingIfBelow) {

@@ -21,17 +21,24 @@ String MowOp::name(){
     return "Mow";
 }
 
-void MowOp::begin(){
+void MowOp::begin(){	
+	
+	int iterationcounter = 0;
+	
     bool error = false;
     bool routingFailed = false;      
-
-    CONSOLE.println("OP_MOW");      
+	
+    CONSOLE.println("MowOp::begin");      
     motor.enableTractionMotors(true); // allow traction motors to operate         
-    motor.setLinearAngularSpeed(0,0);      
-    if (((previousOp != &escapeReverseOp) && (previousOp != &escapeForwardOp)) || (DISABLE_MOW_MOTOR_AT_OBSTACLE))  motor.setMowState(false);              
-    battery.setIsDocked(false);                
-    timetable.setMowingCompletedInCurrentTimeFrame(false);                
-
+    motor.setLinearAngularSpeed(0,0);
+    CONSOLE.println("MowOp:: set linear = 0, angular = 0");  
+	if (DISABLE_MOW_MOTOR_AT_OBSTACLE == true) { //(((previousOp != &escapeReverseOp) && (previousOp != &escapeForwardOp) && (previousOp != &escapeLawnOp) && (previousOp != &idleOp) && (previousOp != &chargeOp)) || 
+      CONSOLE.println("MowOp:: switch OFF mow motor --> previous OP was not an escapeOp OVERRIDE");
+	  motor.setMowState(false);     
+	}																																		
+	battery.setIsDocked(false);
+    timetable.setMowingCompletedInCurrentTimeFrame(false);
+ 
     // plan route to next target point 
 
     dockOp.dockReasonRainTriggered = false;    
@@ -43,10 +50,13 @@ void MowOp::begin(){
             lastFixTime = millis();                
             maps.setLastTargetPoint(stateX, stateY);        
             //stateSensor = SENS_NONE;
-            motor.setMowState(true);                
+            //if (!motor.switchedOn) {
+			  CONSOLE.println("MowOp::begin switch ON mowmotor --> startMowing");
+			  motor.setMowState(true);
+			//}
         } else {
             error = true;
-            CONSOLE.println("error: no waypoints!");
+            CONSOLE.println("MowOp::begin error: no waypoints!");
             //op = stateOp;                
         }
     } else error = true;
@@ -55,7 +65,9 @@ void MowOp::begin(){
         stateSensor = SENS_MAP_NO_ROUTE;
         //op = OP_ERROR;
         routingFailed = true;
-        motor.setMowState(false);
+		CONSOLE.println("MowOp::begin routing failed");
+		CONSOLE.println("MowOp::begin switch OFF mowmotor -> SENS_MAP_NO_ROUTE");
+		motor.setMowState(false);
     }
 
     if (routingFailed){
@@ -65,7 +77,7 @@ void MowOp::begin(){
             CONSOLE.println("error: too many map routing errors!");
             stateSensor = SENS_MAP_NO_ROUTE;
             changeOp(errorOp);      
-        } else {    
+        } else {
         changeOp(gpsRebootRecoveryOp, true);
         }
     } else {
@@ -79,14 +91,21 @@ void MowOp::end(){
 }
 
 void MowOp::run(){
+	//if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){      //searching for a bug.... when mower will move without waiting for mowmotor
+	//	CONSOLE.println("MowOp::run trying to wait for mowmotor....");
+	//	motor.setLinearAngularSpeed(0,0);
+	//	return;
+   //}
+
     if (!detectObstacle()){
         detectObstacleRotation();                              
-    }        
+    }
     // line tracking
-    trackLine(true); 
+    trackLine(true);
+	if (ESCAPE_LAWN)detectLawn(); //MrTree
     detectSensorMalfunction();    
     battery.resetIdle();
-    
+	
     if (timetable.shouldAutostopNow()){
         if (DOCKING_STATION){
             CONSOLE.println("TIMETABLE - DOCKING");
@@ -130,6 +149,17 @@ void MowOp::onBatteryLowShouldDock(){
     dockOp.setInitiatedByOperator(false);
     changeOp(dockOp);
 }
+
+
+void MowOp::onMowRPMStall(){											//MrTree
+	CONSOLE.println("MowOp::onMowRPMStall: Mow motor RPM stall detected");	//**   
+    
+    if (ESCAPE_LAWN) {
+		CONSOLE.println("triggerEscapeLawn");
+		statEscapeLawnCounter++;
+		changeOp(escapeLawnOp, true);		     											
+    }                   
+}																	//**
 
 void MowOp::onTimetableStopMowing(){        
 }
@@ -231,27 +261,34 @@ void MowOp::onTargetReached(){
 
 
 void MowOp::onGpsFixTimeout(){
+	iterationcounter++;
     // no gps solution
     if (REQUIRE_VALID_GPS){
 #ifdef UNDOCK_IGNORE_GPS_DISTANCE
         if (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE){
+			iterationcounter = 0;
 #else
-        if (!maps.isUndocking()){
+        if (!maps.isUndocking() && (iterationcounter > 200)){
 #endif
             stateSensor = SENS_GPS_FIX_TIMEOUT;
+			iterationcounter = 0;
             changeOp(gpsWaitFixOp, true);
         }
     }
 }
 
 void MowOp::onGpsNoSignal(){
+	iterationcounter++;
     if (REQUIRE_VALID_GPS){
 #ifdef UNDOCK_IGNORE_GPS_DISTANCE
         if (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE){
+		iterationcounter = 0;
 #else
-        if (!maps.isUndocking()){
+        if (!maps.isUndocking() && (iterationcounter > 200)){
 #endif
-            stateSensor = SENS_GPS_INVALID;
+            CONSOLE.println("MowOp::onGpsNoSignal iterationcounter over value, triggering gpsWaitFloatOp");
+			stateSensor = SENS_GPS_INVALID;
+			iterationcounter = 0;
             changeOp(gpsWaitFloatOp, true);
         }
     }
@@ -259,7 +296,8 @@ void MowOp::onGpsNoSignal(){
 
 void MowOp::onKidnapped(bool state){
     if (state){
-        stateSensor = SENS_KIDNAPPED;      
+        stateSensor = SENS_KIDNAPPED;
+		CONSOLE.println("MowOp::onKidnapped switch OFF all motors");  
         motor.setLinearAngularSpeed(0,0, false); 
         motor.setMowState(false);    
         changeOp(kidnapWaitOp, true); 
@@ -268,7 +306,7 @@ void MowOp::onKidnapped(bool state){
 
 void MowOp::onNoFurtherWaypoints(){
     CONSOLE.println("mowing finished!");
-    timetable.setMowingCompletedInCurrentTimeFrame(true);
+	timetable.setMowingCompletedInCurrentTimeFrame(true);
     if (!finishAndRestart){             
         if (DOCKING_STATION){
             dockOp.setInitiatedByOperator(false);

@@ -22,8 +22,9 @@ void GpsWaitFloatOp::begin(){
     //linear = 0;
     //angular = 0;      
     //mow = false;
-    motor.setLinearAngularSpeed(0,0, false); 
-    motor.setMowState(false);     
+	CONSOLE.println("GpsWaitFloatOp::begin switch OFF all motors");
+	motor.setLinearAngularSpeed(0,0, false); 
+    motor.setMowState(false); 
 }
 
 
@@ -31,6 +32,7 @@ void GpsWaitFloatOp::end(){
 }
 
 void GpsWaitFloatOp::run(){
+
     battery.resetIdle();
     if ((gps.solution == SOL_FIXED) || (gps.solution == SOL_FLOAT)){        
         changeOp(*nextOp);

@@ -22,7 +22,7 @@ Point *CHECK_POINT = (Point*)0x12345678;  // just some arbitray address for corr
 
 unsigned long memoryCorruptions = 0;        
 unsigned long memoryAllocErrors = 0;
-
+bool reverseTillGpsRebootPoint  = false; //svol0´s
 
 Point::Point(){
   init();
@@ -476,6 +476,8 @@ void Map::begin(){
   wayMode = WAY_MOW;
   trackReverse = false;
   trackSlow = false;
+  //trackPerimeter = false; //MrTree, would be a nice idea
+  //trackExclusion = false; //MrTree, would be a nice idea
   useGPSfixForPosEstimation = true;
   useGPSfloatForPosEstimation = true;
   useGPSfloatForDeltaEstimation = true;
@@ -492,7 +494,6 @@ void Map::begin(){
   CONSOLE.println(sizeof(Point));  
   load();
   dump();
-  //stressTestMapTransfer();
 }
 
 long Map::calcMapCRC(){   
@@ -645,7 +646,7 @@ void Map::finishedUploadingMap(){
       robotDriver.setSimRobotPosState(x, y, delta);
     } else {
       CONSOLE.println("SIM: error getting docking pos");
-      if (perimeterPoints.numPoints > 0){
+	  if (perimeterPoints.numPoints > 0){
         Point pt = perimeterPoints.points[0];
         //perimeterPoints.getCenter(pt);
         robotDriver.setSimRobotPosState(pt.x(), pt.y(), 0);
@@ -696,7 +697,6 @@ bool Map::setPoint(int idx, float x, float y){
 
 
 // set number points for point type
-// transfers points from global point list to specific point list
 bool Map::setWayCount(WayType type, int count){
   if ((memoryCorruptions != 0) || (memoryAllocErrors != 0)){
     CONSOLE.println("ERROR setWayCount: memory errors");
@@ -704,10 +704,9 @@ bool Map::setWayCount(WayType type, int count){
   }  
   switch (type){
     case WAY_PERIMETER:            
-      if (perimeterPoints.alloc(count)) {
+      if (perimeterPoints.alloc(count)){
         for (int i=0; i < count; i++){
-          int sidx = i;
-          if (sidx < points.numPoints) perimeterPoints.points[i].assign( points.points[sidx] );
+          perimeterPoints.points[i].assign( points.points[i] );
         }
       }
       break;
@@ -717,19 +716,17 @@ bool Map::setWayCount(WayType type, int count){
     case WAY_DOCK:    
       if (dockPoints.alloc(count)){
         for (int i=0; i < count; i++){
-          int sidx = perimeterPoints.numPoints + exclusionPointsCount + i;
-          if (sidx < points.numPoints) dockPoints.points[i].assign( points.points[ sidx ] );
+          dockPoints.points[i].assign( points.points[perimeterPoints.numPoints + exclusionPointsCount + i] );
         }
       }
       break;
     case WAY_MOW:          
       if (mowPoints.alloc(count)){
         for (int i=0; i < count; i++){
-          int sidx = perimeterPoints.numPoints + exclusionPointsCount + dockPoints.numPoints + i;
-          if (sidx < points.numPoints) mowPoints.points[i].assign( points.points[ sidx ] );
+          mowPoints.points[i].assign( points.points[perimeterPoints.numPoints + exclusionPointsCount + dockPoints.numPoints + i] );
         }
         if (exclusionPointsCount == 0){
-          points.dealloc(); // free point list
+          points.dealloc();
           finishedUploadingMap();
         }
       }
@@ -766,8 +763,7 @@ bool Map::setExclusionLength(int idx, int len){
     ptIdx += exclusions.polygons[i].numPoints;    
   }    
   for (int j=0; j < len; j++){
-    int sidx =  perimeterPoints.numPoints + ptIdx;
-    if (sidx < points.numPoints) exclusions.polygons[idx].points[j].assign( points.points[ sidx ] );        
+    exclusions.polygons[idx].points[j].assign( points.points[perimeterPoints.numPoints + ptIdx] );        
     ptIdx ++;
   }
   CONSOLE.print("ptIdx=");
@@ -848,14 +844,41 @@ void Map::run(){
     case WAY_DOCK:      
       if (dockPointsIdx < dockPoints.numPoints){
         targetPoint.assign( dockPoints.points[dockPointsIdx] );
+        //MrTree: Using Svol0´s solution
+        // Svol0: if no gps fix possible at dockingstation, undock without gps support
+        if (((dockPointsIdx+1) == dockPoints.numPoints) || (trackReverse && ((dockPointsIdx+2) == dockPoints.numPoints))) {       //MrTree changed from  "if ((dockPointsIdx+1) == dockPoints.numPoints) "becouse its not working if mower never docked and is between last point and point before
+          if (DOCK_IGNORE_GPS == true) allowDockLastPointWithoutGPS = true;
+          if (DOCK_NO_ROTATION) allowDockRotation = false; //MrTree
+          if ((gps.solution == !SOL_FIXED) && (useGPSfixForPosEstimation == DOCK_IGNORE_GPS)){
+              useGPSfixForPosEstimation = !DOCK_IGNORE_GPS;
+              useGPSfixForDeltaEstimation = !DOCK_IGNORE_GPS;
+              CONSOLE.print("Map::run - gps.solution = ");
+              CONSOLE.print(gps.solution);
+              CONSOLE.print(" useGPSfixForPosEstimation = ");
+              CONSOLE.println(useGPSfixForPosEstimation);
+          }
+        } else { 
+            allowDockLastPointWithoutGPS = false;
+            allowDockRotation = true;  //MrTree
+        }        
       }
       break;
     case WAY_MOW:
+      allowDockLastPointWithoutGPS = false; // Svol0:
+      allowDockRotation = true;  //MrTree
+      //dockGpsRebootState = 0; //MrTree
+      trackReverse = false;             
+      trackSlow = false;
+      
       if (mowPointsIdx < mowPoints.numPoints){
         targetPoint.assign( mowPoints.points[mowPointsIdx] );
       }
       break;
-    case WAY_FREE:      
+    case WAY_FREE:
+      allowDockLastPointWithoutGPS = false; // Svol0:
+      allowDockRotation = true;  //MrTree
+      trackSlow = false;         //MrTree
+      //dockGpsRebootState = 0;    //MrTree      
       if (freePointsIdx < freePoints.numPoints){
         targetPoint.assign(freePoints.points[freePointsIdx]);
       }
@@ -952,6 +975,12 @@ bool Map::retryDocking(float stateX, float stateY){
   if (shouldRetryDock) {
     CONSOLE.println("ERROR retryDocking: already retrying!");   
     return false;
+  }
+  // Svol0: if a specific docking point for gps-reboot is configured, mower will return to this point, if retryDocking is triggered
+  if (((dockPointsIdx) >= (dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT))) && (DOCK_POINT_GPS_REBOOT != 0)){                                                                 
+      reverseTillGpsRebootPoint = true;
+      CONSOLE.print("Map::retryDocking: Go back to GPS-Reboot point: ");   
+      CONSOLE.println(dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT));
   } 
   if (dockPointsIdx > 0) dockPointsIdx--;    
   shouldRetryDock = true;
@@ -1013,7 +1042,7 @@ bool Map::startMowing(float stateX, float stateY){
     Point src;
     Point dst;
     src.setXY(stateX, stateY);
-    if ((wayMode == WAY_DOCK) && (dockPoints.numPoints > 0)) {
+    if (wayMode == WAY_DOCK){
       src.assign(dockPoints.points[0]);
     } else {
       wayMode = WAY_FREE;      
@@ -1293,22 +1322,87 @@ bool Map::nextDockPoint(bool sim){
     if (dockPointsIdx+1 < dockPoints.numPoints){
       if (!sim) { 
         lastTargetPoint.assign(targetPoint);
+        trackSlow = true; // Svol0:
         if (dockPointsIdx == 0) {
-          CONSOLE.println("nextDockPoint: shouldRetryDock=false");
+          CONSOLE.println("Map::nextDockPoint: shouldRetryDock=false; dockPointsIdx = 0");
           shouldRetryDock=false;
+          reverseTillGpsRebootPoint = false;
         }
-        if (shouldRetryDock) {
-          CONSOLE.println("nextDockPoint: shouldRetryDock=true");
+        if (shouldRetryDock || reverseTillGpsRebootPoint) {
+          CONSOLE.println("Map::nextDockPoint: shouldRetryDock=true");
+          // Svol0:
+          if (reverseTillGpsRebootPoint) {
+            if (((dockPointsIdx+1) == (dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT))) && (DOCK_POINT_GPS_REBOOT != 0)){
+              dockGpsRebootState = 1;                    // activate gps-reboot in robot.cpp
+              CONSOLE.print("Map::nextDockPoint - gps-reboot by retry docking at dockingpoint: ");
+              CONSOLE.print(dockPointsIdx);
+              CONSOLE.print(" DOCK_POINT_GPS_REBOOT: ");
+              CONSOLE.println(dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT));
+              reverseTillGpsRebootPoint = false;
+              dockPointsIdx++;
+            }
+          }
+          // Svol0: if going reverse and mower is between docking station and "DOCK_POINT_GPS_REBOOT", this will be done without gps support
+          if (((dockPointsIdx+1) > (dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT))) && (DOCK_POINT_GPS_REBOOT != 0)){                                                                 
+            if (!sim) useGPSfixForPosEstimation = !DOCK_IGNORE_GPS;
+            if (!sim) useGPSfixForDeltaEstimation = !DOCK_IGNORE_GPS;
+            CONSOLE.print("Map::nextDockPoint - gps-fix needed for reverse? 1=no/0=yes :");
+            CONSOLE.print(DOCK_IGNORE_GPS);
+            CONSOLE.print(" | dockPointsIdx: ");
+            CONSOLE.print(dockPointsIdx);
+            CONSOLE.print(" / ");
+            CONSOLE.println(dockPoints.numPoints);
+
+
+          } else {
+            if (!sim) useGPSfixForPosEstimation = true;
+            if (!sim) useGPSfixForDeltaEstimation = true;
+            CONSOLE.print("Map::nextDockPoint - gps-fix needed for reverse!");
+            CONSOLE.print(DOCK_IGNORE_GPS);
+            CONSOLE.print(" | dockPointsIdx: ");
+            CONSOLE.print(dockPointsIdx);
+            CONSOLE.print(" / ");
+            CONSOLE.println(dockPoints.numPoints);
+
+          }
+          
           dockPointsIdx--;
-          trackReverse = true;                    
+          trackSlow = false;
+          trackReverse = true;          
+/*
+          if (((dockPointsIdx) > (dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT))) && (DOCK_POINT_GPS_REBOOT != 0)){                                                                 
+            reverseTillGpsRebootPoint = true;
+          } else reverseTillGpsRebootPoint = false;        
+*/        
+
         } else {
           dockPointsIdx++; 
-          trackReverse = false;                            
+          trackReverse = false;
+          
+          CONSOLE.print("Map::nextDockPoint: dockPointsIdx: ");
+          CONSOLE.print(dockPointsIdx);
+          CONSOLE.print(" dockPoints.numPoints: ");
+          CONSOLE.print(dockPoints.numPoints);
+          CONSOLE.print(" trackReverse: ");
+          CONSOLE.println(trackReverse);
+
+          // Svol0: only the last dockingpoints (value from "DOCK_SLOW_ONLY_LAST_POINTS") will be done with slow speed
+          if ((dockPoints.numPoints > abs(DOCK_SLOW_ONLY_LAST_POINTS)) && 
+          (dockPointsIdx < (dockPoints.numPoints - abs(DOCK_SLOW_ONLY_LAST_POINTS))) && (DOCK_SLOW_ONLY_LAST_POINTS != 0) ){
+            if (dockPointsIdx+1 == dockPoints.numPoints - abs(DOCK_SLOW_ONLY_LAST_POINTS)){              //MrTree changed from: if (trackSlow == true){                                                       
+              CONSOLE.print("Map::nextDockPoint: switched to slow track speed at dockPointsIdx: ");
+              CONSOLE.print(dockPointsIdx);
+              CONSOLE.print(" dockPoints.numPoints: ");
+              CONSOLE.print(dockPoints.numPoints);
+              CONSOLE.print(" trackReverse: ");
+              CONSOLE.println(trackReverse);
+            }
+            if (!sim) trackSlow = false;
+          }
+          if (!sim) useGPSfixForPosEstimation = true;
+          if (!sim) useGPSfixForDeltaEstimation = true;
         }
-      }              
-      if (!sim) trackSlow = true;
-      if (!sim) useGPSfixForPosEstimation = true;
-      if (!sim) useGPSfixForDeltaEstimation = true;      
+      }
       if (!sim) useGPSfloatForPosEstimation = false;    
       if (!sim) useGPSfloatForDeltaEstimation = false;    
       if (!sim) useIMU = true;     // false      
@@ -1320,12 +1414,71 @@ bool Map::nextDockPoint(bool sim){
   } else if (shouldMow){
     // should undock
     if (dockPointsIdx > 0){
+      CONSOLE.print("Map::nextDockPoint: actual dockPointsIdx :");
+      CONSOLE.println(dockPointsIdx);
+
       if (!sim) lastTargetPoint.assign(targetPoint);
-      if (!sim) dockPointsIdx--;              
-      if (!sim) {
-        trackReverse = (dockPointsIdx >= dockPoints.numPoints-2) ; // undock reverse only in dock
-      }              
-      if (!sim) trackSlow = true;      
+      if (!sim) dockPointsIdx--;
+
+      // Svol0: the mower will undock with slow speed and reverse, till the mower reached the pointnumber 
+      // (value from "DOCK_POINT_GPS_REBOOT" counted from the last dockingpoint (Dockingstation)).
+      // From there the mower will go on with normal speed, forward and with GPS-Support
+      if (((dockPointsIdx+2) > (dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT))) || (DOCK_POINT_GPS_REBOOT == 0)){    //MrTree changed from dockPointsIdx +2 >                                                            
+        if (!sim) trackReverse = true;      
+        if (!sim) trackSlow = true;      
+        if (!sim) useGPSfixForPosEstimation = !DOCK_IGNORE_GPS;
+        if (!sim) useGPSfixForDeltaEstimation = !DOCK_IGNORE_GPS;
+        if (!sim) useGPSfloatForPosEstimation = false;  
+        if (!sim) useGPSfloatForDeltaEstimation = false;
+        CONSOLE.print("Map::nextDockPoint: dockPointsIdx: ");
+        CONSOLE.print(dockPointsIdx);
+        CONSOLE.print(" dockPoints.numPoints: ");
+        CONSOLE.print(dockPoints.numPoints);
+        CONSOLE.print(" trackSlow: ");
+        CONSOLE.print(trackSlow);
+        CONSOLE.print(" trackReverse: ");
+        CONSOLE.print(trackReverse);
+        CONSOLE.print(" DOCK_IGNORE_GPS: ");
+        CONSOLE.println(DOCK_IGNORE_GPS);
+
+
+        // to avoid "gps no speed => obstacle!" error
+        if ((dockGpsRebootState == 0) && (dockGpsRebootState != 10)){ //MrTree this if condition makes no sense because if state is 0 it can´t be 10
+          dockGpsRebootState  = 10;
+          CONSOLE.println("Map::nextDockPoint: to avoid gps no speed => obstacle! error => resetLinearMotionMeasurement");      
+        }
+        if ((DOCK_IGNORE_GPS) && (DOCK_POINT_GPS_REBOOT != 0)){
+          blockKidnapByUndocking = true; // block Kidnap detection
+          CONSOLE.print("Map::nextDockPoint: blockKidnapByUndocking: ");      
+          CONSOLE.println(blockKidnapByUndocking);      
+        }
+      }
+      else {
+        if (!sim) trackReverse = false;  
+        if (!sim) trackSlow = false;
+        if (!sim) useGPSfixForPosEstimation = true;
+        if (!sim) useGPSfixForDeltaEstimation = true;                  
+        if (!sim) useGPSfloatForPosEstimation = true;  
+        if (!sim) useGPSfloatForDeltaEstimation = true;
+      }
+      if (!sim) useIMU = true; // false
+            
+      // Svol0: activates gps-reboot by reaching specified dockingpoint (please see "DOCK_POINT_GPS_REBOOT" in config.h)
+      if (((dockPointsIdx+2) == (dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT)) && DOCK_POINT_GPS_REBOOT != 0)){ //MrTree changed dockPointsIdx + 2 
+        dockGpsRebootState = 1;                    // activate gps-reboot in robot.cpp
+        CONSOLE.print("Map::nextDockPoint: gps-reboot by undocking at dockingpoint :");
+        CONSOLE.println(dockPointsIdx);
+      }
+
+      // Svol0: activate kidnap detection again
+      if ((dockPointsIdx == 0) || ((dockPointsIdx + 3) == (dockPoints.numPoints - abs(DOCK_POINT_GPS_REBOOT)) && DOCK_POINT_GPS_REBOOT != 0)) {
+        blockKidnapByUndocking = false; // reset block Kidnap detection
+        CONSOLE.print("Map::nextDockPoint: enable kidnap detection at dockPointsIdx: ");
+        CONSOLE.print(dockPointsIdx);
+        CONSOLE.print(" blockKidnapByUndocking: ");      
+        CONSOLE.println(blockKidnapByUndocking);      
+      }
+            
       return true;
     } else {
       // finished undocking
@@ -1340,6 +1493,10 @@ bool Map::nextDockPoint(bool sim){
         if (!sim) useGPSfloatForPosEstimation = true;    
         if (!sim) useGPSfloatForDeltaEstimation = true;    
         if (!sim) useIMU = true;    
+        CONSOLE.print("Map::nextDockPoint: undocking finished! trackReverse:");
+        CONSOLE.print(trackReverse);
+        CONSOLE.print(" trackSlow: ");      
+        CONSOLE.println(trackSlow);      
         return true;
       } else return false;        
     }  
@@ -1684,8 +1841,8 @@ float Map::calcHeuristic(Point &pos0, Point &pos1) {
 // 1. if start node is outside perimeter, it must be within a certain distance to section point with perimeter (to next node), 
 //  and must have section count of one
 // 2. if start node is inside exclusion, it must be within a certain distance to section point with exclusion (to next node)  
-// 3. otherwise: line between start node and next node node must not intersect any obstacle  
-  
+// 3. otherwise: line between start node and next node node must not intersect any obstacle    
+
 int Map::findNextNeighbor(NodeList &nodes, PolygonList &obstacles, Node &node, int startIdx) {
   Point dbgSrcPt(4.2, 6.2);
   Point dbgDstPt(3.6, 6.8);  
@@ -2092,20 +2249,4 @@ void Map::testIntegerCalcs(){
   }   
 }
   
-
-// map transfer stress test
-void Map::stressTestMapTransfer(){
-  CONSOLE.print("stressTestMapTransfer start");
-  for (int counter=0 ; counter < 5000; counter++){
-    int idx = counter;
-    maps.setPoint(idx, 0, 0);
-    setExclusionLength(idx, idx);
-    maps.setWayCount(WAY_PERIMETER, idx);                
-    maps.setWayCount(WAY_EXCLUSION, idx);                
-    maps.setWayCount(WAY_DOCK, idx);                
-    maps.setWayCount(WAY_MOW, idx);                
-    maps.setWayCount(WAY_FREE, idx);                
-  }
-  CONSOLE.print("stressTestMapTransfer end");
-}
-
+  

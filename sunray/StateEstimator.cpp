@@ -263,7 +263,7 @@ void computeRobotState(){
               stateDeltaGPS = scalePIangles(stateDeltaGPS, stateDelta);
               stateDelta = scalePI(fusionPI(0.9, stateDelta, stateDeltaGPS));               
             }            
-          }
+          }            
         }
       }
       lastPosN = posN;
@@ -321,5 +321,3 @@ void computeRobotState(){
     //CONSOLE.println(stateDeltaSpeedWheels/PI*180.0);
   }
 }
-
-

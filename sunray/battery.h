@@ -25,14 +25,15 @@ class Battery {
     float chargingVoltBatteryVoltDiff;    
     float batteryVoltageSlope; // slope (volts/minute)	  
     float chargingVoltage;  // volts
+    float actual_voltage; //volts MrTree
 	  float chargingCurrent;  // amps
     bool chargingEnabled;
     int chargingCompletedDelay; // ensure that loadingcurrent or loadingvoltage triggers 'chargingCompleted' condition for a longer period
     bool chargingCompleted;
 	  void begin();            
-    void run();	  
+    void run();
     void setIsDocked(bool state);
-    bool isDocked();
+    bool isDocked();	  
 	  bool chargerConnected();
     bool badChargerContact();
     void enableCharging(bool flag);   	      
@@ -41,8 +42,8 @@ class Battery {
     bool underVoltage();
     void resetIdle();
     void switchOff();
-  protected:       
-    int batteryVoltageSlopeLowCounter;
+  protected:
+    int batteryVoltageSlopeLowCounter;       
     int startupPhase;    
     unsigned long nextBatteryTime ;
     bool switchOffByOperator;    
