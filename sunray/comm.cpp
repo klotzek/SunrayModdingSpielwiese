@@ -164,7 +164,8 @@ void cmdControl(){
 
 // request motor 
 void cmdMotor(){
-  if (cmd.length()<6) return;  
+  if (cmd.length()<6) return;
+  if(activeOp->name() != "Idle")activeOp->changeOp(idleOp); //MrTree Silberstreifens change to put mower in idleop if user interferes  
   int counter = 0;
   int lastCommaIdx = 0;
   float linear=0;
