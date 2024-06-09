@@ -236,7 +236,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MOTOR_TOO_LOW_CURRENT 0.005   // gear motor too low current (amps)
 #define MOTOR_OVERLOAD_CURRENT 1.0    // gear motors overload current (amps)
 
-#define USE_LINEAR_SPEED_RAMP  true      // use a speed ramp for the linear speed //MrTree overshooting is reduced: try out for the sake of your gears
+#define USE_LINEAR_SPEED_RAMP  true      // use a speed ramp for the linear speed //MrTree overshooting is reduced, deceleration is more agressive: keep enabled! (recommended)
 //#define USE_LINEAR_SPEED_RAMP  false      // do not use a speed ramp 
 
 // motor speed control (PID coefficients) - these values are tuned for Ardumower motors
@@ -259,9 +259,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 #define MOW_PWM 200  // use this to permanently reduce mowing motor power (255=max)
 
-#define MOW_FAULT_CURRENT 6.0       // mowing motor fault current (amps)
+#define MOW_FAULT_CURRENT 5.0       // mowing motor fault current (amps)
 #define MOW_TOO_LOW_CURRENT 0.005   // mowing motor too low current (amps)
-#define MOW_OVERLOAD_CURRENT 5.0    // mowing motor overload current (amps)
+#define MOW_OVERLOAD_CURRENT 4.0    // mowing motor overload current (amps)
 
 // should the direction of mowing motor toggle each start? (yes: true, no: false)
 #define MOW_TOGGLE_DIR       true
@@ -341,9 +341,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define SONAR_ENABLE true              // should ultrasonic sensor be used?
 //#define SONAR_ENABLE false
 #define SONAR_TRIGGER_OBSTACLES false     // should sonar be used to trigger obstacles? if not, mower will only slow down
-#define SONAR_LEFT_OBSTACLE_CM   30      // slow down or stop mowing operation below this distance (cm) 
-#define SONAR_CENTER_OBSTACLE_CM 35      // slow down or stop mowing operation below this distance (cm) 
-#define SONAR_RIGHT_OBSTACLE_CM  30      // slow down or stop mowing operation below this distance (cm) 
+#define SONAR_LEFT_OBSTACLE_CM   40     // slow down or stop mowing operation below this distance (cm) 
+#define SONAR_CENTER_OBSTACLE_CM 40      // slow down or stop mowing operation below this distance (cm) 
+#define SONAR_RIGHT_OBSTACLE_CM  40      // slow down or stop mowing operation below this distance (cm) 
 
 // ------ rain sensor ----------------------------------------------------------
 #define RAIN_ENABLE true                 // if activated, mower will dock when rain sensor triggers
@@ -363,8 +363,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define BUMPER_ENABLE true
 //#define BUMPER_ENABLE false
 #define BUMPER_DEADTIME 200  // linear motion dead-time (ms) after bumper is allowed to trigger
-#define BUMPER_TRIGGER_DELAY  50 // bumper must be active for (ms) to trigger
-#define BUMPER_MAX_TRIGGER_TIME 30  // if bumpersensor stays permanent triggered mower will stop with bumper error (time in seconds; 0 = disabled)
+#define BUMPER_TRIGGER_DELAY  75 // bumper must be active for (ms) to trigger
+#define BUMPER_MAX_TRIGGER_TIME 20  // if bumpersensor stays permanent triggered mower will stop with bumper error (time in seconds; 0 = disabled)
 
 // ----- battery charging current measurement (INA169) --------------
 // the Marotronics charger outputs max 1.5A 
@@ -377,7 +377,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //#define CURRENT_FACTOR 1.98   // PCB1.4 (non-bridged INA169, max. 2.5A)
 #define CURRENT_FACTOR 2.941  // PCB1.4 (bridged INA169, max. 5A)
 
-#define GO_HOME_VOLTAGE   21  // start going to dock below this voltage
+#define GO_HOME_VOLTAGE   22  // start going to dock below this voltage
 // The battery will charge if both battery voltage is below that value and charging current is above that value.
 #define BAT_FULL_VOLTAGE  28.8  // start mowing again at this voltage
 #define BAT_FULL_CURRENT  0.01   // start mowing again below this charging current (amps)
@@ -411,14 +411,14 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // detect if robot is actually moving (obstacle detection via GPS feedback)
 #define GPS_MOTION_DETECTION          true    // if robot is not moving trigger obstacle avoidance (recommended)
 //#define GPS_MOTION_DETECTION        false   // ignore if robot is not moving
-#define GPS_MOTION_DETECTION_TIMEOUT  8       // timeout for motion (secs)
+#define GPS_MOTION_DETECTION_TIMEOUT  5       // timeout for motion (secs)
 #define GPS_MOTION_DETECTION_DELTA    0.2     // distance mower must be moving in timeouttime until gps no motion is triggered
 
 // configure ublox f9p with optimal settings (will be stored in f9p RAM only)
 // NOTE: due to a PCB1.3 bug GPS_RX pin is not working and you have to fix this by a wire:
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#PCB1.3_GPS_pin_fix_and_wire_fix   (see 'GPS wire fix')
-//#define GPS_REBOOT_RECOVERY  true // allow GPS receiver rebooting (recommended - requires GPS wire fix above! otherwise firmware will stuck at boot!)
-#define GPS_REBOOT_RECOVERY   false  // do not allow rebooting GPS receiver (no GPS wire fix required)
+#define GPS_REBOOT_RECOVERY  true // allow GPS receiver rebooting (recommended - requires GPS wire fix above! otherwise firmware will stuck at boot!)
+//#define GPS_REBOOT_RECOVERY   false  // do not allow rebooting GPS receiver (no GPS wire fix required)
 
 #define GPS_CONFIG   true     // configure GPS receiver (recommended - requires GPS wire fix above! otherwise firmware will stuck at boot!)
 //#define GPS_CONFIG   false  // do not configure GPS receiver (no GPS wire fix required)
