@@ -114,22 +114,22 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MOW_RPMtr_SLOW              75    // (85)(%) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will trigger a keepSlow state with KEEPSLOWSPEED
 #define ESCAPELAWNSPEED             0.35  // (m/s) speed of mower reverse due to MOW_RPM_STALL trigger
 #define ESCAPELAWNDISTANCE          0.5   // (m) distance mower reverses with ESCAPELAWNSPEED due to MOW_RPM_STALL triggered
-#define ESCAPELAWNWAITTIME          5000    // (ms)after Reversing, mower will wait for this time (workaround if RPM needs time to recover)
+#define ESCAPELAWNWAITTIME          5000  // (ms)after Reversing, mower will wait for this time (workaround if RPM needs time to recover)
 #define ESCAPELAWNTIMER             20000 // (ms)timer to reset retries of ESCAPELAWN, if time is met and retries stay under MAXRETRY triggercounter will reset, otherwise there will be an obstacle error
 #define ESCAPELAWN_DEADTIME         3000  // (ms)deadtime between allowed ESCAPELAWN triggers (deadtime should be the reverse time of action and be calculated in code)
 #define MAXRETRY                    5     // number of possible retries of ESCAPELAWN within ESCAPELAWNTIMER until there will be an obstacle error or obstacle avoidance
-#define MAXRETRYOBSTACLE            false  // if true, ESCAPELAWN will trigger Obstacle avoidance when to many MAXRETRY´s and will not trigger an error
-#define RETRYSLOWSPEED              0.15  //(ms) if ESCAPELAWN true, mower will back up with ESCAPELAWNSPEED if RPM stall is detected and retry mowing forward with RETRYSPEED until RETRYSLOWTIME is met, then it will continue with normal Speed
+#define MAXRETRYOBSTACLE            false // if true, ESCAPELAWN will trigger Obstacle avoidance when to many MAXRETRY´s and will not trigger an error
+#define RETRYSLOWSPEED              0.15  // (ms) if ESCAPELAWN true, mower will back up with ESCAPELAWNSPEED if RPM stall is detected and retry mowing forward with RETRYSPEED until RETRYSLOWTIME is met, then it will continue with normal Speed
 #define KEEPSLOWSPEED               0.25  // mower will use this speed if there is a rpm stall (%) of mowingblades defined by MOW_RPMtr_SLOW
 #define RETRYSLOWTIME               15000 // (ms) mower will continue slow with RETRY_SLOW_SPEED after ESCAPELAWN operation (reversing triggered by MOW_RPMtr_RETRY (%)) for RETRYSLOWTIME, if a MOW_RPMtr_SLOW will happen again in this retryslowstate, mower resets this timer until no rpm stall occurs in set time
 #define KEEPSLOWTIME                15000 // (ms) mower will continue slow with KEEP_SLOW_SPEED for given Time if MOW_RPMtr_SLOW (%) was met... if a MOW_RPMtr_SLOW will happen again during keepslowstate, mower resets this timer until no rpm stall occurs in set time.   
 #define GLOBALSPEEDLIMIT            true  // if true, MOTOR_MAX_SPEED and MOTOR_MIN_SPEED will limit possible code bugs or inputs directly in motor.cpp        
 #define MOTOR_MAX_SPEED             0.60  // (m/s) maximum mower speed
 #define MOTOR_MIN_SPEED             0.05  // (m/s) minimal mower speed
-//#define MOWMOTORSTOPONOBSTACLE    false // if false, mow motor will NOT stop on obstacle triggers which lead to EscapeReverse or EscapeForward Operation (use at own risk)  
+//#define MOWMOTORSTOPONOBSTACLE    false // (moved to obstacle section) if false, mow motor will NOT stop on obstacle triggers which lead to EscapeReverse or EscapeForward Operation (use at own risk)  
 #define MAP_STANLEY_CONTROL         true  // if true, stanley values will be mapped linear from MOTOR_MIN_SPEED-->MOTOR_MAX_SPEED with SC_P_*|SC_K_* to actual speedset of mower (recommended if you use high operation speeds)
 #define STANLEYNORMALMUL            false // if true, StanleyNormal parameters in Sunray-App will be multiplied by 10! (0,1 = 1) (for testing)
-//deaktivated because of IMU_FIFO_RATE #define IMUUPDATETIME             50    // (ms) defines the update rate of IMU "inertia measurement unit" aka MPU (standard 150, 50 equals 20Hz, the lower:the faster, don´t tweak under 50 if you are not sure. If you encounter IMU problems, raise to 100)
+//#define IMUUPDATETIME             50    // (moved to imu section --> IMU_FIFO_RATE) (ms) defines the update rate of IMU "inertia measurement unit" aka MPU (standard 150, 50 equals 20Hz, the lower:the faster, don´t tweak under 50 if you are not sure. If you encounter IMU problems, raise to 100)
 #define MOWMOTOR_RPM_OFFSET         110   // compensate small RPM offsets (positive if RPM reading is less then RPM setpoint)
 #define MOWMOTOR_PID_KP             0.0024// (0.0024 Mowmotordriver DRV8308) (0.0018 JYQD) this is enough to compensate battery drainage over time and have a slow spinup, there may be a controlleroffset to rpm wich has to be thought of
 #define MOWMOTOR_PID_KI             0.002 // (0.04 (Mowmotordriver DRV8308/JYQD))
@@ -137,29 +137,29 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define GPS_REBOOT                  true  // if false and DOCK_POINT_GPS_REBOOT is not 0, mower will wait at the DOCK_POINT_GPS_REBOOT point for fix without rebooting GPS 
 #define GPSWAITREBOOT               15000 // (ms) time to wait after rebooting gps for response from ublox? 
 #define GPS_STABLETIME              30000 // (ms) GPS Time with fix solution, before continueing from DOCK_POINT_GPS_REBOOT after undock  
-#define DOCK_POINT_GPS_REBOOT       3   // (pt)(MrTree: Warning, you need 3 more dockpoints than this number, or there will be bugs! so, if there is 4 defined, you need 7 on the Map!) Svol0: dockingpoint number (counted from last dockingpoint) where the gps will be rebooted and waited for gps-fix by undocking. 0 = no gps reboot by undocking. MrTree: if not "0" and GPS_REBOOT = false, mower will wait at the point for fix without rebooting GPS
-#define DOCK_SLOW_ONLY_LAST_POINTS  4   // (pt) Svol0: dockingpoint number (counted from last dockingpoint) where slow speed will be used to reach the dockingstation (0 = all points will be reached with slow speed)
+#define DOCK_POINT_GPS_REBOOT       3     // (pt)(MrTree: Warning, you need 3 more dockpoints than this number, or there will be bugs! so, if there is 4 defined, you need 7 on the Map!) Svol0: dockingpoint number (counted from last dockingpoint) where the gps will be rebooted and waited for gps-fix by undocking. 0 = no gps reboot by undocking. MrTree: if not "0" and GPS_REBOOT = false, mower will wait at the point for fix without rebooting GPS
+#define DOCK_SLOW_ONLY_LAST_POINTS  4     // (pt) Svol0: dockingpoint number (counted from last dockingpoint) where slow speed will be used to reach the dockingstation (0 = all points will be reached with slow speed)
 #define DOCK_NO_ROTATION            true  // if true, rotation for the mower when reaching or leaving the last dockpoint is not allowed! Make sure mower comes just before the dock in a straight line from the point before, then the last point is the dockposition, on that path angular steering is not allowed!
 #define DOCK_NO_ROTATION_TIMER      16000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
 #define DOCK_NO_ROTATION_DELAY      2000  // (ms) gives the mower time to surpass the point before dockpoint by given time, after the time angular will be zero! 
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
 #define SUPER_SPIKE_ELIMINATOR      0     // advanced spike elimination  (experimental, comment out to disable)
 //try to fix 8308 driver with pwm (keep FALSE if you have no issues or no DRV8308)
-#define DRV8308_FIX                 false  // only for testing, if true and charger is connected, drivers pwm will be 1 for DRVFIXITERATIONS iteration of code everytime DRVFIXTIMER is met
+#define DRV8308_FIX                 false // only for testing, if true and charger is connected, drivers pwm will be 1 for DRVFIXITERATIONS iteration of code everytime DRVFIXTIMER is met
 #define DRVFIXITERATIONS            5     // iterations of code for pwm of drivers to be PWM_GEAR and PWM_MOW (below)
 #define DRVFIXTIMER                 60000 // (ms) timer for DRV8308_FIX, everytime timer is met, function will run once for DRVFIXITERATIONS and set pwm of drivers to 1
 #define PWM_GEAR                    1     // PWM for DRVFIX efforts..
 #define PWM_MOW                     1     // PWM for DRVFIX efforts..
-//try to fix 8308 driver with moving (keep FALSE if you have no issues or no DRV8308)
-#define MOVE_REGULARLY              true  //kk: move mower to keep 8308 alive
-#define MOVE_AGAIN_AFTER            10.0  //kk: move the mower every xx minutes
-#define MOVING_TIME                 500   //kk: time (ms) for moving back and forth
-#define SWITCH_OFF_TRACTION_MOTORS  true // Should tractionmotors be disabled in dock?
+//try to fix 8308 driver with moving, only works with "DOCK_RETRY_TOUCH = true"! (keep FALSE if you have no issues or no DRV8308)
+#define MOVE_REGULARLY              true  // if true, mower will move in dock in given MOVE_ADAIN_AFTER time, kk: move mower to keep 8308 alive
+#define MOVE_AGAIN_AFTER            10.0  // kk: move the mower every xx minutes
+#define MOVING_TIME                 500   // kk: time (ms) for moving back
+#define SWITCH_OFF_TRACTION_MOTORS  true  // should tractionmotors be disabled in dock?
 //LOG
-#define OUTPUT_ENABLED              false // Output standard Sunray_FW LOG in serial monitor and SDlog
+#define OUTPUT_ENABLED              false // output standard Sunray_FW LOG in serial monitor and SDlog
 #define CALC_LOOPTIME               false // calc and output the sunray loop time in serial monitor and SDlog
-#define TUNING_LOG                  true
-#define TUNING_LOG_TIME             5000  // (ms)
+#define TUNING_LOG                  true  // outputs valuable states of sunray for debugging tuning functions or just for observation
+#define TUNING_LOG_TIME             5000  // (ms) periodic output time of TUNING_LOG
 
 
 // ------- SD card map load/resume and logging ---------------------------------
