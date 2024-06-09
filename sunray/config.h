@@ -83,7 +83,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //#define ENABLE_LIFT_DETECTION  1
 // should the lift sensor be used for obstacle avoidance (if not, mower will simply go into error if lifted)
 #define LIFT_OBSTACLE_AVOIDANCE 1  
-//TEST
+
 //Modfunctions/Speeds/Time for different stuff and movement operations  //svol0, where are you?? XD
 #define MOWSPINUPTIME               10000 // (ms) Adds time to rotate mowingdisc before starting moving, use high value if you enable ESCAPE_LAWN for good reading of idle mow motor RPM
 #define OVERLOADSPEED               0.15  // (m/s) if there is a overloadcurrent of a motordriver, mower will use OVERLOADSPEED if ENABLE_OVERLOAD_DETECTION false
