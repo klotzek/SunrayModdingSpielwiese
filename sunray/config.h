@@ -86,6 +86,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //Modsection START
+//please keep in mind that there are bugs, but if you encounter bugs that stop the operation of mower on an area completely please tell me about it...
 
 //Experimental Modfunctions/Options/Speeds/Time etc. for different stuff and movement operations. Please read the descriptions. Cheers.
 //Mower general times and speeds with their condition parameters
@@ -108,10 +109,10 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define GLOBALSPEEDLIMIT            true  // if true, MOTOR_MAX_SPEED and MOTOR_MIN_SPEED will limit possible code bugs or inputs directly in motor.cpp        
 #define MOTOR_MAX_SPEED             0.60  // (m/s) maximum mower speed
 #define MOTOR_MIN_SPEED             0.05  // (m/s) minimal mower speed
-//use a PID controller for mowmotor to set an RPM instead of PWM?
+//use a PID controller for mowmotor to set an RPM instead of PWM? If you use this (there will be a console output with data after 10sec when you activate the mowmotor and this is enabled)
 #define USE_MOW_RPM_SET             true  // uses RPM instead of PWM to set mowmotor (RPM_FAULT_DETECTION of orig Sunray needs to be TRUE for all RPM based functions!!)
 #define MOWMOTOR_RPM_OFFSET         110   // compensate small RPM offsets (positive if RPM reading is less then RPM setpoint)
-#define MOWMOTOR_PID_KP             0.0024// (0.0024 Mowmotordriver DRV8308) (0.0018 JYQD) this is enough to compensate battery drainage over time and have a slow spinup, there may be a controlleroffset to rpm wich has to be thought of
+#define MOWMOTOR_PID_KP             0.0024// (0.0024 Mowmotordriver DRV8308) (0.0018 JYQD) this is enough to compensate battery drainage over time and have a slow spinup, there may be a controlleroffset to rpm which has to be thought of... RPM_OFFSET
 #define MOWMOTOR_PID_KI             0.002 // (0.04 (Mowmotordriver DRV8308/JYQD))
 #define MOWMOTOR_PID_KD             0.00  // (0.0000 (Mowmotordriver DRV8308/JYQD))
 //adaptive_speed settings on RPM or LOAD of mowmotor (consider if you have mowmotor odometrie)
