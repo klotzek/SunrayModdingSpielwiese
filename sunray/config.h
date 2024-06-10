@@ -143,7 +143,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MAP_STANLEY_CONTROL         true  // if true, stanley values will be mapped linear from MOTOR_MIN_SPEED-->MOTOR_MAX_SPEED with SC_P_*|SC_K_* to actual speedset of mower (recommended if you use high operation speeds)
 #define STANLEYNORMALMUL            false // if true, StanleyNormal parameters in Sunray-App will be multiplied by 10! (0,1 = 1) (for testing)
 //svol0s GPS reboot option after undocking-->mowing
-#define GPS_REBOOT                  true  // if false and DOCK_POINT_GPS_REBOOT is not 0, mower will wait at the DOCK_POINT_GPS_REBOOT point for fix without rebooting GPS 
+#define GPS_REBOOT                  true  // if false and DOCK_POINT_GPS_REBOOT is not 0, mower will wait at the DOCK_POINT_GPS_REBOOT point for fix without rebooting GPS, if false and DOCK_POINT_GPS_REBOOT = 0 this function is off (hopefully)
 #define GPSWAITREBOOT               15000 // (ms) time to wait after rebooting gps for response from ublox? 
 #define GPS_STABLETIME              30000 // (ms) GPS Time with fix solution, before continueing from DOCK_POINT_GPS_REBOOT after undock  
 #define DOCK_POINT_GPS_REBOOT       3     // (pt)(MrTree: Warning, you need 3 more dockpoints than this number, or there will be bugs! so, if there is 4 defined, you need 7 on the Map!) Svol0: dockingpoint number (counted from last dockingpoint) where the gps will be rebooted and waited for gps-fix by undocking. 0 = no gps reboot by undocking. MrTree: if not "0" and GPS_REBOOT = false, mower will wait at the point for fix without rebooting GPS
