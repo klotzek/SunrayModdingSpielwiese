@@ -125,6 +125,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MOW_RPM_RETRY               3600  // (3600)(rpm) mow motor rpm when MOW_RPMtr_RETRY (%) of MOW_RPM_NORMAL (rpm) is met. Should be higher or the same as MOW_RPM_SLOW4 (is only used by ESCAPE_LAWN)
 //escapeLawn operation, mower will backup on a mowmotor stall and retry with given values... after the first try and still stalling, it backs up and waits for mowmotor to recover
 #define ESCAPE_LAWN                 true  // mower drives reverse if true and RPM stall of mow motor is detected by more than MOW_RPMtr_STALL(percentage), only available if ENABLE_RPM_FAULT_DETECTION true
+//#define ESCAPE_LAWN_MOWMOTORPOWER   true //not yet implemented... will get rid of RPM triggers and use power of mowmotor instead of rpm readings to trigger this function (testing)
 #define MOW_RPMtr_STALL             60    // (70)(%) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will back up with ESCAPELAWNDISTANCE and ESCAPELAWNSPEED and try again
 #define MOW_RPMtr_SLOW              75    // (85)(%) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will trigger a keepSlow state with KEEPSLOWSPEED
 #define ESCAPELAWNSPEED             0.35  // (m/s) speed of mower reverse due to MOW_RPM_STALL trigger
