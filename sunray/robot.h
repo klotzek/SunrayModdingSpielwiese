@@ -191,6 +191,6 @@ bool detectLift();
 bool detectObstacle();
 bool detectObstacleRotation();
 void resetLinearMotionMeasurement(); //Svol0
-
+void resetAngularMotionMeasurement(); //MrTree
 
 #endif

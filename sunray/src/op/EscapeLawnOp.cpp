@@ -18,7 +18,6 @@ String EscapeLawnOp::name(){
 void EscapeLawnOp::begin(){
 	
 	//reverse from high grass																								//would be better to use .maps and reverse to a set gpspoint.........
-	//reverse from high grass																								//would be better to use .maps and reverse to a set gpspoint.........
     if (escapeLawnCounter == 0)	escapeLawnStartTime = millis();   															//set triggered time on entrance if escapeLawnCounter successfully resets	
 	escapeLawnCounter++;																									//iterate counter		
 	if (((escapeLawnStartTime + ESCAPELAWNTIMER) < millis()) && (escapeLawnCounter <= MAXRETRY)) escapeLawnCounter = 0;		//reset counter if ESCAPELAWNTIME succeded without too many triggers of EscapeLawn
@@ -46,7 +45,7 @@ void EscapeLawnOp::run(){
     battery.resetIdle();		 																																																	
 	if (escapeLawnCounter > MAXRETRY) {
 		if ((MAXRETRYOBSTACLE)&&(OBSTACLE_AVOIDANCE)){
-		  CONSOLE.println("EscapeLawnOp:: MAXRETRY´s! too many retries in configured time (ESCAPELAWNTIMER), triggering Obstacleavoidance");	      
+		  CONSOLE.println("EscapeLawnOp:: MAXRETRYï¿½s! too many retries in configured time (ESCAPELAWNTIMER), triggering Obstacleavoidance");	      
           changeOp(escapeReverseOp, true);
 		  escapeLawnCounter = 0;
 		  escapeFinished = true;

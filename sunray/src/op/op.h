@@ -67,7 +67,7 @@ class Op {
     virtual void onLiftTriggered();
     virtual void onOdometryError();
     virtual void onMotorOverload();
-	virtual void onMowRPMStall();		//MrTree
+	  virtual void onMowRPMStall();		//MrTree
     virtual void onMotorError();
     virtual void onObstacle();
     virtual void onObstacleRotation();
@@ -114,7 +114,7 @@ class MowOp: public Op {
   public:	
     bool lastMapRoutingFailed;
     int mapRoutingFailedCounter;
-	int iterationcounter = 0;
+	  int iterationcounter = 0;
     MowOp();
     virtual String name() override;
     virtual void begin() override;
@@ -124,12 +124,12 @@ class MowOp: public Op {
     virtual void onGpsFixTimeout() override;
     virtual void onOdometryError() override;
     virtual void onMotorOverload() override;
-	virtual void onMowRPMStall() override;		//MrTree
+	  virtual void onMowRPMStall() override;		//MrTree
     virtual void onMotorError() override;
     virtual void onRainTriggered() override;
     virtual void onTempOutOfRangeTriggered() override;    
     virtual void onBatteryLowShouldDock() override;
-	virtual void onTimetableStartMowing() override;    
+	  virtual void onTimetableStartMowing() override;    
     virtual void onTimetableStopMowing() override; 
     virtual void onObstacle() override;
     virtual void onObstacleRotation() override;
@@ -259,7 +259,9 @@ class EscapeReverseOp: public Op {
 
 // escape obstacle (drive forward)
 class EscapeForwardOp: public Op {
-  public:        
+  public:
+    int escapeForwardCounter = 0;		        //MrTree				
+	  unsigned long escapeForwardStartTime;   //MrTree
     unsigned long driveForwardStopTime;
     virtual String name() override;
     virtual void begin() override;
