@@ -144,6 +144,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_NO_ROTATION_DELAY      2000  // (ms) gives the mower time to surpass the point before dockpoint by given time, after the time angular will be zero! 
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
 #define SUPER_SPIKE_ELIMINATOR      0     // advanced spike elimination  (experimental, comment out to disable)
+//obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
+#define CHANGE_OBSTACLE_ROTATION    true  // if true, after 2 times moving forward due to an IMUyaw difference, escapeReverse with obstacle is triggered (prevent mower going forward if it can´t rotate and already tried to evade with escapeForward op) 
 //try to fix 8308 driver with pwm (keep FALSE if you have no issues or no DRV8308)
 #define DRV8308_FIX                 false // only for testing, if true and charger is connected, drivers pwm will be 1 for DRVFIXITERATIONS iteration of code everytime DRVFIXTIMER is met
 #define DRVFIXITERATIONS            5     // iterations of code for pwm of drivers to be PWM_GEAR and PWM_MOW (below)
@@ -362,7 +364,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // https://wiki.ardumower.de/index.php?title=Free_wheel_sensor
 #define BUMPER_ENABLE true
 //#define BUMPER_ENABLE false
-#define BUMPER_DEADTIME 200  // linear motion dead-time (ms) after bumper is allowed to trigger
+#define BUMPER_DEADTIME 500  // linear motion dead-time (ms) after bumper is allowed to trigger
 #define BUMPER_TRIGGER_DELAY  75 // bumper must be active for (ms) to trigger
 #define BUMPER_MAX_TRIGGER_TIME 20  // if bumpersensor stays permanent triggered mower will stop with bumper error (time in seconds; 0 = disabled)
 
@@ -411,8 +413,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // detect if robot is actually moving (obstacle detection via GPS feedback)
 #define GPS_MOTION_DETECTION          true    // if robot is not moving trigger obstacle avoidance (recommended)
 //#define GPS_MOTION_DETECTION        false   // ignore if robot is not moving
-#define GPS_MOTION_DETECTION_TIMEOUT  5       // timeout for motion (secs)
-#define GPS_MOTION_DETECTION_DELTA    0.2     // distance mower must be moving in timeouttime until gps no motion is triggered
+#define GPS_MOTION_DETECTION_TIMEOUT  3       // (5) timeout for motion (secs)
+#define GPS_MOTION_DETECTION_DELTA    0.10     // (0.20) distance mower must be moving in timeouttime until gps no motion is triggered
 
 // configure ublox f9p with optimal settings (will be stored in f9p RAM only)
 // NOTE: due to a PCB1.3 bug GPS_RX pin is not working and you have to fix this by a wire:
@@ -439,8 +441,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 #define OBSTACLE_DETECTION_ROTATION true // detect robot rotation stuck (requires IMU)
 //#define OBSTACLE_DETECTION_ROTATION false   // NOTE: recommended to turn this off for slope environment   
-#define ROTATION_TIMEOUT              15000    //15000 Timeout of rotation movement that triggers an obstaclerotation
-#define ROTATION_TIME                 3000    //3000 Time the code expects to rotate without a IMU yaw difference
+#define ROTATION_TIMEOUT              8000    //15000 Timeout of rotation movement that triggers an obstacle with escapeReverse
+#define ROTATION_TIME                 1500    //3000 Time the code expects to rotate without a IMU yaw difference
 
 
 #define OBSTACLE_AVOIDANCE true   // try to find a way around obstacle

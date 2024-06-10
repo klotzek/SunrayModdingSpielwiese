@@ -66,7 +66,7 @@ void EscapeLawnOp::run(){
 		if (!motor.switchedOn) {
 		  CONSOLE.println("EscapeLawnOp::run Mow motor was switched off canceling Operation!");
 		   //motor.setMowState(true);
-		   escapeFinished = true; //significant change?
+		   escapeFinished = true; 							//significant change?
 		   changeOp(*nextOp, false);						// continue current operation
 		   return;	  	
 		}
