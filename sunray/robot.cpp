@@ -933,11 +933,13 @@ void tuningOutput(){
       CONSOLE.print(" V, mowMotorPower: ");
       CONSOLE.print(motor.mowPowerAct);
       CONSOLE.println(" Watt");
+      ///////////////
       CONSOLE.print("                               speedcurr: ");
       CONSOLE.print(motor.speedcurr);
       CONSOLE.print(" m/s, Speedfactor: ");
       CONSOLE.println(motor.SpeedFactor);
       CONSOLE.println();
+      /////////////
   CONSOLE.print("motor.cpp: sense()          -- ");
       CONSOLE.print("mowPowerAct: ");     
       CONSOLE.print(motor.mowPowerAct);
@@ -946,16 +948,29 @@ void tuningOutput(){
       CONSOLE.print(" A, motorMowSenseLP: ");
       CONSOLE.print(motor.motorMowSenseLP);
       CONSOLE.println(" A");
+      /////////////////////////
       CONSOLE.print("                               motorLeftSense: ");
       CONSOLE.print(motor.motorLeftSense);
       CONSOLE.print(" A, motorLeftSenseLP: ");
       CONSOLE.print(motor.motorLeftSenseLP);;
       CONSOLE.println(" A");
+      /////////////////////////
       CONSOLE.print("                               motorRightSense: ");
       CONSOLE.print(motor.motorRightSense);
       CONSOLE.print(" A, motorRightSenseLP: ");
       CONSOLE.print(motor.motorRightSenseLP);
       CONSOLE.println(" A");
+      CONSOLE.println();
+  CONSOLE.print("IMU                         -- ");
+      CONSOLE.print("diffIMUWheelYawSpeedLP = ");
+      CONSOLE.print(diffIMUWheelYawSpeedLP/PI*180.0);
+      CONSOLE.print(" deg/s, stateDeltaSpeedIMU = ");
+      CONSOLE.print(stateDeltaSpeedIMU/PI*180.0);
+      CONSOLE.print(" deg/s, stateDeltaSpeedWheels = ");
+      CONSOLE.print(stateDeltaSpeedWheels/PI*180.0);
+      CONSOLE.print(" deg/s, stateDeltaSpeedLP = ");
+      CONSOLE.print(stateDeltaSpeedLP/PI*180.0);
+      CONSOLE.println(" deg/s");
       CONSOLE.println("<----------------------------------------------------");
       CONSOLE.println();
 }
