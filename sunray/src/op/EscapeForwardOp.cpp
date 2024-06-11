@@ -15,14 +15,16 @@ String EscapeForwardOp::name(){
 
 void EscapeForwardOp::begin(){
     // rotate stuck avoidance
+    /* to be removed....
     resetAngularMotionMeasurement();                                                        // we couldnt´t rotate, so we reset the measurement on entrance..
     resetLinearMotionMeasurement();                                                         // linear should be zero anyway and reset this?
-    //resetOverallMotionTimeout();                                                          // maybe gps should trigger the escapeReverseOp, but it´s way to long.. all triggers are too long?
+    resetOverallMotionTimeout();                                                          // maybe gps should trigger the escapeReverseOp, but it´s way to long.. all triggers are too long?
+    */
     if (escapeForwardCounter == 0)	escapeForwardStartTime = millis();   					// set triggered time on entrance if escapeForwardCounter successfully resets	
 	escapeForwardCounter++;                                                                 //MrTree iterate counter
     if (((escapeForwardStartTime + 10000) < millis()) && (escapeForwardCounter < 5)) escapeForwardCounter = 0;		//reset counter if escapeForward succeded without too many triggers in given time
     driveForwardStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000); 	//MrTree just add a constant time to compensate offsets?
-	//if ((!MOWMOTORSTOPONOBSTACLE) && (previousOp == &mowOp)) {
+	//if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (previousOp == &mowOp)) {
 	//  if (!motor.switchedOn) {
 	//	  CONSOLE.println("EscapeForwardOp:: Overriding mowmotor stop! (MOWMOTORSTOPONOBSTACLE = false)");
 	//	  motor.setMowState(true);	

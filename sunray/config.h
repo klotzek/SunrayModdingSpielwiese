@@ -346,7 +346,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MQTT_SERVER  "192.168.178.2"                 // your MQTT broker IP or hostname (e.g. "broker.mqtt-dashboard.com")
 #define MQTT_PORT  1883
 #define MQTT_USER "mqtt"
-#define MQTT_PASS "Madcat!11"
+#define MQTT_PASS "*******"
 
 // ------ ultrasonic sensor -----------------------------
 // see Wiki on how to install the ultrasonic sensors: 

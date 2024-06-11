@@ -18,7 +18,7 @@ String EscapeReverseOp::name(){
 void EscapeReverseOp::begin(){
     // obstacle avoidance
     driveReverseStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000); //+500); 	//MrTree just take a deadtime of 500ms to compensate deadtimes
-	//if ((!MOWMOTORSTOPONOBSTACLE) && (previousOp == &mowOp)) {
+	//if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (previousOp == &mowOp)) {
 	//	if (!motor.switchedOn) {
 	//	  CONSOLE.println("EscapeReverseOp:: Overriding mowmotor stop! (MOWMOTORSTOPONOBSTACLE = false)");
 	//	  motor.setMowState(true);	
