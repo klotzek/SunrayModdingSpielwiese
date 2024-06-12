@@ -87,15 +87,24 @@ bool MpuDriver::isDataAvail(){
     quatX = mpu.qx;
     quatY = mpu.qy;
     quatZ = mpu.qz;
-    mpu.computeEulerAngles(false);      
-    //CONSOLE.print(imu.ax);
-    //CONSOLE.print(",");
-    //CONSOLE.print(imu.ay);
-    //CONSOLE.print(",");
-    //CONSOLE.println(imu.az);
+    mpu.computeEulerAngles(false);
+    /*     
+    CONSOLE.print("IMU ax, ay, az = ");
+    CONSOLE.print(mpu.ax);
+    CONSOLE.print(", ");
+    CONSOLE.print(mpu.ay);
+    CONSOLE.print(", ");
+    CONSOLE.println(mpu.az);
+    */
     roll = mpu.roll;
     pitch = mpu.pitch;
-    yaw = mpu.yaw;    
+    yaw = mpu.yaw;
+
+    heading = mpu.computeCompassHeading; //MrTree heading of mpu
+    ax = mpu.calcAccel(ax);    //MrTree x acceleration of mpu
+    ay = mpu.calcAccel(ay);    //MrTree y acceleration of mpu
+    az = mpu.calcAccel(az);    //MrTree z acceleration of mpu
+
     return true;
 }         
     

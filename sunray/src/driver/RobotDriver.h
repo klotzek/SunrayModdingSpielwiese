@@ -107,6 +107,10 @@ class ImuDriver {
     float roll; // euler radiant
     float pitch; // euler radiant
     float yaw;   // euler radiant
+    float heading; //MrTree Compass direction, try getting more Information of MPU
+    float ax; //MrTree x-Acceleration of IMU
+    float ay; //MrTree y-Acceleration of IMU
+    float az; //MrTree z-Acceleration of IMU
     bool imuFound;   
     // detect module (should update member 'imuFound')
     virtual void detect() = 0;             
