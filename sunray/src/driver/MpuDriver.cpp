@@ -99,11 +99,14 @@ bool MpuDriver::isDataAvail(){
     roll = mpu.roll;
     pitch = mpu.pitch;
     yaw = mpu.yaw;
-
-    heading = mpu.computeCompassHeading; //MrTree heading of mpu
-    ax = mpu.calcAccel(ax);    //MrTree x acceleration of mpu
-    ay = mpu.calcAccel(ay);    //MrTree y acceleration of mpu
-    az = mpu.calcAccel(az);    //MrTree z acceleration of mpu
+    mpu.computeCompassHeading();
+    mpu.calcAccel(X_AXIS);
+    mpu.calcAccel(Y_AXIS);
+    mpu.calcAccel(Z_AXIS);
+    heading = mpu.heading; //MrTree heading of mpu
+    ax = mpu.ax;    //MrTree x acceleration of mpu
+    ay = mpu.ay;    //MrTree y acceleration of mpu
+    az = mpu.az;    //MrTree z acceleration of mpu
 
     return true;
 }         

@@ -187,7 +187,7 @@ void Motor::setLinearAngularSpeed(float linear, float angular, bool useLinearRam
     linear = 0;                                     //workaround
     angular = 0; 
    }
-   if (linear == 0)resetLinearMotionMeasurement(); //MrTree  
+
    setLinearAngularSpeedTimeout = millis() + 1000;
    setLinearAngularSpeedTimeoutActive = true;
    linearCurrSet = linear;//MrTree
@@ -216,16 +216,21 @@ void Motor::setLinearAngularSpeed(float linear, float angular, bool useLinearRam
    float rspeed = linearSpeedSet + angularSpeedSet * (wheelBaseCm /100.0 /2);          
    float lspeed = linearSpeedSet - angularSpeedSet * (wheelBaseCm /100.0 /2);          
    // RPM = V / (2*PI*r) * 60
+   if (fabs(linearSpeedSet) < MOTOR_MIN_SPEED) resetLinearMotionMeasurement(); //MrTree less than MOTOR_MIN_SPEED 
+   if (fabs(angularSpeedSet) <= 0,02) resetAngularMotionMeasurement(); //MrTree less then 1deg/s
+
    motorRightRpmSet =  rspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;   
    motorLeftRpmSet = lspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;   
-//   CONSOLE.print("setLinearAngularSpeed ");
-//   CONSOLE.print(linear);
-//   CONSOLE.print(",");
-//   CONSOLE.print(angular); 
-//   CONSOLE.print(",");
-//   CONSOLE.print(lspeed);
-//   CONSOLE.print(",");
-//   CONSOLE.println(rspeed);
+   /*
+   CONSOLE.print("setLinearAngularSpeed ");
+   CONSOLE.print(linear);
+   CONSOLE.print(",");
+   CONSOLE.print(angular); 
+   CONSOLE.print(",");
+   CONSOLE.print(lspeed);
+   CONSOLE.print(",");
+   CONSOLE.println(rspeed);
+   */
 }
 
 

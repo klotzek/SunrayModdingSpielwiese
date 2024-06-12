@@ -545,7 +545,8 @@ void trackLine(bool runControl) {
   }
 
   if (runControl) {
-
+    if (angular == 0) resetAngularMotionMeasurement(); //MrTree
+    if (linear == 0) resetLinearMotionMeasurement();  //MrTree
     if (angleToTargetFits != langleToTargetFits) {
       CONSOLE.print("Linetracker.cpp angular: ");
       CONSOLE.println(angular*180.0/PI);

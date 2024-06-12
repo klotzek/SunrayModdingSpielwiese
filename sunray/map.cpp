@@ -1128,6 +1128,8 @@ bool Map::findObstacleSafeMowPoint(Point &findPathToPoint){
   bool safe;  
   Point dst;  
   while (true){
+    resetAngularMotionMeasurement(); //MrTree
+    resetLinearMotionMeasurement(); //MrTree
     safe = true;  
     dst.assign(mowPoints.points[mowPointsIdx]);
     CONSOLE.print("findObstacleSafeMowPoint checking ");    
@@ -2069,7 +2071,10 @@ bool Map::findPath(Point &src, Point &dst){
       if (millis() >= nextProgressTime){
         nextProgressTime = millis() + 4000;          
         CONSOLE.print(".");
-        watchdogReset();     
+        watchdogReset();
+        resetAngularMotionMeasurement(); //MrTree
+        resetLinearMotionMeasurement(); //MrTree
+        resetOverallMotionTimeout(); //MrTree     
       }
       timeout--;            
       if (timeout == 0){
@@ -2165,7 +2170,10 @@ bool Map::findPath(Point &src, Point &dst){
     //delay(8000); // simulate a busy path finder
 
     resetImuTimeout();
-
+    resetAngularMotionMeasurement(); //MrTree
+    resetLinearMotionMeasurement(); //MrTree
+    resetOverallMotionTimeout(); //MrTree     
+    
     if ((currentNode != NULL) && (distance(*currentNode->point, *end->point) < 0.02)) {
       Node *curr = currentNode;
       int nodeCount = 0;
@@ -2202,6 +2210,9 @@ bool Map::findPath(Point &src, Point &dst){
   
   checkMemoryErrors();  
   resetImuTimeout();
+  resetAngularMotionMeasurement(); //MrTree
+  resetLinearMotionMeasurement(); //MrTree
+  resetOverallMotionTimeout(); //MrTree     
   return true;  
 }
 

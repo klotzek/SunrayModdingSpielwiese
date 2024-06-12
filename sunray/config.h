@@ -172,7 +172,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define OUTPUT_ENABLED              false // output standard Sunray_FW LOG in serial monitor and SDlog
 #define CALC_LOOPTIME               false // calc and output the sunray loop time in serial monitor and SDlog
 #define TUNING_LOG                  true  // outputs valuable states of sunray for debugging tuning functions or just for observation
-#define TUNING_LOG_TIME             5000  // (ms) periodic output time of TUNING_LOG
+#define TUNING_LOG_TIME             2500  // (ms) periodic output time of TUNING_LOG
 
 //Modsection END
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 #define MOTOR_FAULT_CURRENT 3.0    // gear motors fault current (amps)
 #define MOTOR_TOO_LOW_CURRENT 0.005   // gear motor too low current (amps)
-#define MOTOR_OVERLOAD_CURRENT 1.0    // gear motors overload current (amps)
+#define MOTOR_OVERLOAD_CURRENT 1.5    // gear motors overload current (amps)
 
 #define USE_LINEAR_SPEED_RAMP  true      // use a speed ramp for the linear speed //MrTree overshooting is reduced, deceleration is more agressive: keep enabled! (recommended)
 //#define USE_LINEAR_SPEED_RAMP  false      // do not use a speed ramp 
@@ -454,8 +454,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 #define OBSTACLE_DETECTION_ROTATION true // detect robot rotation stuck (requires IMU)
 //#define OBSTACLE_DETECTION_ROTATION false   // NOTE: recommended to turn this off for slope environment   
-#define ROTATION_TIMEOUT              8000    //15000 Timeout of rotation movement that triggers an obstacle with escapeReverse
-#define ROTATION_TIME                 1500    //3000 Time the code expects to rotate without a IMU yaw difference
+#define ROTATION_TIMEOUT              5000    //15000 Timeout of rotation movement that triggers an obstacle with escapeReverse
+#define ROTATION_TIME                 1000    //3000 Time the code expects to rotate without a IMU yaw difference
 
 
 #define OBSTACLE_AVOIDANCE true   // try to find a way around obstacle

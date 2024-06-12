@@ -703,8 +703,8 @@ bool robotShouldMoveForward(){
 bool robotShouldRotate(){
   if ((fabs(motor.linearSpeedSet) < MOTOR_MIN_SPEED/2) &&  (((fabs(motor.angularSpeedSet))/PI*180.0) > 2.5)) return (true);//MrTree changed to deg/s (returned true before if angularspeedset > 0.57deg/s), reduced linearSpeedSet condition
   else {
-    stateDeltaSpeedLP = 0;      //MrTree reset measurement
-    diffIMUWheelYawSpeed = 0;   //MrTree reset measurement
+    //stateDeltaSpeedLP = 0;      //MrTree reset measurement
+    //diffIMUWheelYawSpeed = 0;   //MrTree reset measurement
     diffIMUWheelYawSpeedLP = 0; //MrTree reset measurement
     return (false); 
   }
@@ -992,11 +992,11 @@ void tuningOutput(){
       CONSOLE.println(" mm/s²");
       CONSOLE.print("                               roll = ");
       CONSOLE.print(imuDriver.roll);
-      CONSOLE.print(" rad/s, pitch = "); 
+      CONSOLE.print(" rad, pitch = "); 
       CONSOLE.print(imuDriver.pitch);
-      CONSOLE.print("rad/s, yaw = ");
+      CONSOLE.print("rad, yaw = ");
       CONSOLE.print(imuDriver.yaw);
-      CONSOLE.println(" rad/s");
+      CONSOLE.println(" rad");
       CONSOLE.println("<----------------------------------------------------");
       CONSOLE.println();
 }
