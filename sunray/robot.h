@@ -193,5 +193,6 @@ bool detectObstacleRotation();
 void resetLinearMotionMeasurement(); //Svol0
 void resetAngularMotionMeasurement(); //MrTree
 void resetOverallMotionTimeout(); //MrTree
+bool robotShouldRotate(); //MrTree
 
 #endif

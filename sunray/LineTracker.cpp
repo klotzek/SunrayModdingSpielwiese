@@ -36,6 +36,8 @@ Point lastPoint;
 Point last_rotation_target;
 bool rotateLeft = false;
 bool rotateRight = false;
+bool shouldRotate = false;              //MrTree
+bool shouldRotatel = false;             //MrTree
 bool angleToTargetFits = false;
 bool angleToTargetPrecise = true;
 bool langleToTargetFits = false;
@@ -558,9 +560,15 @@ void trackLine(bool runControl) {
         CONSOLE.println(linear);        
     }
     lastSpeed = linear;
-     
-
     
+    shouldRotate = robotShouldRotate();
+    if (shouldRotate != shouldRotatel){
+      CONSOLE.print("Linetracker.cpp ShouldRotate = ");
+      CONSOLE.println(shouldRotate);
+      shouldRotatel = shouldRotate;
+    }
+    
+
     if ((mow != motor.switchedOn) && (motor.enableMowMotor)){
       CONSOLE.print("Linetracker.cpp changes mow status: ");
       CONSOLE.println(mow);

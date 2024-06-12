@@ -696,12 +696,18 @@ bool robotShouldMove(){
 }
 
 bool robotShouldMoveForward(){
-   return ( motor.linearSpeedSet >= MOTOR_MIN_SPEED );   //MrTree changed from 0.001
+   return ( motor.linearSpeedSet >= MOTOR_MIN_SPEED/2 );   //MrTree changed from 0.001, reduced linearSpeedSet condition
 }
 
 // should robot rotate?
 bool robotShouldRotate(){
-  return ( (fabs(motor.linearSpeedSet) < MOTOR_MIN_SPEED) &&  (fabs(motor.angularSpeedSet) > 0.01) ); //MrTree changed from 0.001 and 0.001
+  if ((fabs(motor.linearSpeedSet) < MOTOR_MIN_SPEED/2) &&  (((fabs(motor.angularSpeedSet))/PI*180.0) > 2.5)) return (true);//MrTree changed to deg/s (returned true before if angularspeedset > 0.57deg/s), reduced linearSpeedSet condition
+  else {
+    stateDeltaSpeedLP = 0;      //MrTree reset measurement
+    diffIMUWheelYawSpeed = 0;   //MrTree reset measurement
+    diffIMUWheelYawSpeedLP = 0; //MrTree reset measurement
+    return (false); 
+  }
 }
 
 // should robot be in motion? NOTE: function ignores very short motion pauses (with motion low-pass filtering)
