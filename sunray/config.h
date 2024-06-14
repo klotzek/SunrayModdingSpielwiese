@@ -105,7 +105,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define SONARSPEED                  0.15  // (m/s) if sonar enabled and used, on sonar trigger mower will use SONARSPEED
 #define DOCKANGULARSPEED            25.0  // (deg/s) the turning rate of mower when docking (no change needed, keep low; tune at your needs if you must)
 #define OBSTACLEAVOIDANCESPEED      0.35  // (m/s) on obstacle evade operations, mower will use OBSTACLEAVOIDANCESPEED
-#define OBSTACLEAVOIDANCEWAY        0.45  // (m) distance in meters the mover will drive reverse in case of obstacle triggers
+#define ESCAPE_REVERSE_WAY          0.45  // (m) distance in meters the mover will drive reverse in escapeReverseOp if obstacle triggered eg. by bumper org gps no speed
+#define ESCAPE_FORWARD_WAY          0.25  // (m) distance in meters the mover will drive forward in escapeForwardOp if obstacle triggered by OBSTACLE_ROTATION (no rotation)
 #define GLOBALSPEEDLIMIT            true  // if true, MOTOR_MAX_SPEED and MOTOR_MIN_SPEED will limit possible code bugs or inputs directly in motor.cpp        
 #define MOTOR_MAX_SPEED             0.60  // (m/s) maximum mower speed
 #define MOTOR_MIN_SPEED             0.05  // (m/s) minimal mower speed
@@ -119,7 +120,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define ADAPTIVE_SPEED              true  // if true, mowing speed will adjust to RPM or MOWMOTORPOWER of mow motor on all forward speed mow operations, only available if ENABLE_RPM_FAULT_DETECTION true
 #define MOWMOTORPOWER               true  // uses Power (Watts) for adaptive speed instead of mowRPM (best)
 #define MOWPOWERMIN                 10.0  // (Watt) idle Power of Mowmotor or minimum load power of mowmotor, if under this load mower will have maximum speed
-#define MOWPOWERMAX                 60.0  // (Watt) max load power of mowmotor, when hitting this load mower will be at minspeed
+#define MOWPOWERMAX                 50.0  // (Watt) max load power of mowmotor, when hitting this load mower will be at minspeed
 #define MOW_RPM_NORMAL              3000  // (3200)(rpm) mow motor rpm for mowing (WARNING, you should check if your rpm output works as espected! if it does work, but the reading is wrong, you need to calculate the mowmotorticks per second according to realistic rpm!)
 #define MOW_RPM_SLOW                3300  // (3400)(rpm) mow motor rpm when MOW_RPMtr_SLOW (%) of MOW_RPM_NORMAL (rpm) is met. Should be higher or the same as MOW_RPM_NORMAL
 #define MOW_RPM_RETRY               3600  // (3600)(rpm) mow motor rpm when MOW_RPMtr_RETRY (%) of MOW_RPM_NORMAL (rpm) is met. Should be higher or the same as MOW_RPM_SLOW4 (is only used by ESCAPE_LAWN)
@@ -130,7 +131,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MOW_RPMtr_SLOW              75    // (85)(%) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will trigger a keepSlow state with KEEPSLOWSPEED
 #define ESCAPELAWNSPEED             0.35  // (m/s) speed of mower reverse due to MOW_RPM_STALL trigger
 #define ESCAPELAWNDISTANCE          0.5   // (m) distance mower reverses with ESCAPELAWNSPEED due to MOW_RPM_STALL triggered
-#define ESCAPELAWNWAITTIME          5000  // (ms)after Reversing, mower will wait for this time (workaround if RPM needs time to recover)
+#define ESCAPELAWNWAITTIME          5000  // (ms)after reversing the second time within ESCAPELAWNTIMER, mower will wait for this time before continue (recover rpm)
 #define ESCAPELAWNTIMER             20000 // (ms)timer to reset retries of ESCAPELAWN, if time is met and retries stay under MAXRETRY triggercounter will reset, otherwise there will be an obstacle error
 #define ESCAPELAWN_DEADTIME         3000  // (ms)deadtime between allowed ESCAPELAWN triggers (deadtime should be the reverse time of action and be calculated in code :| )
 #define MAXRETRY                    5     // number of possible retries of ESCAPELAWN within ESCAPELAWNTIMER until there will be an obstacle error or obstacle avoidance
@@ -150,20 +151,20 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_SLOW_ONLY_LAST_POINTS  4     // (pt) Svol0: dockingpoint number (counted from last dockingpoint) where slow speed will be used to reach the dockingstation (0 = all points will be reached with slow speed)
 //keep mower from rotating in dock by all means, needs situation dependent tuning, so be aware!
 #define DOCK_NO_ROTATION            true  // if true, rotation for the mower when reaching or leaving the last dockpoint is not allowed! Make sure mower comes just before the dock in a straight line from the point before, then the last point is the dockposition, on that path angular steering is not allowed!
-#define DOCK_NO_ROTATION_TIMER      16000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
+#define DOCK_NO_ROTATION_TIMER      12000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
 #define DOCK_NO_ROTATION_DELAY      2000  // (ms) gives the mower time to surpass the point before dockpoint by given time, after this timer angular will be clamped to zero! 
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
 //other tests
 #define SUPER_SPIKE_ELIMINATOR      0     // advanced spike elimination  (experimental, comment out to disable)
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
 #define CHANGE_OBSTACLE_ROTATION    true  // if true, after 2 times moving forward due to an IMUyaw difference, escapeReverse with obstacle is triggered (prevent mower going forward if it can´t rotate and already tried to evade with escapeForward op) 
-//try to fix 8308 driver with pwm (keep FALSE if you have no issues or no DRV8308)
+//try to fix 8308 driver with pwm (keep FALSE if you have no issues or no DRV8308, this is for experiments only)
 #define DRV8308_FIX                 false // only for testing, if true and charger is connected, drivers pwm will be 1 for DRVFIXITERATIONS iteration of code everytime DRVFIXTIMER is met
 #define DRVFIXITERATIONS            5     // iterations of code for pwm of drivers to be PWM_GEAR and PWM_MOW (below)
 #define DRVFIXTIMER                 60000 // (ms) timer for DRV8308_FIX, everytime timer is met, function will run once for DRVFIXITERATIONS and set pwm of drivers to 1
 #define PWM_GEAR                    1     // PWM for DRVFIX efforts..
 #define PWM_MOW                     1     // PWM for DRVFIX efforts..
-//try to fix 8308 driver with moving, only works reliable with "DOCK_RETRY_TOUCH = true"! (keep FALSE if you have no issues or no DRV8308)
+//try to fix 8308 driver with moving, only works reliable with "DOCK_RETRY_TOUCH = true"! tested and seems to be a valid workaround for the DRV8308 related dock stuck issue (keep FALSE if you have no issues or no DRV8308)
 #define MOVE_REGULARLY              true  // if true, mower will move in dock in given MOVE_ADAIN_AFTER time, kk: move mower to keep 8308 alive
 #define MOVE_AGAIN_AFTER            10.0  // kk: move the mower every xx minutes
 #define MOVING_TIME                 500   // kk: time (ms) for moving back
@@ -171,9 +172,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //LOG
 #define OUTPUT_ENABLED              false // output standard Sunray_FW LOG in serial monitor and SDlog
 #define CALC_LOOPTIME               false // calc and output the sunray loop time in serial monitor and SDlog
-#define TUNING_LOG                  true  // outputs valuable states of sunray for debugging tuning functions or just for observation
+#define TUNING_LOG                  true  // outputs valuable var-states of sunray for debugging tuning functions or just for observation and insights
 #define TUNING_LOG_TIME             2500  // (ms) periodic output time of TUNING_LOG
-
+#define DEBUG_LOG                   true  // adds output informations on changed mower states, functions and operations
 //Modsection END
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

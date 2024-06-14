@@ -17,7 +17,7 @@ String EscapeReverseOp::name(){
 
 void EscapeReverseOp::begin(){
     // obstacle avoidance
-    driveReverseStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000); //+500); 	//MrTree just take a deadtime of 500ms to compensate deadtimes
+    driveReverseStopTime = millis() + (ESCAPE_REVERSE_WAY/OBSTACLEAVOIDANCESPEED*1000); //+500); 	//MrTree just take a deadtime of 500ms to compensate deadtimes
 	//if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (previousOp == &mowOp)) {
 	//	if (!motor.switchedOn) {
 	//	  CONSOLE.println("EscapeReverseOp:: Overriding mowmotor stop! (MOWMOTORSTOPONOBSTACLE = false)");
@@ -45,7 +45,7 @@ void EscapeReverseOp::run(){
        // wait until mowing motor is running
     //   if (!buzzer.isPlaying()) buzzer.sound(SND_WARNING, true);
     //    motor.setLinearAngularSpeed(0,0,false);
-	//	driveReverseStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000);
+	//	driveReverseStopTime = millis() + (ESCAPE_REVERSE_WAY/OBSTACLEAVOIDANCESPEED*1000);
     //  }
 	//else {
        motor.setLinearAngularSpeed(-OBSTACLEAVOIDANCESPEED,0,false);				

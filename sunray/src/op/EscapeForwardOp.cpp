@@ -23,7 +23,7 @@ void EscapeForwardOp::begin(){
     if (escapeForwardCounter == 0)	escapeForwardStartTime = millis();   					// set triggered time on entrance if escapeForwardCounter successfully resets	
 	escapeForwardCounter++;                                                                 //MrTree iterate counter
     if (((escapeForwardStartTime + 10000) < millis()) && (escapeForwardCounter < 5)) escapeForwardCounter = 0;		//reset counter if escapeForward succeded without too many triggers in given time
-    driveForwardStopTime = millis() + (OBSTACLEAVOIDANCEWAY/OBSTACLEAVOIDANCESPEED*1000); 	//MrTree just add a constant time to compensate offsets?
+    driveForwardStopTime = millis() + (ESCAPE_FORWARD_WAY/OBSTACLEAVOIDANCESPEED*1000); 	//MrTree just add a constant time to compensate offsets?
 	//if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (previousOp == &mowOp)) {
 	//  if (!motor.switchedOn) {
 	//	  CONSOLE.println("EscapeForwardOp:: Overriding mowmotor stop! (MOWMOTORSTOPONOBSTACLE = false)");

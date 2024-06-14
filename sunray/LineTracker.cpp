@@ -547,7 +547,7 @@ void trackLine(bool runControl) {
   if (runControl) {
     if (angular == 0) resetAngularMotionMeasurement(); //MrTree
     if (linear == 0) resetLinearMotionMeasurement();  //MrTree
-    if (angleToTargetFits != langleToTargetFits) {
+    if ((angleToTargetFits != langleToTargetFits)&&(DEBUG_LOG)) {
       CONSOLE.print("Linetracker.cpp angular: ");
       CONSOLE.println(angular*180.0/PI);
       //CONSOLE.print("angleToTargetFits: ");
@@ -556,21 +556,21 @@ void trackLine(bool runControl) {
       //CONSOLE.println(trackerDiffDelta);
       langleToTargetFits = angleToTargetFits;
     }
-    if (linear != lastSpeed){ 
+    if ((linear != lastSpeed)&&(DEBUG_LOG)){ 
         CONSOLE.print("Linetracker.cpp linear: ");
         CONSOLE.println(linear);        
     }
     lastSpeed = linear;
     
     shouldRotate = robotShouldRotate();
-    if (shouldRotate != shouldRotatel){
+    if ((shouldRotate != shouldRotatel)&&(DEBUG_LOG)){
       CONSOLE.print("Linetracker.cpp ShouldRotate = ");
       CONSOLE.println(shouldRotate);
       shouldRotatel = shouldRotate;
     }
     
 
-    if ((mow != motor.switchedOn) && (motor.enableMowMotor)){
+    if ((mow != motor.switchedOn) && (motor.enableMowMotor)&&(DEBUG_LOG)){
       CONSOLE.print("Linetracker.cpp changes mow status: ");
       CONSOLE.println(mow);
       motor.setMowState(mow); 
@@ -586,7 +586,7 @@ void trackLine(bool runControl) {
       if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){
        // wait until mowing motor is running
        if (!buzzer.isPlaying()) buzzer.sound(SND_WARNING, true);
-       //CONSOLE.println("linetracker.cpp trying to wait for mowmotor....");
+        if (DEBUG_LOG) CONSOLE.println("linetracker.cpp trying to wait for mowmotor....");
         linear = 0;
         angular = 0; 
       }
@@ -598,14 +598,14 @@ void trackLine(bool runControl) {
   x_new = target.x();
   y_new = target.y();
 
-  if ((x_old != x_new) || (y_old != y_new)){
+  if (((x_old != x_new) || (y_old != y_new))&&(DEBUG_LOG)){
   CONSOLE.print("LineTracker.cpp targetPoint  x = ");
   CONSOLE.print(x_new);
   CONSOLE.print(" y = ");
   CONSOLE.println(y_new);
-  }
   x_old = x_new;
   y_old = y_new;
+  }
   
   if (targetReached) {
     
