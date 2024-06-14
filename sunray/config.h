@@ -91,7 +91,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //Experimental Modfunctions/Options/Speeds/Time etc. for different stuff and movement operations. Please read the descriptions. Cheers.
 //Mower general times and speeds with their condition parameters
 #define MOWSPINUPTIME               10000 // (ms) Adds time to rotate mowingdisc before starting moving, use high value if you enable ESCAPE_LAWN for good reading of idle mow motor RPM
-#define OVERLOADSPEED               0.15  // (m/s) if there is a overloadcurrent of a motordriver, mower will use OVERLOADSPEED if ENABLE_OVERLOAD_DETECTION false
+#define OVERLOADSPEED               0.15  // (m/s) if there is a overloadcurrent of a motordriver, mower will use OVERLOADSPEED
 #define ROTATETOTARGETSPEED1        65.0  // (deg/s) if angle difference to point is more than ANGLEDIFF1 then this value will be used...   warning, a high value will result in extreme gearmotor stress (test at own risk, 65deg/s is still safe and fast)
 #define ROTATETOTARGETSPEED2        40.0  // (deg/s) if angle difference to point is between ANGLEDIFF1 and ANGLEDIFF2 then this value will be used...
 #define ROTATETOTARGETSPEED3        25.0  // (deg/s) if angle difference to point is less than ANGLEDIFF2 then this value will be used...
@@ -166,7 +166,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define PWM_GEAR                    1     // PWM for DRVFIX efforts..
 #define PWM_MOW                     1     // PWM for DRVFIX efforts..
 //try to fix 8308 driver with moving, only works reliable with "DOCK_RETRY_TOUCH = true"! tested and seems to be a valid workaround for the DRV8308 related dock stuck issue (keep FALSE if you have no issues or no DRV8308)
-#define MOVE_REGULARLY              true  // if true, mower will move in dock in given MOVE_ADAIN_AFTER time, kk: move mower to keep 8308 alive
+#define MOVE_REGULARLY              true  // if true, mower will move in dock in given MOVE_AGAIN_AFTER time, kk: move mower to keep 8308 alive
 #define MOVE_AGAIN_AFTER            10.0  // kk: move the mower every xx minutes
 #define MOVING_TIME                 500   // kk: time (ms) for moving back
 #define SWITCH_OFF_TRACTION_MOTORS  true  // should tractionmotors be disabled in dock?
