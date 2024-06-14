@@ -1,5 +1,3 @@
-# This is modded Sunray FW in the "quasi" state of orig Sunray v .319
-
 # Sunray firmware
 
 # Table of contents

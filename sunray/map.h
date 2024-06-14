@@ -143,12 +143,12 @@ class Map
     int freePointsIdx;   // next free point in free point polygon
     int percentCompleted;
     
-    Polygon points;
-    Polygon perimeterPoints;
-    Polygon mowPoints;    
-    Polygon dockPoints;
+    Polygon points;      // all points in one list (mowPoints, perimeterPoints, dockPoints) transfered to robot
+    Polygon perimeterPoints;  // all perimeter points
+    Polygon mowPoints;        // all mowing points
+    Polygon dockPoints;       // all docking points
     Polygon freePoints;
-    PolygonList exclusions;     
+    PolygonList exclusions;   // list of exclusion points
     PolygonList obstacles;     
     PolygonList pathFinderObstacles;
     NodeList pathFinderNodes;
@@ -157,7 +157,7 @@ class Map
            
     bool shouldDock;  // start docking?
     bool shouldRetryDock; // retry docking?
-    bool shouldMow;  // start mowing?       
+    bool shouldMow;  // start mowing?
     
     long mapCRC;  // map data CRC
         
@@ -176,6 +176,7 @@ class Map
     bool load();
     bool save();
     void stressTest();
+    void stressTestMapTransfer();
     long calcMapCRC();
 
     // -------mowing operation--------------------------------------

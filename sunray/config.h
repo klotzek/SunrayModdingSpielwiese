@@ -172,9 +172,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //LOG
 #define OUTPUT_ENABLED              false // output standard Sunray_FW LOG in serial monitor and SDlog
 #define CALC_LOOPTIME               false // calc and output the sunray loop time in serial monitor and SDlog
-#define TUNING_LOG                  true  // outputs valuable var-states of sunray for debugging tuning functions or just for observation and insights
+#define TUNING_LOG                  false  // outputs valuable var-states of sunray for debugging tuning functions or just for observation and insights
 #define TUNING_LOG_TIME             2500  // (ms) periodic output time of TUNING_LOG
-#define DEBUG_LOG                   true  // adds output informations on changed mower states, functions and operations
+#define DEBUG_LOG                   false  // adds output informations on changed mower states, functions and operations
 //Modsection END
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -232,7 +232,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MOTOR_MOW_TICKS_PER_REVOLUTION 12 /2 //ACT BLDC MOTOR from Shop = 6! (DRV8308/JYQD)
 
 //#define TICKS_PER_REVOLUTION  975     // odometry ticks per wheel revolution (owlRobotics platform)
-
+//#define TICKS_PER_REVOLUTION  90     // odometry ticks per wheel revolution (hoverboard motor)
 
 // ----- gear motors --------------------------------------------------
 // for brushless motors, study the sections (drivers, adapter, protection etc.) in the Wiki (https://wiki.ardumower.de/index.php?title=DIY_Brushless_Driver_Board)
@@ -257,9 +257,12 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 // motor speed control (PID coefficients) - these values are tuned for Ardumower motors
 // general information about PID controllers: https://wiki.ardumower.de/index.php?title=PID_control
+#define MOTOR_PID_LP     0.0    // encoder low-pass filter (use for low encoder tickcount - use zero to disable)
 #define MOTOR_PID_KP     2.0    // do not change 2.0 (for non-Ardumower motors or if the motor speed control is too fast you may try: KP=1.0, KI=0, KD=0)
 #define MOTOR_PID_KI     0.03   // do not change 0.03
 #define MOTOR_PID_KD     0.03   // do not change 0.03
+#define MOTOR_PID_LIMIT  255    // output limit - do not change 255
+#define MOTOR_PID_RAMP   0      // output derivative limit - do not change 0
 
 //#define MOTOR_LEFT_SWAP_DIRECTION 1  // uncomment to swap left motor direction
 //#define MOTOR_RIGHT_SWAP_DIRECTION 1  // uncomment to swap right motor direction
@@ -397,6 +400,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // The battery will charge if both battery voltage is below that value and charging current is above that value.
 #define BAT_FULL_VOLTAGE  28.8  // start mowing again at this voltage
 #define BAT_FULL_CURRENT  0.01   // start mowing again below this charging current (amps)
+#define BAT_FULL_SLOPE    0.002  // start mowing again below this voltage slope
 
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#Automatic_battery_switch_off
 #define BAT_SWITCH_OFF_IDLE  true         // switch off if idle (JP8 must be set to autom.)
@@ -417,6 +421,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 //#define GPS_USE_TCP 1                    // comment out for serial gps, activate for TCP client-based GPS
 //#define GPS_SKYTRAQ  1               // comment out for ublox gps, uncomment for skytraq gps/NMEA
+// #define GPS_LIDAR 1                    // decomment for LiDAR
 
 #define REQUIRE_VALID_GPS  true       // mower will pause if no float and no fix GPS solution during mowing (recommended)
 //#define REQUIRE_VALID_GPS  false    // mower will continue to mow if no float or no fix solution (not recommended)

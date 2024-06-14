@@ -28,6 +28,7 @@
 #include "map.h"   
 #include "src/ublox/ublox.h"
 #include "src/skytraq/skytraq.h"
+#include "src/lidar/lidar.h"
 #ifdef __linux__
   #include <BridgeClient.h>
   #include "src/ntrip/ntripclient.h"
@@ -37,8 +38,8 @@
 #include "PubSubClient.h"
 #include "timetable.h"
 
-
-#define VER "Sunray,1.0.319"
+//this is the modversion 
+#define VER "Sunraymod,1.0.322"
 
 // operation types
 enum OperationType {
@@ -151,6 +152,8 @@ extern int motormowRPMStallCounter; //MrTree
 
 #ifdef DRV_SIM_ROBOT
   extern SimImuDriver imuDriver;
+#elif defined(GPS_LIDAR)
+  LidarImuDriver imuDriver;
 #elif defined(BNO055)
   extern BnoDriver imuDriver; 
 #elif defined(ICM20948)
@@ -171,6 +174,8 @@ extern Map maps;
 extern TimeTable timetable;
 #ifdef DRV_SIM_ROBOT
   extern SimGpsDriver gps;
+#elif GPS_LIDAR
+  extern LidarGpsDriver gps;
 #elif GPS_SKYTRAQ
   extern SKYTRAQ gps;
 #else

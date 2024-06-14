@@ -7,7 +7,7 @@
 #define MOTOR_H
 
 #include "pid.h"
-
+#include "lowpass_filter.h"
 
 // selected motor
 enum MotorSelect {MOTOR_LEFT, MOTOR_RIGHT, MOTOR_MOW} ;
@@ -47,7 +47,7 @@ class Motor {
     float  mowRpm;//mrTree
     float mowMotorCurrentAverage;
     float mowPowerAct; //MrTree
-	float speedcurr; //MrTree
+	  float speedcurr; //MrTree
     float currentFactor;
     float SpeedFactor; //MrTree
     bool keepslow;   //MrTree
@@ -70,13 +70,18 @@ class Motor {
     float motorRightSenseLP; // right  motor current (amps, low-pass)
     float motorMowSenseLP;  // mower motor current (amps, low-pass)       
     float motorsSenseLP; // all motors current (amps, low-pass)
-    float motorLeftSenseLPNorm; 
+    float motorLeftSenseLPNorm;
     float motorRightSenseLPNorm;
     unsigned long motorMowSpinUpTime;
     unsigned long keepSlowTime; //MrTree adaptive_Speed keep slow speed after RPM stall of mow motor
     unsigned long retrySlowTime;  //MrTree
     bool motorRecoveryState;
-    bool motorMowForwardSet;    
+    bool motorMowForwardSet;
+    PID motorLeftPID;
+    PID motorRightPID;
+    PID motorMowPID;       //MrTree    
+    LowPassFilter motorLeftLpf;
+    LowPassFilter motorRightLpf; 
     void begin();
     void run();      
     void test();
@@ -121,10 +126,7 @@ class Motor {
     int recoverMotorFaultCounter;
     unsigned long nextRecoverMotorFaultTime;
     int motorLeftTicksZero;    
-    int motorRightTicksZero;    
-    PID motorLeftPID;
-    PID motorRightPID;
-    PID motorMowPID;       //MrTree  
+    int motorRightTicksZero;  
     bool setLinearAngularSpeedTimeoutActive;
     unsigned long setLinearAngularSpeedTimeout;    
     void speedPWM ( int pwmLeft, int pwmRight, int pwmMow );
