@@ -274,13 +274,13 @@ void trackLine(bool runControl) {
       if (motor.keepslow) linear = KEEPSLOWSPEED;     //MrTree slow down because of high grass with config.h KEEPSLOWSPEED
       if (motor.retryslow) linear = RETRYSLOWSPEED;   //MrTree slow down because mowmotor stalled with config.h RETRYSLOWSPEED
     }  
-    // slow down speed in case of overload and overwrite all prior speed
+    // slow down speed in case of overload and overwrite all prior speeds
     if ( (motor.motorLeftOverload) || (motor.motorRightOverload) || (motor.motorMowOverload) ) {
       if (!printmotoroverload) {
         CONSOLE.println("motor overload detected: reduce linear speed to OVERLOADSPEED");
       }
+      linear = OVERLOADSPEED;  //MrTree continue with config.h 
       printmotoroverload = true;
-      linear = OVERLOADSPEED;  //MrTree continue with config.h OVERLOADSPEED
     } else {
       printmotoroverload = false;
     }

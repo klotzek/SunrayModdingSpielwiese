@@ -894,22 +894,32 @@ bool detectObstacleRotation(){
     return false;
   }  
   if (!OBSTACLE_DETECTION_ROTATION) return false; 
+  //MrTree: This is the Situation without an IMU!
   if (millis() > angularMotionStartTime + ROTATION_TIMEOUT) { // too long rotation time (timeout), e.g. due to obstacle
     CONSOLE.println("too long rotation time (timeout) for requested rotation => assuming obstacle");
     statMowRotationTimeoutCounter++;
-    triggerObstacle(); //MrTree changed to escape reverse?
+    if (FREEWHEEL_IS_AT_BACKSIDE){
+      triggerObstacleRotation(); //MrTree changed to trigger freewheel dependent
+    } else {
+      triggerObstacle(); //MrTree changed to trigger freewheel dependent
+    }
+    
     return true;
   }
-  /*if (BUMPER_ENABLE){
-    if (millis() > angularMotionStartTime + 500) { // FIXME: do we actually need a deadtime here for the freewheel sensor?        
-      if (bumper.obstacle()){  
-        CONSOLE.println("bumper obstacle!");    
-        statMowBumperCounter++;
-        triggerObstacleRotation();    
+  if (OVERLOAD_ROTATION){       
+    if ((motor.motorLeftOverload) || (motor.motorRightOverload)){
+      if (FREEWHEEL_IS_AT_BACKSIDE){
+        CONSOLE.println("Overload on traction motors while robot should rotate! Assuming obstacle in the back!");    
+        statMowRotationTimeoutCounter++;
+        triggerObstacleRotation();
         return true;
+      } else {
+        CONSOLE.println("Overload on traction motors while robot should rotate! Assuming obstacle in the front!");    
+        statMowRotationTimeoutCounter++;
+        triggerObstacle();
       }
-    }
-  }*/
+    }       
+  }
   if (imuDriver.imuFound){
     if (millis() > angularMotionStartTime + ROTATION_TIME) {                  
       if (fabs(stateDeltaSpeedLP) < 3.0/180.0 * PI){ // less than 3 degree/s yaw speed, e.g. due to obstacle
