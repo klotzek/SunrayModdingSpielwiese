@@ -917,6 +917,7 @@ bool detectObstacleRotation(){
         CONSOLE.println("Overload on traction motors while robot should rotate! Assuming obstacle in the front!");    
         statMowRotationTimeoutCounter++;
         triggerObstacle();
+        return true;
       }
     }       
   }
