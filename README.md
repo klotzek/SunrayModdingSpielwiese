@@ -1,3 +1,5 @@
+# This is modded Sunray in the "quasi" state of orig Sunray ver .322
+
 # Sunray firmware
 
 # Table of contents
