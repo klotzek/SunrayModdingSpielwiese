@@ -1058,10 +1058,13 @@ void run(){
     saveState();
   }
 
-  if (millis() >= nextOutputTime){
-    nextOutputTime = millis() + TUNING_LOG_TIME;
-    tuningOutput();
+  if (TUNING_LOG){
+    if (millis() >= nextOutputTime){
+      nextOutputTime = millis() + TUNING_LOG_TIME;
+      tuningOutput();
+    }
   }
+  
   
   // temp
   if (millis() > nextTempTime){

@@ -212,7 +212,7 @@ void cmdMotor(){
   CONSOLE.print(linear);
   CONSOLE.print(" angular=");
   CONSOLE.println(angular);*/
-  motor.setLinearAngularSpeed(linear, angular, false);
+  motor.setLinearAngularSpeed(linear, angular, true);
   String s = F("M");
   cmdAnswer(s);
 }

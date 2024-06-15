@@ -174,8 +174,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define OUTPUT_ENABLED              false // output standard Sunray_FW LOG in serial monitor and SDlog
 #define CALC_LOOPTIME               false // calc and output the sunray loop time in serial monitor and SDlog
 #define TUNING_LOG                  false  // outputs valuable var-states of sunray for debugging tuning functions or just for observation and insights
-#define TUNING_LOG_TIME             2500  // (ms) periodic output time of TUNING_LOG
-#define DEBUG_LOG                   false  // adds output informations on changed mower states, functions and operations
+#define TUNING_LOG_TIME             5000  // (ms) periodic output time of TUNING_LOG
+#define DEBUG_LOG                   true  // adds output informations on changed mower states, functions and operations
 //Modsection END
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -249,9 +249,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //#define MOTOR_DRIVER_BRUSHLESS_GEARS_JYQD 1   // uncomment for brushless JYQD driver and gears/traction motor
 //#define MOTOR_DRIVER_BRUSHLESS_GEARS_OWL 1   // uncomment for brushless owlDrive gears/traction motor
 
-#define MOTOR_FAULT_CURRENT 3.0    // gear motors fault current (amps)
+#define MOTOR_FAULT_CURRENT 3.5    // gear motors fault current (amps)
 #define MOTOR_TOO_LOW_CURRENT 0.005   // gear motor too low current (amps)
-#define MOTOR_OVERLOAD_CURRENT 1.5    // gear motors overload current (amps)
+#define MOTOR_OVERLOAD_CURRENT 1.0    // gear motors overload current (amps)
 
 #define USE_LINEAR_SPEED_RAMP  true      // use a speed ramp for the linear speed //MrTree overshooting is reduced, deceleration is more agressive: keep enabled! (recommended)
 //#define USE_LINEAR_SPEED_RAMP  false      // do not use a speed ramp 
@@ -281,7 +281,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 #define MOW_FAULT_CURRENT 5.0       // mowing motor fault current (amps)
 #define MOW_TOO_LOW_CURRENT 0.005   // mowing motor too low current (amps)
-#define MOW_OVERLOAD_CURRENT 4.0    // mowing motor overload current (amps)
+#define MOW_OVERLOAD_CURRENT 3.5    // mowing motor overload current (amps)
 
 // should the direction of mowing motor toggle each start? (yes: true, no: false)
 #define MOW_TOGGLE_DIR       true
