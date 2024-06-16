@@ -203,10 +203,9 @@ void trackLine(bool runControl) {
   //  angleToTargetFits = true;
   }
 
-  if ((!angleToTargetFits || !angleToTargetPrecise) && !dockTimer) {   //MrTree added !dockTimer, !angleToTargetPrecise
+  if ((!angleToTargetFits || !angleToTargetPrecise) && !dockTimer) {   //MrTree added !dockTimer to prevent the jumping gps point to cause linear=0 because of !angleToTargetFits, added !angleToTargetPrecise
     // angular control (if angle to far away, rotate to next waypoint)
     if (!angleToTargetFits) angleToTargetPrecise = false;
-    resetLinearMotionMeasurement();                                     //MrTree added function call from svol0
     linear = 0;                                                       //MrTree while turning from >= 20/45 deg difference, linear is 0... still decelerating or accelerating on stepin/out
     if (((maps.isDocking()) || (maps.isUndocking())) && 
          ((maps.trackSlow) && (trackslow_allowed))) {
@@ -258,11 +257,7 @@ void trackLine(bool runControl) {
       // planner forces slow tracking (e.g. docking etc)
       if (dockTimer) linear = DOCK_NO_ROTATION_SPEED;
       else linear = TRACKSLOWSPEED;                                                                                                    //MrTree, use TRACKSLOW in config.h
-    } else if //(     ((setSpeed > 0.2) && (maps.distanceToTargetPoint(stateX, stateY) < NEARWAYPOINTDISTANCE) && (!straight))      //MrTree approaching/leaving NEARWAYPOINTDISTANCE in config.h
-              //      || ((linearMotionStartTime != 0) && (millis() < linearMotionStartTime + NEARWAYPOINTDISTANCE / NEARWAYPOINTSPEED * 1000)) //MrTree leaving Waypoint with Speedset to reach the NEARWAYPOINTDISTANCE ... besser lasttargetdistance verwenden!?
-              //)
-              ((targetDist < NEARWAYPOINTDISTANCE) || (lastTargetDist < NEARWAYPOINTDISTANCE))
-    {
+    } else if ((targetDist < NEARWAYPOINTDISTANCE) || (lastTargetDist < NEARWAYPOINTDISTANCE)){
       linear = NEARWAYPOINTSPEED; //MrTree reduce speed when approaching/leaving waypoints with NEARWAYPOINTSPEED in config.h
     }
     else {
@@ -508,7 +503,7 @@ void trackLine(bool runControl) {
 
       case 10:
         // Wenn ohne GPS fix oder float das undocking gestartet wird, muss bei erreichen von fix oder float die "linearMotionStartTime" resetet werden, um "gps no speed => obstacle!" zu vermeiden
-        resetLinearMotionMeasurement();
+        //resetLinearMotionMeasurement();
         break;
 
     } // switch (dockGpsRebootState)
@@ -520,35 +515,31 @@ void trackLine(bool runControl) {
     }
   } //if (dockGpsRebootState > 0)
 
-  if ((allowDockRotation == false) && (!maps.isUndocking())) {       //MrTree
-    if (!dockTimer){
-      reachedPointBeforeDockTime = millis(); //start a timer when going to last dockpoint
-      dockTimer = true;
+  if ((allowDockRotation == false) && (!maps.isUndocking())) {        //MrTree step in algorithm if allowDockRotation (computed in maps.cpp) is false and mower is not undocking
+    if (!dockTimer){                                                  //set helper bool to start a timer and print info once
+      reachedPointBeforeDockTime = millis();                          //start a timer when going to last dockpoint
+      dockTimer = true;                                               //enables following code
       CONSOLE.println("allowDockRotation = false, timer to successfully dock startet. angular = 0, turning not allowed");
     }
     if (dockTimer){
-      resetLinearMotionMeasurement(); //keep 0
-      if (millis() > reachedPointBeforeDockTime+DOCK_NO_ROTATION_DELAY) {
-        angular = 0; //stop angular after last point passed
-      }
-      if (millis() > reachedPointBeforeDockTime+DOCK_NO_ROTATION_TIMER){
+      resetLinearMotionMeasurement();                                         //need to test if this is still neccessary
+      if (targetDist<DOCK_NO_ROTATION_DISTANCE) angular = 0;                  //testing easier approach for DOCK_NO_ROTATION setup
+      //if (millis() > reachedPointBeforeDockTime+DOCK_NO_ROTATION_DELAY) {     //let mower pass point with DOCK_NO_ROTATION_DELAY and straighten to dockpoint on path with stanley
+      //  angular = 0;                                                          //stop angular after last point passed
+      //}
+      if (millis() > reachedPointBeforeDockTime+DOCK_NO_ROTATION_TIMER){      //check the time until mower has to reach the charger and triger obstacle if not reached
         CONSOLE.println("allowDockRotation = false, not docked in given time, triggering maps.retryDocking!");
         triggerObstacle();
-        //maps.retryDocking(stateX, stateY);  //give 10 secs time to reach dock, or retry- Note: if !angletotargetfits robot will just stop and sit there, which is good, becouse it wouldnt have made it anyways
         dockTimer = false;     
       }
       
     }
-    //if ((targetReached) && (!battery.chargerConnected()))maps.retryDocking(stateX, stateY);
-    
-    //else if target not reached and standing still....... after a certain time, trigger retrydock
   } else {
       dockTimer = false;     
   }
 
   if (runControl) {
-    if (angular == 0) resetAngularMotionMeasurement(); //MrTree
-    if (linear == 0) resetLinearMotionMeasurement();  //MrTree
+
     if ((angleToTargetFits != langleToTargetFits)&&(DEBUG_LOG)) {
       CONSOLE.print("Linetracker.cpp angular: ");
       CONSOLE.println(angular*180.0/PI);
@@ -558,12 +549,7 @@ void trackLine(bool runControl) {
       //CONSOLE.println(trackerDiffDelta);
       langleToTargetFits = angleToTargetFits;
     }
-    if ((linear != lastSpeed)&&(DEBUG_LOG)){ 
-        CONSOLE.print("Linetracker.cpp linear: ");
-        CONSOLE.println(linear);        
-    }
-    lastSpeed = linear;
-    
+
     shouldRotate = robotShouldRotate();
     if ((shouldRotate != shouldRotatel)&&(DEBUG_LOG)){
       CONSOLE.print("Linetracker.cpp ShouldRotate = ");
@@ -571,19 +557,18 @@ void trackLine(bool runControl) {
       shouldRotatel = shouldRotate;
     }
     
+    if (detectLift()){ // in any case, turn off mower motor if lifted  
+      mow = false;  // also, if lifted, do not turn on mowing motor so that the robot will drive and can do obstacle avoidance 
+      linear = 0;
+      angular = 0; 
+    }
 
     if ((mow != motor.switchedOn) && (motor.enableMowMotor)&&(DEBUG_LOG)){
       CONSOLE.print("Linetracker.cpp changes mow status: ");
       CONSOLE.println(mow);
       motor.setMowState(mow); 
     }
-    // in any case, turn off mower motor if lifted 
-    // also, if lifted, do not turn on mowing motor so that the robot will drive and can do obstacle avoidance 
-    if (detectLift()) {
-      mow = false;
-      linear = 0;
-      angular = 0; 
-    }
+
     if (mow)  {      
       if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){
        // wait until mowing motor is running
@@ -594,6 +579,12 @@ void trackLine(bool runControl) {
       }
     }
 
+    if ((linear != lastSpeed)&&(DEBUG_LOG)){ 
+        CONSOLE.print("Linetracker.cpp linear: ");
+        CONSOLE.println(linear);        
+    }
+    lastSpeed = linear;
+
     motor.setLinearAngularSpeed(linear, angular);    
   }
 
@@ -601,16 +592,15 @@ void trackLine(bool runControl) {
   y_new = target.y();
 
   if (((x_old != x_new) || (y_old != y_new))&&(DEBUG_LOG)){
-  CONSOLE.print("LineTracker.cpp targetPoint  x = ");
-  CONSOLE.print(x_new);
-  CONSOLE.print(" y = ");
-  CONSOLE.println(y_new);
-  x_old = x_new;
-  y_old = y_new;
+    CONSOLE.print("LineTracker.cpp targetPoint  x = ");
+    CONSOLE.print(x_new);
+    CONSOLE.print(" y = ");
+    CONSOLE.println(y_new);
+    x_old = x_new;
+    y_old = y_new;
   }
   
   if (targetReached) {
-    
     rotateLeft = false;
     rotateRight = false;
     activeOp->onTargetReached();

@@ -151,9 +151,13 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_SLOW_ONLY_LAST_POINTS  4     // (pt) Svol0: dockingpoint number (counted from last dockingpoint) where slow speed will be used to reach the dockingstation (0 = all points will be reached with slow speed)
 //keep mower from rotating in dock by all means, needs situation dependent tuning, so be aware!
 #define DOCK_NO_ROTATION            true  // if true, rotation for the mower when reaching or leaving the last dockpoint is not allowed! Make sure mower comes just before the dock in a straight line from the point before, then the last point is the dockposition, on that path angular steering is not allowed!
+#define DOCK_NO_ROTATION_DISTANCE   1.0  // (m) distance to dockpoint to stop angular motion of mower, make sure mower comes straight to dock!
 #define DOCK_NO_ROTATION_TIMER      12000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
 #define DOCK_NO_ROTATION_DELAY      2000  // (ms) gives the mower time to surpass the point before dockpoint by given time, after this timer angular will be clamped to zero! 
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
+//GPS
+#define GPS_RESET_WAIT_FIX          true  // reset GPS if mower is in a float timeout?
+#define GPS_RESET_WAIT_FIX_TIME     15    // (min) time in minutes to reset gps if mower is in a float timeout without getting fix within GPS_RESET_WAIT_FIX_TIME 
 //other tests
 #define SUPER_SPIKE_ELIMINATOR      0     // advanced spike elimination  (experimental, comment out to disable)
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)

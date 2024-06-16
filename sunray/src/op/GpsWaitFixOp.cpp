@@ -13,7 +13,7 @@ String GpsWaitFixOp::name(){
 }
 
 void GpsWaitFixOp::begin(){
-    CONSOLE.println("WARN: no gps solution!");
+    CONSOLE.println("GpsWaitFixOp::begin - WARN: no gps solution!");
     stateSensor = SENS_GPS_INVALID;
     //setOperation(OP_ERROR);
     //buzzer.sound(SND_STUCK, true);          
@@ -21,9 +21,13 @@ void GpsWaitFixOp::begin(){
     //linear = 0;
     //angular = 0;      
     //mow = false;
-	CONSOLE.println("GpsWaitFixOp::begin switch OFF all motors --> no gps solution!");
+	CONSOLE.println("GpsWaitFixOp::begin - switch OFF all motors --> no gps solution!");
     motor.setLinearAngularSpeed(0,0, false); 
-    motor.setMowState(false);     
+    motor.setMowState(false);
+    if (GPS_RESET_WAIT_FIX){
+        CONSOLE.println("GpsWaitFixOp::begin - reset timer for getting fix again startet!");
+        resetGpsTimer = millis() + (GPS_RESET_WAIT_FIX_TIME*1000*60);     //MrTree strart timer for wait fix gps reset
+    }
 }
 
 
@@ -32,6 +36,13 @@ void GpsWaitFixOp::end(){
 
 void GpsWaitFixOp::run(){
     battery.resetIdle();
+    if (GPS_RESET_WAIT_FIX){
+        if (millis() > resetGpsTimer) {
+            CONSOLE.println("GpsWaitFixOp::run - rest gps timer triggered! Resetting GPS!");
+            resetGpsTimer = millis() + (GPS_RESET_WAIT_FIX_TIME*1000*60);
+            gps.reboot();
+        }
+    }
     if (gps.solution == SOL_FIXED){
         changeOp(*nextOp);
     }     

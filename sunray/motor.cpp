@@ -193,7 +193,8 @@ void Motor::setLinearAngularSpeed(float linear, float angular, bool useLinearRam
     linear = 0;                                     //workaround
     angular = 0; 
    }
-
+   if (angular == 0) resetAngularMotionMeasurement(); //MrTree
+   if (linear == 0) resetLinearMotionMeasurement();  //MrTree
    setLinearAngularSpeedTimeout = millis() + 1000;
    setLinearAngularSpeedTimeoutActive = true;
    linearCurrSet = linear;//MrTree

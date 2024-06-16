@@ -215,6 +215,7 @@ class GpsRebootRecoveryOp: public Op {
 // wait for gps fix
 class GpsWaitFixOp: public Op {
   public:
+    unsigned long resetGpsTimer = 0;  //MrTree
     virtual String name() override;
     virtual void begin() override;
     virtual void end() override;
@@ -233,10 +234,10 @@ class GpsWaitFloatOp: public Op {
 // escape high lawn (drive backwards without virtual obstace)
 class EscapeLawnOp: public Op {					//MrTree
   public:        								//**
-	int escapeLawnCounter = 0;							
-	unsigned long escapeLawnStartTime;
+	  int escapeLawnCounter = 0;							
+	  unsigned long escapeLawnStartTime;
     unsigned long driveReverseStopTime;
-	unsigned long escapeLawnWaitTime;
+	  unsigned long escapeLawnWaitTime;
     virtual String name() override;
     virtual void begin() override;
     virtual void end() override;

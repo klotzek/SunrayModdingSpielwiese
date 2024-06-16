@@ -47,7 +47,7 @@ void EscapeForwardOp::run(){
 	if (CHANGE_OBSTACLE_ROTATION){
         if (escapeForwardCounter == 3) {
 	        CONSOLE.println("EscapeForwardOp:: too many retries for escapeForward op, assuming obstacle in front: changeOp-->escapeReverseOp");	      
-            resetAngularMotionMeasurement();
+            //resetAngularMotionMeasurement();
             changeOp(escapeReverseOp, true);
             return;	
 	    } 
