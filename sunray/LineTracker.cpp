@@ -531,8 +531,7 @@ void trackLine(bool runControl) {
         CONSOLE.println("allowDockRotation = false, not docked in given time, triggering maps.retryDocking!");
         triggerObstacle();
         dockTimer = false;     
-      }
-      
+      } 
     }
   } else {
       dockTimer = false;     
