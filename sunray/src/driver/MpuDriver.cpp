@@ -58,8 +58,8 @@ bool MpuDriver::begin(){
     }
     //mpu.setAccelFSR(2);	      
     mpu.dmpBegin(DMP_FEATURE_6X_LP_QUAT  // Enable 6-axis quat
-               |  DMP_FEATURE_GYRO_CAL // Use gyro calibration
-             //  | DMP_FEATURE_SEND_RAW_ACCEL
+               | DMP_FEATURE_GYRO_CAL // Use gyro calibration
+               | DMP_FEATURE_SEND_RAW_ACCEL
               , IMU_FIFO_RATE); // Set DMP FIFO rate
     // DMP_FEATURE_LP_QUAT can also be used. It uses the 
     // accelerometer in low-power mode to estimate quat's.

@@ -328,7 +328,7 @@ void trackLine(bool runControl) {
   if ((gps.solution == SOL_FIXED) || (gps.solution == SOL_FLOAT))  {                     //MrTree Bugged, slow movements will entirely be ignored....
     warnDockWithoutGpsTrg = false;    // Svol0: reset warnmessage trigger
     if (fabs(CurrSpeed) >= MOTOR_MIN_SPEED) {                                                        //MrTree (changed: linear to CurrSpeed <= MinSpeedVal (works without compiler warning)) //origin: does not consider Mow Spinuptime. There will be an GPS Obstacle on the Start if long Spinup is done, linear is set before actually moving??? Need to change to actual input/output of function motor.setlinearangularspeed
-      if ((millis() > linearMotionStartTime + 5000) && (stateGroundSpeed < (MOTOR_MIN_SPEED * 0.5))) { //Stateoverground < to half of Currspeed
+      if ((millis() > linearMotionStartTime + GPS_NO_SPEED_TIME) && (stateGroundSpeed < (MOTOR_MIN_SPEED * 0.5))) { //Stateoverground < to half of Currspeed
         // if in linear motion and not enough ground speed => obstacle
         //if ( (GPS_SPEED_DETECTION) && (!maps.isUndocking()) ) {
         if (GPS_SPEED_DETECTION && !allowDockLastPointWithoutGPS) { 

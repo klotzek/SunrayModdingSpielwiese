@@ -6,10 +6,8 @@
 #include "Arduino.h"
 #include "ublox.h"
 #include "../../config.h"
-#include "SparkFun_Ublox_Arduino_Library.h" 
-
-
-SFE_UBLOX_GPS configGPS; // used for f9p module configuration only
+#include "SparkFun_u-blox_GNSS_v3.h"
+SFE_UBLOX_GNSS_SERIAL configGPS; 
 
 
 // used to send .ubx log files via 'sendgps.py' to Arduino (also set GPS to Serial in config for this)
@@ -192,14 +190,20 @@ bool UBLOX::configure(){
           setValueSuccess &= configGPS.addCfgValset8(0x201100a4, CPG_CONFIG_FILTER_MINELEV); // CFG-NAVSPG-INFIL_MINELEV  (10 Min SV elevation degree)
           setValueSuccess &= configGPS.addCfgValset8(0x201100aa, CPG_CONFIG_FILTER_NCNOTHRS); // CFG-NAVSPG-INFIL_NCNOTHRS (10 C/N0 Threshold #SVs)
           setValueSuccess &= configGPS.addCfgValset8(0x201100ab, CPG_CONFIG_FILTER_CNOTHRS); // CFG-NAVSPG-INFIL_CNOTHRS  (30 dbHz)
+          setValueSuccess &= configGPS.addCfgValset8(UBLOX_CFG_NAVSPG_INFIL_MINCNO, CPG_CONFIG_FILTER_MINCNO); // CFG-NAVSPG-INFIL_MINCNO  (30 dbHz) 
         } else { // ublox default filter settings
           setValueSuccess &= configGPS.addCfgValset8(0x201100a4, 10); // CFG-NAVSPG-INFIL_MINELEV  (10 Min SV elevation degree)
           setValueSuccess &= configGPS.addCfgValset8(0x201100aa, 0);  // CFG-NAVSPG-INFIL_NCNOTHRS (0 C/N0 Threshold #SVs)
-          setValueSuccess &= configGPS.addCfgValset8(0x201100ab, 0);  // CFG-NAVSPG-INFIL_CNOTHRS  (0 dbHz)   
+          setValueSuccess &= configGPS.addCfgValset8(0x201100ab, 0);  // CFG-NAVSPG-INFIL_CNOTHRS  (0 dbHz)
         }
         // ----  gps rates ----------------------------------
         setValueSuccess &= configGPS.addCfgValset16(0x30210001, 200); // CFG-RATE-MEAS       (measurement period 200 ms)  
-        setValueSuccess &= configGPS.sendCfgValset16(0x30210002, 1,   timeout); //CFG-RATE-NAV  (navigation rate cycles 1)  
+        setValueSuccess &= configGPS.sendCfgValset16(0x30210002, 1,   timeout); //CFG-RATE-NAV  (navigation rate cycles 1)
+        // ----  extras ----------------------------------
+        setValueSuccess &= configGPS.addCfgValset8(UBLOX_CFG_SIGNAL_SBAS_ENA, 0);  // SBAS
+        setValueSuccess &= configGPS.addCfgValset8(UBLOX_CFG_NMEA_FILT_SBAS, 0);  // SBAS
+        setValueSuccess &= configGPS.addCfgValset8(UBLOX_CFG_SIGNAL_BDS_ENA, 0);  // Beidou
+        setValueSuccess &= configGPS.addCfgValset8(UBLOX_CFG_NMEA_FILT_BDS, 0);  // Beidou
       } 
       else if (idx == 2){
         // ----- USB messages (Ardumower) -----------------  
@@ -242,7 +246,7 @@ bool UBLOX::configure(){
 void UBLOX::reboot(){
   CONSOLE.println("rebooting GPS receiver...");
   //configGPS.hardReset();
-  configGPS.GNSSRestart();
+  configGPS.softwareResetGNSSOnly();
 }
 
 void UBLOX::parse(int b)

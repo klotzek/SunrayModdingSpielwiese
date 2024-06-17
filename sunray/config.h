@@ -158,6 +158,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //GPS
 #define GPS_RESET_WAIT_FIX          true  // reset GPS if mower is in a float timeout?
 #define GPS_RESET_WAIT_FIX_TIME     15    // (min) time in minutes to reset gps if mower is in a float timeout without getting fix within GPS_RESET_WAIT_FIX_TIME 
+#define GPS_NO_SPEED_TIME           2000  // (s) time for GPS no speed trigger --> obstacle
 //other tests
 #define SUPER_SPIKE_ELIMINATOR      0     // advanced spike elimination  (experimental, comment out to disable)
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
@@ -454,6 +455,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define CPG_CONFIG_FILTER_MINELEV  3   // Min SV elevation degree: 14 (high elevation, less robust), 10 (low elevation, robust) 
 #define CPG_CONFIG_FILTER_NCNOTHRS 8   // C/N0 Threshold #SVs: 10 (robust), 6 (less robust)
 #define CPG_CONFIG_FILTER_CNOTHRS  17   // 30 dbHz (robust), 13 dbHz (less robust)
+#define CPG_CONFIG_FILTER_MINCNO   10   // min satelite signal strenght for observing?
 
 
 // ------ obstacle detection and avoidance  -------------------------
