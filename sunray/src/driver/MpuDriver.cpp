@@ -104,9 +104,9 @@ bool MpuDriver::isDataAvail(){
     mpu.calcAccel(Y_AXIS);
     mpu.calcAccel(Z_AXIS);
     heading = mpu.heading; //MrTree heading of mpu
-    ax = mpu.ax;    //MrTree x acceleration of mpu
-    ay = mpu.ay;    //MrTree y acceleration of mpu
-    az = mpu.az;    //MrTree z acceleration of mpu
+    ax = mpu.ax / 16384.0;    //MrTree x acceleration of mpu
+    ay = mpu.ay / 16384.0;    //MrTree y acceleration of mpu
+    az = mpu.az / 16384.0;    //MrTree z acceleration of mpu
 
     return true;
 }         

@@ -1006,11 +1006,11 @@ void tuningOutput(){
       CONSOLE.println(" none");
       CONSOLE.print("                               ax = ");
       CONSOLE.print(imuDriver.ax);
-      CONSOLE.print(" mm/s², ay = "); 
+      CONSOLE.print(" g, ay = "); 
       CONSOLE.print(imuDriver.ay);
-      CONSOLE.print(" mm/s², az = ");
+      CONSOLE.print(" g, az = ");
       CONSOLE.print(imuDriver.az);
-      CONSOLE.println(" mm/s²");
+      CONSOLE.println(" g");
       CONSOLE.print("                               roll = ");
       CONSOLE.print(imuDriver.roll);
       CONSOLE.print(" rad, pitch = "); 

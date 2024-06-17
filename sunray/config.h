@@ -178,7 +178,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //LOG
 #define OUTPUT_ENABLED              false // output standard Sunray_FW LOG in serial monitor and SDlog
 #define CALC_LOOPTIME               false // calc and output the sunray loop time in serial monitor and SDlog
-#define TUNING_LOG                  false  // outputs valuable var-states of sunray for debugging tuning functions or just for observation and insights
+#define TUNING_LOG                  true  // outputs valuable var-states of sunray for debugging tuning functions or just for observation and insights
 #define TUNING_LOG_TIME             5000  // (ms) periodic output time of TUNING_LOG
 #define DEBUG_LOG                   true  // adds output informations on changed mower states, functions and operations
 //Modsection END
