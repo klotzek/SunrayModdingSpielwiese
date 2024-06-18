@@ -160,9 +160,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define GPS_RESET_WAIT_FIX_TIME     15    // (min) time in minutes to reset gps if mower is in a float timeout without getting fix within GPS_RESET_WAIT_FIX_TIME 
 #define GPS_NO_SPEED_TIME           2000  // (s) time for GPS no speed trigger --> obstacle
 //ODO/ISR
-#define ISR_MODE                    1
+#define ISR_MODE                    1     // 1: uses bernards simple interrupt readout, 2: uses WhatATest´s microsecond measurement of interrupt instead of counting ticks, 0: orig sunray(bugging out if superspikeeliminator is true)
 //other tests
-#define SUPER_SPIKE_ELIMINATOR      0     // advanced spike elimination  (experimental, comment out to disable)
+#define SUPER_SPIKE_ELIMINATOR      false // advanced spike elimination  (experimental, set false to disable)
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
 #define CHANGE_OBSTACLE_ROTATION    true  // if true, after 2 times moving forward due to an IMUyaw difference or OVERLOAD_ROTATION with escapeForward because of FREEWHEEL_IS_AT_BACKSIDE, escapeReverse with obstacle is triggered (prevent mower going forward if it can´t rotate and already tried to evade with escapeForward op) 
 #define OVERLOAD_ROTATION           true  // this function is dependent of FREEWHEEL_IS_AT_BACKSIDE and is usefull if there is alot of grip of wheels which lead to a high current and can result in a motor error overcurrent, before that happens... we want an evasion of the situation. If FREEWHEEL_IS_AT_BACKSIDE is true mower will drive forward on MOTOROVERLOAD if mower state is shouldrotate... otherwise it will trigger an Obstacle and escapeReverse (front snout of mower is hitting something during rotation) 

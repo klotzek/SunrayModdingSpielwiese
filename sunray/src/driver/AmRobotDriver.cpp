@@ -110,7 +110,7 @@ void OdometryMowISR(){
   #else //MrTree original code with long term bug if superspike is used
     //if (digitalRead(pinMotorMowRpm) == LOW) return;
     if (millis() < motorMowTicksTimeout) return; // eliminate spikes  
-    #ifdef SUPER_SPIKE_ELIMINATOR
+    #if SUPER_SPIKE_ELIMINATOR
       unsigned long duration = millis() - motorMowTransitionTime;
       if (duration > 5) duration = 0;
       motorMowTransitionTime = millis();
@@ -135,7 +135,7 @@ void OdometryLeftISR(){
   #else //MrTree original code with long term bug if superspike is used
     //if (digitalRead(pinOdometryLeft) == LOW) return;
     if (millis() < motorLeftTicksTimeout) return; // eliminate spikes  
-    #ifdef SUPER_SPIKE_ELIMINATOR
+    #if SUPER_SPIKE_ELIMINATOR
       unsigned long duration = millis() - motorLeftTransitionTime;
       if (duration > 5) duration = 0;
       motorLeftTransitionTime = millis();
@@ -159,7 +159,7 @@ void OdometryRightISR(){
   #else //MrTree original code with long term bug if superspike is used		
     //if (digitalRead(pinOdometryRight) == LOW) return;  
     if (millis() < motorRightTicksTimeout) return; // eliminate spikes
-    #ifdef SUPER_SPIKE_ELIMINATOR
+    #if SUPER_SPIKE_ELIMINATOR
       unsigned long duration = millis() - motorRightTransitionTime;
       if (duration > 5) duration = 0;  
       motorRightTransitionTime = millis();
