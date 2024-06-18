@@ -160,7 +160,6 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define GPS_RESET_WAIT_FIX_TIME     15    // (min) time in minutes to reset gps if mower is in a float timeout without getting fix within GPS_RESET_WAIT_FIX_TIME 
 #define GPS_NO_SPEED_TIME           2000  // (s) time for GPS no speed trigger --> obstacle
 //ODO/ISR
-#define ISR_MODE                    1     // 1: uses bernards simple interrupt readout, 2: uses WhatATest´s microsecond measurement of interrupt instead of counting ticks, 0: orig sunray(bugging out if superspikeeliminator is true)
 //other tests
 #define SUPER_SPIKE_ELIMINATOR      false // advanced spike elimination  (experimental, set false to disable)
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
