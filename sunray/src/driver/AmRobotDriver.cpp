@@ -101,58 +101,80 @@ float AmRobotDriver::getCpuTemperature(){
 // odometry signal change interrupt
 
 void OdometryMowISR(){			  
-  
- 
-  if (digitalRead(pinMotorMowRpm) == LOW) return;
-  //if (millis() < motorMowTicksTimeout) return; // eliminate spikes  
-  //#ifdef SUPER_SPIKE_ELIMINATOR
-  //  unsigned long duration = millis() - motorMowTransitionTime;
-  //  if (duration > 5) duration = 0;
-  //  motorMowTransitionTime = millis();
-  //  motorMowDurationMax = 0.7 * max(motorMowDurationMax, ((float)duration));
-  //  motorMowTicksTimeout = millis() + motorMowDurationMax;
-  //#else
-    //motorMowTicksTimeout = millis() + 1;
-  //#endif
-  odomTicksMow++; 
-  asm("dsb");  
+  #if ISR_MODE==1 //MrTree simple interrupt read, recommended by bernard
+    odomTicksMow++; 
+    asm("dsb");
+    return;
+  #elif ISR_MODE==2 //MrTree improved interrupt read of time, not tick.. using micros, used by WhatATest
+
+  #else //MrTree original code with long term bug if superspike is used
+    //if (digitalRead(pinMotorMowRpm) == LOW) return;
+    if (millis() < motorMowTicksTimeout) return; // eliminate spikes  
+    #ifdef SUPER_SPIKE_ELIMINATOR
+      unsigned long duration = millis() - motorMowTransitionTime;
+      if (duration > 5) duration = 0;
+      motorMowTransitionTime = millis();
+      motorMowDurationMax = 0.7 * max(motorMowDurationMax, ((float)duration));
+      motorMowTicksTimeout = millis() + motorMowDurationMax;
+    #else
+      motorMowTicksTimeout = millis() + 1;
+    #endif
+    odomTicksMow++; 
+    //asm("dsb");
+  #endif  
 }
 
 
-void OdometryLeftISR(){			  
-  if (digitalRead(pinOdometryLeft) == LOW) return;
-  //if (millis() < motorLeftTicksTimeout) return; // eliminate spikes  
-  //#ifdef SUPER_SPIKE_ELIMINATOR
-    //unsigned long duration = millis() - motorLeftTransitionTime;
-    //if (duration > 5) duration = 0;
-    //motorLeftTransitionTime = millis();
-    //motorLeftDurationMax = 0.7 * max(motorLeftDurationMax, ((float)duration));
-    //motorLeftTicksTimeout = millis() + motorLeftDurationMax;
-  //#else
-  //  motorLeftTicksTimeout = millis() + 1;
-  //#endif
-  odomTicksLeft++;
-  asm("dsb");    
+void OdometryLeftISR(){
+  #if ISR_MODE==1 //MrTree simple interrupt read, recommended by bernard
+    odomTicksLeft++;
+    asm("dsb");
+    return;
+  #elif ISR_MODE==2 //MrTree improved interrupt read of time, not tick.. using micros, used by WhatATest
+
+  #else //MrTree original code with long term bug if superspike is used
+    //if (digitalRead(pinOdometryLeft) == LOW) return;
+    if (millis() < motorLeftTicksTimeout) return; // eliminate spikes  
+    #ifdef SUPER_SPIKE_ELIMINATOR
+      unsigned long duration = millis() - motorLeftTransitionTime;
+      if (duration > 5) duration = 0;
+      motorLeftTransitionTime = millis();
+      motorLeftDurationMax = 0.7 * max(motorLeftDurationMax, ((float)duration));
+      motorLeftTicksTimeout = millis() + motorLeftDurationMax;
+    #else
+      motorLeftTicksTimeout = millis() + 1;
+    #endif
+    odomTicksLeft++;
+    //asm("dsb");
+  #endif    
 }
 
-void OdometryRightISR(){			
-  if (digitalRead(pinOdometryRight) == LOW) return;  
-  //if (millis() < motorRightTicksTimeout) return; // eliminate spikes
-  //#ifdef SUPER_SPIKE_ELIMINATOR
-    //unsigned long duration = millis() - motorRightTransitionTime;
-    //if (duration > 5) duration = 0;  
-    //motorRightTransitionTime = millis();
-    //motorRightDurationMax = 0.7 * max(motorRightDurationMax, ((float)duration));  
-    //motorRightTicksTimeout = millis() + motorRightDurationMax;
-  //#else
-    //motorRightTicksTimeout = millis() + 1;
+void OdometryRightISR(){
+  #if ISR_MODE==1 //MrTree simple interrupt read, recommended by bernard
+    odomTicksRight++;        
+    asm("dsb");
+    return;
+  #elif ISR_MODE==2 //MrTree improved interrupt read of time, not tick.. using micros, used by WhatATest
+
+  #else //MrTree original code with long term bug if superspike is used		
+    //if (digitalRead(pinOdometryRight) == LOW) return;  
+    if (millis() < motorRightTicksTimeout) return; // eliminate spikes
+    #ifdef SUPER_SPIKE_ELIMINATOR
+      unsigned long duration = millis() - motorRightTransitionTime;
+      if (duration > 5) duration = 0;  
+      motorRightTransitionTime = millis();
+      motorRightDurationMax = 0.7 * max(motorRightDurationMax, ((float)duration));  
+      motorRightTicksTimeout = millis() + motorRightDurationMax;
+    #else
+      motorRightTicksTimeout = millis() + 1;
+    #endif
+  odomTicksRight++
+  //asm("dsb")
+#endif
+  //#ifdef TEST_PIN_ODOMETRY
+  //  testValue = !testValue;
+  //  digitalWrite(pinKeyArea2, testValue);  
   //#endif
-  odomTicksRight++;        
-  asm("dsb");
-  #ifdef TEST_PIN_ODOMETRY
-    testValue = !testValue;
-    digitalWrite(pinKeyArea2, testValue);  
-  #endif
 }
 
 
@@ -378,9 +400,9 @@ void AmMotorDriver::begin(){
   //pinMode(pinLift, INPUT_PULLUP); //MrTree using for RC Mowrpm
 
   // enable interrupts
-  attachInterrupt(pinOdometryLeft, OdometryLeftISR, CHANGE);  
-  attachInterrupt(pinOdometryRight, OdometryRightISR, CHANGE);  
-  attachInterrupt(pinMotorMowRpm, OdometryMowISR, CHANGE);  
+  attachInterrupt(pinOdometryLeft, OdometryLeftISR, FALLING);  
+  attachInterrupt(pinOdometryRight, OdometryRightISR, FALLING);  
+  attachInterrupt(pinMotorMowRpm, OdometryMowISR, FALLING);  
     
 	//pinMan.setDebounce(pinOdometryLeft, 100);  // reject spikes shorter than usecs on pin
 	//pinMan.setDebounce(pinOdometryRight, 100);  // reject spikes shorter than usecs on pin	
