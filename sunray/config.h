@@ -151,7 +151,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_SLOW_ONLY_LAST_POINTS  4     // (pt) Svol0: dockingpoint number (counted from last dockingpoint) where slow speed will be used to reach the dockingstation (0 = all points will be reached with slow speed)
 //keep mower from rotating in dock by all means, needs situation dependent tuning, so be aware!
 #define DOCK_NO_ROTATION            true  // if true, rotation for the mower when reaching or leaving the last dockpoint is not allowed! Make sure mower comes just before the dock in a straight line from the point before, then the last point is the dockposition, on that path angular steering is not allowed!
-#define DOCK_NO_ROTATION_DISTANCE   1.0  // (m) distance to dockpoint to stop angular motion of mower, make sure mower comes straight to dock!
+#define DOCK_NO_ROTATION_DISTANCE   1.2  // (m) distance to dockpoint to stop angular motion of mower, make sure mower comes straight to dock!
 #define DOCK_NO_ROTATION_TIMER      12000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
 //#define DOCK_NO_ROTATION_DELAY      2000  // (ms) gives the mower time to surpass the point before dockpoint by given time, after this timer angular will be clamped to zero! 
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
@@ -162,6 +162,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //ODO/ISR
 //other tests
 #define SUPER_SPIKE_ELIMINATOR      false // advanced spike elimination  (experimental, set false to disable)
+#define MOW_ONLY_WAYMOW             false // (buggy) mowmotor only starts if way state of mower is waymow, will cause stop mowmotor on all obstacle escape reverse with add obstacle or without add obsacle (escape_lawn), escape forward to switch off mowmotor. Could be used for mowmotor not starting directly at dock, but at mow area
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
 #define CHANGE_OBSTACLE_ROTATION    true  // if true, after 2 times moving forward due to an IMUyaw difference or OVERLOAD_ROTATION with escapeForward because of FREEWHEEL_IS_AT_BACKSIDE, escapeReverse with obstacle is triggered (prevent mower going forward if it can´t rotate and already tried to evade with escapeForward op) 
 #define OVERLOAD_ROTATION           true  // this function is dependent of FREEWHEEL_IS_AT_BACKSIDE and is usefull if there is alot of grip of wheels which lead to a high current and can result in a motor error overcurrent, before that happens... we want an evasion of the situation. If FREEWHEEL_IS_AT_BACKSIDE is true mower will drive forward on MOTOROVERLOAD if mower state is shouldrotate... otherwise it will trigger an Obstacle and escapeReverse (front snout of mower is hitting something during rotation) 
@@ -174,7 +175,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //try to fix 8308 driver with moving, only works reliable with "DOCK_RETRY_TOUCH = true"! tested and seems to be a valid workaround for the DRV8308 related dock stuck issue (keep FALSE if you have no issues or no DRV8308)
 #define MOVE_REGULARLY              true  // if true, mower will move in dock in given MOVE_AGAIN_AFTER time, kk: move mower to keep 8308 alive
 #define MOVE_AGAIN_AFTER            10.0  // kk: move the mower every xx minutes
-#define MOVING_TIME                 500   // kk: time (ms) for moving back
+#define MOVING_TIME                 400   // kk: time (ms) for moving back
 #define SWITCH_OFF_TRACTION_MOTORS  true  // should tractionmotors be disabled in dock?
 //LOG
 #define OUTPUT_ENABLED              false // output standard Sunray_FW LOG in serial monitor and SDlog
@@ -231,7 +232,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //#define TICKS_PER_REVOLUTION  1050 /2  // odometry ticks per wheel revolution 
 
 // ...for the brushless motor april 2021   https://wiki.ardumower.de/index.php?title=Datei:BLUnit.JPG
-#define TICKS_PER_REVOLUTION  1210 /2   // 1300/2 (1194/2)  odometry ticks per wheel revolution //MrTrees: 1210 
+#define TICKS_PER_REVOLUTION  1330 /2   // 1300/2 (1194/2)  odometry ticks per wheel revolution //MrTrees: 1210 
 
 // #define TICKS_PER_REVOLUTION  304 /2    // odometry ticks per wheel revolution (RM18)
 

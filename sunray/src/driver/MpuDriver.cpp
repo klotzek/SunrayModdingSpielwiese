@@ -3,12 +3,9 @@
 // Licensed GPLv3 for open source use
 // or Grau GmbH Commercial License for commercial use (http://grauonline.de/cms2/?page_id=153)
 
-
 #include "MpuDriver.h"
 #include "../../config.h"
 #include "../../i2c.h"
-
-
 
 MpuDriver::MpuDriver(){    
 }
@@ -59,6 +56,7 @@ bool MpuDriver::begin(){
     //mpu.setAccelFSR(2);	      
     mpu.dmpBegin(DMP_FEATURE_6X_LP_QUAT  // Enable 6-axis quat
                | DMP_FEATURE_GYRO_CAL // Use gyro calibration
+               //|DMP_FEATURE_SEND_CAL_GYRO
                | DMP_FEATURE_SEND_RAW_ACCEL
               , IMU_FIFO_RATE); // Set DMP FIFO rate
     // DMP_FEATURE_LP_QUAT can also be used. It uses the 
@@ -99,14 +97,17 @@ bool MpuDriver::isDataAvail(){
     roll = mpu.roll;
     pitch = mpu.pitch;
     yaw = mpu.yaw;
-    mpu.computeCompassHeading();
-    mpu.calcAccel(X_AXIS);
-    mpu.calcAccel(Y_AXIS);
-    mpu.calcAccel(Z_AXIS);
-    heading = mpu.heading; //MrTree heading of mpu
-    ax = mpu.ax / 16384.0;    //MrTree x acceleration of mpu
-    ay = mpu.ay / 16384.0;    //MrTree y acceleration of mpu
-    az = mpu.az / 16384.0;    //MrTree z acceleration of mpu
+
+    ax = mpu.ax / 16384.0 ;    //MrTree x acceleration of mpu in g
+    ay = mpu.ay / 16384.0 ;    //MrTree y acceleration of mpu in g
+    az = mpu.az / 16384.0 ;    //MrTree z acceleration of mpu in g
+
+    //mpu.computeCompassHeading();
+    //mpu.calcAccel(X_AXIS);
+    //mpu.calcAccel(Y_AXIS);
+    //mpu.calcAccel(Z_AXIS);
+    //heading = mpu.heading; //MrTree heading of mpu
+
 
     return true;
 }         

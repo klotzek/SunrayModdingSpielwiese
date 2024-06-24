@@ -157,6 +157,15 @@ void trackLine(bool runControl) {
   float CurrSpeed = motor.linearSpeedSet;       //MrTree
   float linear = 0;                           //MrTree Changed from 1.0
   bool mow = true;
+
+  if (MOW_ONLY_WAYMOW) {
+    mow = false;                           //MrTree Test
+    if (maps.wayMode == WAY_FREE || maps.wayMode == WAY_DOCK) mow = false;
+    if (maps.wayMode == WAY_MOW) mow = true;
+  } else {
+    mow = true;
+  }
+
   if ((stateOp == OP_DOCK) || (maps.shouldDock == true)) mow = false;
   bool trackslow_allowed = false; //MrTree: definition moved up in code
   float angular = 0;
@@ -555,16 +564,18 @@ void trackLine(bool runControl) {
       CONSOLE.println(shouldRotate);
       shouldRotatel = shouldRotate;
     }
-    
+
     if (detectLift()){ // in any case, turn off mower motor if lifted  
       mow = false;  // also, if lifted, do not turn on mowing motor so that the robot will drive and can do obstacle avoidance 
       linear = 0;
       angular = 0; 
     }
 
-    if ((mow != motor.switchedOn) && (motor.enableMowMotor)&&(DEBUG_LOG)){
-      CONSOLE.print("Linetracker.cpp changes mow status: ");
-      CONSOLE.println(mow);
+    if ((mow != motor.switchedOn) && motor.enableMowMotor){
+      if (DEBUG_LOG) {
+        CONSOLE.print("Linetracker.cpp changes mow status: ");
+        CONSOLE.println(mow);
+      }
       motor.setMowState(mow); 
     }
 
