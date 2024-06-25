@@ -592,7 +592,7 @@ float Motor::adaptiveSpeed(){                                                   
     speedcurr = linearCurrSet; //changed to header
     
     if (MOWMOTORPOWER) {
-      if (AUTO_MOWPOWER) mowPowerMax = motorMowPowerMax;
+      if (MOWPOWERMAX_AUTO) mowPowerMax = motorMowPowerMax;
       else mowPowerMax = MOWPOWERMAX;
       mowPowerMin = MOWPOWERMIN;
       dx = mowPowerMax - mowPowerMin;  
@@ -845,7 +845,7 @@ void Motor::sense(){
 	else 
 		pitchfactor = 2.0-cosPitch; // increase by angle
   motorRightSenseLPNorm = abs(motorRightSenseLP) * robotMass * pitchfactor; 
-  
+
   //////////////////////////////// MrTree need more data
   mowPowerAct = battery.batteryVoltage * motorMowSense;               //actual mow motor Power
   motorRightPowerAct = battery.batteryVoltage * motorRightSense;      //actual right motor power
