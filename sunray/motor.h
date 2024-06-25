@@ -41,12 +41,18 @@ class Motor {
     bool odometryError;       
     unsigned long motorOverloadDuration; // accumulated duration (ms)
     unsigned long motorMowRPMStallDuration; //MrTree RPM of mowmotor stalled duration (ms)
-    int  pwmMax;
-    int  mowPwm; 
+    int pwmMax;
+    int mowPwm; 
     bool motorMowSpunUp; //MrTree 
-    float  mowRpm;//mrTree
+    float mowRpm;//mrTree
     float mowMotorCurrentAverage;
     float mowPowerAct; //MrTree
+    float mowPowerMax; //MrTree
+    float motorMowPowerMax = 15; //MrTree
+    float motorLeftPowerAct; //MrTree
+    float motorLeftPowerMax = 0; //MrTree
+    float motorRightPowerAct; //MrTree
+    float motorRightPowerMax = 0; //MrTree
 	  float speedcurr; //MrTree
     float currentFactor;
     float SpeedFactor; //MrTree

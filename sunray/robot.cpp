@@ -972,6 +972,8 @@ void tuningOutput(){
   CONSOLE.print("motor.cpp: sense()          -- ");
       CONSOLE.print("mowPowerAct: ");     
       CONSOLE.print(motor.mowPowerAct);
+      CONSOLE.print(" Watt, motorMowPowerMax: ");     
+      CONSOLE.print(motor.motorMowPowerMax);
       CONSOLE.print(" Watt, motorMowSense: ");     
       CONSOLE.print(motor.motorMowSense);
       CONSOLE.print(" A, motorMowSenseLP: ");

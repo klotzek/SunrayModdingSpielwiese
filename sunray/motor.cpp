@@ -592,9 +592,9 @@ float Motor::adaptiveSpeed(){                                                   
     speedcurr = linearCurrSet; //changed to header
     
     if (MOWMOTORPOWER) {
-      mowPowerMax = MOWPOWERMAX;
+      if (AUTO_MOWPOWER) mowPowerMax = motorMowPowerMax;
+      else mowPowerMax = MOWPOWERMAX;
       mowPowerMin = MOWPOWERMIN;
-      //mowPowerAct = battery.batteryVoltage * motorMowSense;
       dx = mowPowerMax - mowPowerMin;  
       dy = 100 - (MOTOR_MIN_SPEED/speedcurr*100);                                             
       m = -1*dy/dx;
@@ -816,7 +816,7 @@ void Motor::sense(){
   if (millis() < nextSenseTime) return;
   nextSenseTime = millis() + 20;
   motorDriver.getMotorCurrent(motorLeftSense, motorRightSense, motorMowSense);
-  float lp = 0.85; //0.90, 0.995
+  float lp = 0.88; //0.90, 0.995
   motorRightSenseLP = lp * motorRightSenseLP + (1.0-lp) * motorRightSense;
   motorLeftSenseLP = lp * motorLeftSenseLP + (1.0-lp) * motorLeftSense;
   lp = 0.9;
@@ -845,7 +845,16 @@ void Motor::sense(){
 	else 
 		pitchfactor = 2.0-cosPitch; // increase by angle
   motorRightSenseLPNorm = abs(motorRightSenseLP) * robotMass * pitchfactor; 
-  mowPowerAct = battery.batteryVoltage * motorMowSense; //MrTree
+  
+  //////////////////////////////// MrTree need more data
+  mowPowerAct = battery.batteryVoltage * motorMowSense;               //actual mow motor Power
+  motorRightPowerAct = battery.batteryVoltage * motorRightSense;      //actual right motor power
+  motorLeftPowerAct = battery.batteryVoltage * motorLeftSense;        //actual left motor power
+  motorMowPowerMax = max(motorMowPowerMax, mowPowerAct);              //save mow motor max power during mower activated
+  motorRightPowerMax = max(motorRightPowerMax, motorRightPowerAct);   //save right motor max power during mower activated
+  motorLeftPowerMax = max(motorLeftPowerMax, motorLeftPowerAct);      //save left motor max power during mower activated
+  ///////////////////////////////
+
   checkOverload();  
 }
 
