@@ -47,6 +47,7 @@ float trackerDiffDelta = 0;
 bool stateKidnapped = false;
 unsigned long reachedPointBeforeDockTime = 0;               //MrTree
 bool dockTimer = false;                                     //MrTree
+bool oneTrigger = false;                                    //MrTree
 int dockGpsRebootState;                   // Svol0: status for gps-reboot at specified docking point by undocking action
 bool blockKidnapByUndocking;              // Svol0: kidnap detection is blocked by undocking without gps
 unsigned long dockGpsRebootTime;          // Svol0: retry timer for gps-fix after gps-reboot
@@ -158,15 +159,21 @@ void trackLine(bool runControl) {
   float linear = 0;                           //MrTree Changed from 1.0
   bool mow = false;                           //MrTree changed to false
 
-  if (MOW_START_AT_WAYMOW && mow == false) {
-    mow = false;                                                              //MrTree do not activate mow until there is a first waymow
-    //if (maps.wayMode == WAY_FREE || maps.wayMode == WAY_DOCK) mow = false;  //MrTree this is causing bugs because of obstacle and pathfinder, this is all wayfree
-    if (maps.wayMode == WAY_MOW) mow = true;                                  //MrTree this will only work directly after undocking and way free, the first time it is in waymow, mow will be true forever like before
+
+  if (MOW_START_AT_WAYMOW &! oneTrigger) {                                                             
+    if (maps.wayMode == WAY_MOW) {            //MrTree do not activate mow until there is a first waymow 
+      mow = true;                             //MrTree this will only work directly after undocking and way free, the first time it is in waymow, mow will be true forever like before     
+      oneTrigger = true;
+    }                                              
   } else {
-    mow = true;                                                               //MrTree --> original condition, mow will be true here and is maybe changed by a condition later in linetracker
+    mow = true;                               //MrTree --> original condition, mow will be true here and is maybe changed by a condition later in linetracker
   }
 
-  if ((stateOp == OP_DOCK) || (maps.shouldDock == true)) mow = false;
+  if ((stateOp == OP_DOCK) || (maps.shouldDock == true)) {
+    mow = false;
+    oneTrigger = false;
+  }
+  
   bool trackslow_allowed = false; //MrTree: definition moved up in code
   float angular = 0;
   float targetDelta = pointsAngle(stateX, stateY, target.x(), target.y());

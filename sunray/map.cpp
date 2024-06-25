@@ -1050,8 +1050,9 @@ bool Map::startMowing(float stateX, float stateY){
     src.setXY(stateX, stateY);
     if ((wayMode == WAY_DOCK) && (dockPoints.numPoints > 0)) {
       src.assign(dockPoints.points[0]);
-      wayMode = WAY_FREE;
-      freePointsIdx = 0;     
+    } else {
+        wayMode = WAY_FREE;
+        freePointsIdx = 0;    
     }        
     if (findObstacleSafeMowPoint(dst)){
       //dst.assign(mowPoints.points[mowPointsIdx]);      
