@@ -154,16 +154,16 @@ int get_turn_direction_preference() {
 void trackLine(bool runControl) {
   Point target = maps.targetPoint;
   Point lastTarget = maps.lastTargetPoint;
-  float CurrSpeed = motor.linearSpeedSet;       //MrTree
+  float CurrSpeed = motor.linearSpeedSet;     //MrTree take the real speed
   float linear = 0;                           //MrTree Changed from 1.0
-  bool mow = true;
+  bool mow = false;                           //MrTree changed to false
 
-  if (MOW_ONLY_WAYMOW) {
-    mow = false;                           //MrTree Test
-    if (maps.wayMode == WAY_FREE || maps.wayMode == WAY_DOCK) mow = false;
-    if (maps.wayMode == WAY_MOW) mow = true;
+  if (MOW_START_AT_WAYMOW && mow == false) {
+    mow = false;                                                              //MrTree do not activate mow until there is a first waymow
+    //if (maps.wayMode == WAY_FREE || maps.wayMode == WAY_DOCK) mow = false;  //MrTree this is causing bugs because of obstacle and pathfinder, this is all wayfree
+    if (maps.wayMode == WAY_MOW) mow = true;                                  //MrTree this will only work directly after undocking and way free, the first time it is in waymow, mow will be true forever like before
   } else {
-    mow = true;
+    mow = true;                                                               //MrTree --> original condition, mow will be true here and is maybe changed by a condition later in linetracker
   }
 
   if ((stateOp == OP_DOCK) || (maps.shouldDock == true)) mow = false;
