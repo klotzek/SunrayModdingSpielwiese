@@ -571,8 +571,15 @@ void Motor::checkOverload(){
 // Adaptive_Speed: ramp mowingspeed with mow motor rpm or current measuring            //**MrTree                                              //MrTree
 float Motor::adaptiveSpeed(){                                                          //----->  
   if (ADAPTIVE_SPEED){
+    //returns
+    if (ADAPTIVE_SPEED_MODE < 1 || ADAPTIVE_SPEED_MODE > 2){
+      if (TUNING_LOG){
+        CONSOLE.println("motor.cpp: adaptive_speed() conditions not met... RETURNING 1"); 
+      }
+      return 1;
+    }
     //if ((millis() > linearMotionStartTime + BUMPER_DEADTIME) && (bumper.obstacle())) return 1;     // bumper interrupt behaviour workaround    
-    if (!switchedOn){
+    if (!switchedOn) {
       keepslow = false;
       retryslow = false;
       keepSlowTime = 0;
@@ -592,18 +599,21 @@ float Motor::adaptiveSpeed(){                                                   
     float y = 0;
     speedcurr = linearCurrSet; //changed to header
 
-    if (MOWMOTORPOWER) {
+    if (ADAPTIVE_SPEED_MODE == 1) {
       if (MOWPOWERMAX_AUTO) mowPowerMax = motorMowPowerMax;
       else mowPowerMax = MOWPOWERMAX;
       mowPowerMin = MOWPOWERMIN;
-      dx = mowPowerMax - mowPowerMin;  
-      dy = 100 - (MOTOR_MIN_SPEED/speedcurr*100);                                             
-      m = -1*dy/dx;
-      b = 100 - (m * mowPowerMin); 
-      x = mowPowerAct;                                                    
-      y = (m*x)+b;
-      
-    } else if (MOWMOTORRPM) {
+      //dx = mowPowerMax - mowPowerMin;  
+      //dy = 100 - (MOTOR_MIN_SPEED/speedcurr*100);                                             
+      //m = -1*dy/dx;
+      //b = 100 - (m * mowPowerMin); 
+      //x = mowPowerAct;                                                    
+      //y = (m*x)+b;
+      y = map(mowPowerAct * 1000, mowPowerMin * 1000, mowPowerMax * 1000, MOTOR_MIN_SPEED/speedcurr*100*1000, 100 * 1000); //MOTOR_MIN_SPEED and MOTOR_MAX_SPEED from config.h
+      y = y / 1000;
+    } 
+
+    if (ADAPTIVE_SPEED_MODE == 2) {
       //build linear function: delta mow rpm(dx), delta mowing speed(dy), slope m, shift b
       //y = mx+b; x=RPM, y=SpeedFactor
       dx = abs(motorMowRpmSet) - ((abs(motorMowRpmSet) * MOW_RPMtr_SLOW/100));  //+constant: we want to go to min speed before possible rpm stall or keep slow triggers
@@ -612,7 +622,8 @@ float Motor::adaptiveSpeed(){                                                   
       b = 100 - (m * abs(motorMowRpmSet)); 
       x = abs(motorMowRpmCurrLPFast);                                               //rpm of mowmotor defines x in linear ramp
       y = (m*x)+b;                                                                  //calced mower speed due to rpm (m/s) as speedfactor
-    } else return 1;
+    }
+
     if (keepslow && retryslow) keepslow = false;                                    //reset keepslow because retryslow is prior
 
     if (abs(motorMowRpmCurrLPFast) < (abs(MOW_RPM_NORMAL) * MOW_RPMtr_SLOW/100)){   //trigger and set timer once, trigger by rpm percentage
@@ -694,7 +705,7 @@ float Motor::adaptiveSpeed(){                                                   
     return SpeedFactor;
   } else { //MrTree adaptive speed is not activated
     if (TUNING_LOG){
-    CONSOLE.println("motor.cpp: adaptive_speed() disabled or conditions not met... RETURNING 1"); 
+      CONSOLE.println("motor.cpp: adaptive_speed() disabled RETURNING 1"); 
     }
     return 1;
   }

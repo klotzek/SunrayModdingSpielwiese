@@ -738,7 +738,7 @@ void triggerObstacle(){
 }
 
 void detectLawn(){ //MrTree
-  if (ESCAPE_LAWN_MOWMOTORPOWER){ //MrTree option for triggering escapelawn with mowmotorpower
+  if (ESCAPE_LAWN_MODE == 1){ //MrTree option for triggering escapelawn with mowmotorpower
     if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.escapeLawnTrigFlag){    //MrTree mow power exceeded configuration
       escapeLawnTriggerTime = millis();
       //Mowpower too high, reverse from lawn                                                                       
@@ -754,7 +754,7 @@ void detectLawn(){ //MrTree
     }
   }
 
-  if (ENABLE_RPM_FAULT_DETECTION){ //MrTree option for triggering escapelawn with actual measured rpm stall
+  if (ESCAPE_LAWN_MODE == 2){ //MrTree option for triggering escapelawn with actual measured rpm stall
     if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.motorMowRPMTrigFlag){
       escapeLawnTriggerTime = millis();                                                                    
       //RPM stalled, reverse from lawn
