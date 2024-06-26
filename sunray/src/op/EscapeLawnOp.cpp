@@ -95,7 +95,8 @@ void EscapeLawnOp::run(){
 				  CONSOLE.println("EscapeLawnOp: high lawn, continue operation without virtual obstacle");  //MrTree
 				  CONSOLE.println("EscapeLawnOp: triggering retryslow!");
 				  escapeFinished = true;
-				  motor.motorMowRPMTrigFlag = false;
+				  motor.motorMowRPMTrigFlag = false; //MrTree reset flag if triggered by rpm stall
+				  motor.escapeLawnTrigFlag = false; //MrTree reset flag if triggered by mow power
 				  motor.retryslow = true;
 				  motor.retrySlowTime = millis()+RETRYSLOWTIME; 	//trigger slow retry, set keepSlowTime 
 				  changeOp(*nextOp, false);						// continue current operation

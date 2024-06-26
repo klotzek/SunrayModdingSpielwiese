@@ -737,21 +737,36 @@ void triggerObstacle(){
   activeOp->onObstacle();
 }
 
-void detectLawn(){
-  if (ENABLE_RPM_FAULT_DETECTION){
-    if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.motorMowRPMTrigFlag){                                                                                //MrTree
-      escapeLawnTriggerTime = millis();                                                                                                           //MrTree             
-      //RPM stalled, reverse from lawn                                                                          //MrTree
-      CONSOLE.println("detectLawn(): RPM of mow motor stalled!"); //MrTree     
-      if (ESCAPELAWNDISTANCE > lastTargetDist) escapeLawnDistance = lastTargetDist;                                                             //MrTree(svol0) Wenn die Entfernung zum letzten Wegpunkt kleiner als die Strecke zur Reversieren ist, wird nur bis zum Wegpunkt reversiert
-        else escapeLawnDistance = ESCAPELAWNDISTANCE;                                                                                             //MrTree  wegpunkt funktioniert leider nicht, da die lasttarget distance immer zum mäher geupdatet wird??     
+void detectLawn(){ //MrTree
+  if (ESCAPE_LAWN_MOWMOTORPOWER){ //MrTree option for triggering escapelawn with mowmotorpower
+    if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.escapeLawnTrigFlag){    //MrTree mow power exceeded configuration
+      escapeLawnTriggerTime = millis();
+      //Mowpower too high, reverse from lawn                                                                       
+      CONSOLE.println("detectLawn(): Power of mow motor too high!");
+      if (ESCAPELAWNDISTANCE > lastTargetDist) escapeLawnDistance = lastTargetDist;                //MrTree(svol0) Wenn die Entfernung zum letzten Wegpunkt kleiner als die Strecke zur Reversieren ist, wird nur bis zum Wegpunkt reversiert
+        else escapeLawnDistance = ESCAPELAWNDISTANCE;                                              //MrTree  wegpunkt funktioniert leider nicht, da die lasttarget distance immer zum mäher geupdatet wird??     
       //if (activeOp != &escapeLawnOp){ //Only allow trigger if escapeop finished ?  
       if (escapeFinished){
         escapeFinished = false;
         triggerMowRPMStall();
-        //activeOp->onMowRPMStall();                                                                                                             //MrTree
       }
-    return;                                                                                                                                   //MrTree                                                                                                                                               //MrTree
+    return;
+    }
+  }
+
+  if (ENABLE_RPM_FAULT_DETECTION){ //MrTree option for triggering escapelawn with actual measured rpm stall
+    if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.motorMowRPMTrigFlag){
+      escapeLawnTriggerTime = millis();                                                                    
+      //RPM stalled, reverse from lawn
+      CONSOLE.println("detectLawn(): RPM of mow motor stalled!");    
+      if (ESCAPELAWNDISTANCE > lastTargetDist) escapeLawnDistance = lastTargetDist;            //MrTree(svol0) Wenn die Entfernung zum letzten Wegpunkt kleiner als die Strecke zur Reversieren ist, wird nur bis zum Wegpunkt reversiert
+        else escapeLawnDistance = ESCAPELAWNDISTANCE;                                          //MrTree  wegpunkt funktioniert leider nicht, da die lasttarget distance immer zum mäher geupdatet wird??     
+      //if (activeOp != &escapeLawnOp){ //Only allow trigger if escapeop finished ?  
+      if (escapeFinished){
+        escapeFinished = false;
+        triggerMowRPMStall();
+      }
+    return;
     }
   }
 }

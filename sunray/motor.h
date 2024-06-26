@@ -16,7 +16,8 @@ typedef enum MotorSelect MotorSelect;
 
 class Motor {
   public:
-    bool motorMowRPMTrigFlag;
+    bool motorMowRPMTrigFlag;//MrTree
+    bool escapeLawnTrigFlag; //MrTree
     bool speedUpTrig;
     bool switchedOn;    //MrTree
     int mowRPM_RC; //MrTree

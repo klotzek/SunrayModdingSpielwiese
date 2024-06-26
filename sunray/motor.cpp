@@ -14,12 +14,13 @@
 void Motor::begin() {
   speedUpTrig = false;
   linearCurrSet = 0;
-  motorMowRpmCheck = false;
-  motorMowRPMTrigFlag = false;
+  motorMowRpmCheck = false;//MrTree
+  motorMowRPMTrigFlag = false;//MrTree
+  escapeLawnTrigFlag = false;//Mrtree
   motorMowRpmError = false;//MrTree
   motorMowSpunUp = false;//MrTree
 	pwmMax = MOTOR_PID_LIMIT;
-  switchedOn = false;
+  switchedOn = false;//MrTree
   #ifdef MOW_PWM
     if (MOW_PWM <= 255) {
       mowPwm = MOW_PWM;
@@ -569,7 +570,7 @@ void Motor::checkOverload(){
 
 // Adaptive_Speed: ramp mowingspeed with mow motor rpm or current measuring            //**MrTree                                              //MrTree
 float Motor::adaptiveSpeed(){                                                          //----->  
-  if (ENABLE_RPM_FAULT_DETECTION){
+  if (ADAPTIVE_SPEED){
     //if ((millis() > linearMotionStartTime + BUMPER_DEADTIME) && (bumper.obstacle())) return 1;     // bumper interrupt behaviour workaround    
     if (!switchedOn){
       keepslow = false;
@@ -590,7 +591,7 @@ float Motor::adaptiveSpeed(){                                                   
     float x = 0;                                                    
     float y = 0;
     speedcurr = linearCurrSet; //changed to header
-    
+
     if (MOWMOTORPOWER) {
       if (MOWPOWERMAX_AUTO) mowPowerMax = motorMowPowerMax;
       else mowPowerMax = MOWPOWERMAX;
@@ -601,8 +602,8 @@ float Motor::adaptiveSpeed(){                                                   
       b = 100 - (m * mowPowerMin); 
       x = mowPowerAct;                                                    
       y = (m*x)+b;
-     
-    } else {
+      
+    } else if (MOWMOTORRPM) {
       //build linear function: delta mow rpm(dx), delta mowing speed(dy), slope m, shift b
       //y = mx+b; x=RPM, y=SpeedFactor
       dx = abs(motorMowRpmSet) - ((abs(motorMowRpmSet) * MOW_RPMtr_SLOW/100));  //+constant: we want to go to min speed before possible rpm stall or keep slow triggers
@@ -611,9 +612,9 @@ float Motor::adaptiveSpeed(){                                                   
       b = 100 - (m * abs(motorMowRpmSet)); 
       x = abs(motorMowRpmCurrLPFast);                                               //rpm of mowmotor defines x in linear ramp
       y = (m*x)+b;                                                                  //calced mower speed due to rpm (m/s) as speedfactor
-    }
+    } else return 1;
     if (keepslow && retryslow) keepslow = false;                                    //reset keepslow because retryslow is prior
-    
+
     if (abs(motorMowRpmCurrLPFast) < (abs(MOW_RPM_NORMAL) * MOW_RPMtr_SLOW/100)){   //trigger and set timer once, trigger by rpm percentage
       if ((!keepslow) && (!retryslow)){                                             //only if not already trigged
         CONSOLE.println("Adaptive_Speed: Keeping slow!");
@@ -627,7 +628,7 @@ float Motor::adaptiveSpeed(){                                                   
       if (keepslow) keepSlowTime = millis()+KEEPSLOWTIME;                           //set or refresh keepslowtimer
       if (retryslow) retrySlowTime = millis()+RETRYSLOWTIME;                        //if we already are in retryslow condition, we refresh the timer of retry also                               
     }
-                                             
+                                              
     if (retryslow){                                                    //retryslow is triggered by the end of escapelawnop                       
       if (abs(motorMowRpmSet) != abs(MOW_RPM_RETRY)) {
         CONSOLE.println("Adaptive_Speed: Using MOW_RPM_RETRY");
@@ -643,7 +644,7 @@ float Motor::adaptiveSpeed(){                                                   
         //speedUpTrig = true; 
       }
     }
-  
+
     if (keepslow){                                                    //keepslow is triggered in this function, retryslow in escapelawnOp   
       if (millis() > keepSlowTime) {
         CONSOLE.println("Adaptive_Speed: Keepslow done!");
@@ -662,7 +663,7 @@ float Motor::adaptiveSpeed(){                                                   
         speedUpTrig = false;
       }
     }                             
-  
+
     y = constrain(y, MOTOR_MIN_SPEED/speedcurr*100, 100);//limit val
     y_before = y;
     SpeedFactor = y/100;                                //used for linear modifier as: MOTOR_MIN_SPEED/setSpeed*100 < Speedfactor <= 1
@@ -689,12 +690,14 @@ float Motor::adaptiveSpeed(){                                                   
       //CONSOLE.println(SpeedFactor);
     //}
     //if (speedcurr == 0) return 1; //speedcurr = 0.49;
+
     return SpeedFactor;
-    }
-  if (TUNING_LOG){
+  } else { //MrTree adaptive speed is not activated
+    if (TUNING_LOG){
     CONSOLE.println("motor.cpp: adaptive_speed() disabled or conditions not met... RETURNING 1"); 
+    }
+    return 1;
   }
-  return 1;
 }  
 
 
