@@ -588,6 +588,13 @@ float Motor::adaptiveSpeed(){
     }
 
     //prepare variables
+    int slowtrig = 0;
+    int retrytrig = 0;
+    int controlval = 0;
+    int mownormal = 0;
+    int mowslow = 0;
+    int mowretry = 0;
+    int mowset = 0;
 
     float x = 0;
     float x1 = 0;
@@ -613,55 +620,61 @@ float Motor::adaptiveSpeed(){
       y2 = 100 * 1000;
     }
 
+    if (USE_MOW_RPM_SET){
+      slowtrig = MOW_RPM_NORMAL * MOW_RPMtr_SLOW/100;
+      //retrytrig = 0;
+      controlval = abs(motorMowRpmCurrLPFast);
+      mownormal = MOW_RPM_NORMAL;
+      mowslow = MOW_RPM_SLOW;
+      mowretry = MOW_RPM_RETRY;
+      mowset = motorMowRpmSet;
+    } else {
+      slowtrig = mowPowerMax * MOW_POWERtr_SLOW/100;
+      //retrytrig = 0;
+      controlval = abs(mowPowerAct);
+      mownormal = MOW_PWM_NORMAL;
+      mowslow = MOW_PWM_SLOW;
+      mowretry = MOW_PWM_RETRY;
+      mowset = motorMowPWMSet;
+    }
+
     y = map(x, x1, x2, y2, y1);
     y = y / 1000;
 
     if (keepslow && retryslow) keepslow = false;                                      //reset keepslow because retryslow is prior
-
-    if (USE_MOW_RPM_SET){
-      if (abs(motorMowRpmCurrLPFast) < MOW_RPM_NORMAL * MOW_RPMtr_SLOW/100){   //trigger and set timer once, trigger by rpm percentage
-        if ((!keepslow) && (!retryslow)){                                             //only if not already trigged
-          CONSOLE.println("Adaptive_Speed: Keeping slow!");
-          keepslow = true;                                                            //enable keepslow state
-          if (abs(motorMowRpmSet) != MOW_RPM_SLOW){                              //set the keepslow rpm
+ 
+    if (controlval < slowtrig){   //trigger and set timer once, trigger by rpm percentage
+      if ((!keepslow) && (!retryslow)){                                             //only if not already trigged
+        CONSOLE.println("Adaptive_Speed: Keeping slow!");
+        keepslow = true;                                                            //enable keepslow state
+        if (abs(mowset) != mowslow){                              //set the keepslow rpm
+          if (USE_MOW_RPM_SET){
             CONSOLE.println("Adaptive_Speed: Using MOW_RPM_SLOW");
-            if (motorMowRpmSet > 0) motorMowRpmSet = MOW_RPM_SLOW;                    //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?
-            if (motorMowRpmSet < 0) motorMowRpmSet = -MOW_RPM_SLOW;                   //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?                                                       
-          }
-        }                                                                             //step out of trigger condition
-        if (keepslow) keepSlowTime = millis()+KEEPSLOWTIME;                           //set or refresh keepslowtimer
-        if (retryslow) retrySlowTime = millis()+RETRYSLOWTIME;                        //if we already are in retryslow condition, we refresh the timer of retry also                               
-      }
-    } else {
-      if (mowPowerAct > mowPowerMax * MOW_POWERtr_SLOW/100){                        //trigger and set timer once, trigger by power percentage
-        if ((!keepslow) && (!retryslow)){                                             //only if not already trigged
-          CONSOLE.println("Adaptive_Speed: Keeping slow!");
-          keepslow = true;                                                            //enable keepslow state
-          if (abs(motorMowPWMSet) != MOW_PWM_SLOW){                              //set the keepslow rpm
+            if (mowset > 0) motorMowRpmSet = mowslow;                    //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?
+            if (mowset < 0) motorMowRpmSet = -mowslow;                   //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?    
+          } else {
             CONSOLE.println("Adaptive_Speed: Using MOW_PWM_SLOW");
-            if (motorMowPWMSet > 0) motorMowPWMSet = MOW_PWM_SLOW;                    //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?
-            if (motorMowPWMSet < 0) motorMowPWMSet = -MOW_PWM_SLOW;                   //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?                                                       
-          }
-        }                                                                             //step out of trigger condition
-        if (keepslow) keepSlowTime = millis()+KEEPSLOWTIME;                           //set or refresh keepslowtimer
-        if (retryslow) retrySlowTime = millis()+RETRYSLOWTIME;                        //if we already are in retryslow condition, we refresh the timer of retry also                               
-      }
+            if (mowset > 0) motorMowPWMSet = mowslow;                    //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?
+            if (mowset < 0) motorMowPWMSet = -mowslow;                   //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing? 
+          }                                                   
+        }
+      }                                                                             //step out of trigger condition
+      if (keepslow) keepSlowTime = millis()+KEEPSLOWTIME;                           //set or refresh keepslowtimer
+      if (retryslow) retrySlowTime = millis()+RETRYSLOWTIME;                        //if we already are in retryslow condition, we refresh the timer of retry also                               
     }                                          
     
     if (retryslow){                                                //retryslow is triggered by the end of escapelawnop                       
-      if (USE_MOW_RPM_SET){
-        if (abs(motorMowRpmSet) != MOW_RPM_RETRY) {
+      if (abs(mowset) != mowretry) {
+        if (USE_MOW_RPM_SET){
           CONSOLE.println("Adaptive_Speed: Using MOW_RPM_RETRY");
-          if (motorMowRpmSet > 0) motorMowRpmSet = MOW_RPM_RETRY; 
-          if (motorMowRpmSet < 0) motorMowRpmSet = -MOW_RPM_RETRY;                      
-        }
-      } else {
-        if (abs(motorMowPWMSet) != MOW_PWM_RETRY) {
+          if (mowset > 0) motorMowRpmSet = mowretry; 
+          if (mowset < 0) motorMowRpmSet = -mowretry;
+        } else {
           CONSOLE.println("Adaptive_Speed: Using MOW_RPM_RETRY");
-          if (motorMowPWMSet > 0) motorMowPWMSet = MOW_PWM_RETRY; 
-          if (motorMowPWMSet < 0) motorMowPWMSet = -MOW_PWM_RETRY;                      
-        }
-      }                   
+          if (mowset > 0) motorMowPWMSet = mowretry; 
+          if (mowset < 0) motorMowPWMSet = -mowretry; 
+        }                      
+      }            
       if (millis() > retrySlowTime) {
         CONSOLE.println("Adaptive_Speed: Retryslow done! Going to Keepslow!");
         //CONSOLE.println("Adaptive_Speed: Speeding up!");
@@ -686,11 +699,11 @@ float Motor::adaptiveSpeed(){
         CONSOLE.println("Adaptive_Speed: Speeding up done!");
         CONSOLE.println("Adaptive_Speed: Using MOW_RPM_NORMAL");
         if (USE_MOW_RPM_SET){
-          if (motorMowRpmSet > 0) motorMowRpmSet = MOW_RPM_NORMAL;
-          if (motorMowRpmSet < 0) motorMowRpmSet = -MOW_RPM_NORMAL;
+          if (mowset > 0) motorMowRpmSet = mownormal;
+          if (mowset < 0) motorMowRpmSet = -mownormal;
         } else {
-          if (motorMowPWMSet > 0) motorMowPWMSet = MOW_PWM_NORMAL;
-          if (motorMowPWMSet < 0) motorMowPWMSet = -MOW_PWM_NORMAL;
+          if (mowset > 0) motorMowPWMSet = mownormal;
+          if (mowset < 0) motorMowPWMSet = -mownormal;
         }
         speedUpTrig = false;
       }
