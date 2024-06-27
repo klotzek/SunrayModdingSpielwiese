@@ -54,7 +54,6 @@ class Motor {
     float motorLeftPowerMax = 0; //MrTree
     float motorRightPowerAct; //MrTree
     float motorRightPowerMax = 0; //MrTree
-	  float speedcurr; //MrTree
     float currentFactor;
     float SpeedFactor; //MrTree
     bool keepslow;   //MrTree

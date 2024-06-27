@@ -979,7 +979,7 @@ void tuningOutput(){
       CONSOLE.print("                               gpsSpeed: ");
       CONSOLE.print(stateGroundSpeed);
       CONSOLE.print(" m/s, speedcurr: ");
-      CONSOLE.print(motor.speedcurr);
+      CONSOLE.print(motor.linearCurrSet);
       CONSOLE.print(" m/s, Speedfactor: ");
       CONSOLE.println(motor.SpeedFactor);
       CONSOLE.println();
