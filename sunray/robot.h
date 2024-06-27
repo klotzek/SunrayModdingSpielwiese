@@ -110,7 +110,7 @@ extern bool hasClient;
 extern unsigned long controlLoops;
 extern bool wifiFound;
 extern int motorErrorCounter;
-extern int motormowRPMStallCounter; //MrTree
+extern int motorMowStallCounter; //MrTree
 
 #ifdef DRV_SERIAL_ROBOT
   extern SerialRobotDriver robotDriver;
@@ -186,7 +186,7 @@ int freeMemory();
 void start();
 void run();
 void setOperation(OperationType op, bool allowRepeat = false);
-void triggerMowRPMStall(); //MrTree
+void triggerMotorMowStall(); //MrTree
 void triggerObstacle();
 void sensorTest();
 void updateStateOpText();

@@ -204,7 +204,7 @@ PubSubClient mqttClient(espClient);
 #endif
 
 int motorErrorCounter = 0;
-int motormowRPMStallCounter = 0; //MrTree
+int motorMowStallCounter = 0; //MrTree
 
 RunningMedian<unsigned int,3> tofMeasurements;
 
@@ -728,8 +728,8 @@ bool robotShouldBeInMotion(){
 }
 
 // drive reverse on high lawn and retry   //MrTree
-void triggerMowRPMStall(){                 //MrTree
-  activeOp->onMowRPMStall();               //MrTree
+void triggerMotorMowStall(){                 //MrTree
+  activeOp->onMotorMowStall();               //MrTree
 }                                         //MrTree
 
 // drive reverse if robot cannot move forward
@@ -738,33 +738,18 @@ void triggerObstacle(){
 }
 
 void detectLawn(){ //MrTree
-  if (ESCAPE_LAWN_MODE == 1){ //MrTree option for triggering escapelawn with mowmotorpower
-    if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.escapeLawnTrigFlag){    //MrTree mow power exceeded configuration
-      escapeLawnTriggerTime = millis();
-      //Mowpower too high, reverse from lawn                                                                       
-      CONSOLE.println("detectLawn(): Power of mow motor too high!");
-      if (ESCAPELAWNDISTANCE > lastTargetDist) escapeLawnDistance = lastTargetDist;                //MrTree(svol0) Wenn die Entfernung zum letzten Wegpunkt kleiner als die Strecke zur Reversieren ist, wird nur bis zum Wegpunkt reversiert
-        else escapeLawnDistance = ESCAPELAWNDISTANCE;                                              //MrTree  wegpunkt funktioniert leider nicht, da die lasttarget distance immer zum mäher geupdatet wird??     
-      //if (activeOp != &escapeLawnOp){ //Only allow trigger if escapeop finished ?  
-      if (escapeFinished){
-        escapeFinished = false;
-        triggerMowRPMStall();
-      }
-    return;
-    }
-  }
-
-  if (ESCAPE_LAWN_MODE == 2){ //MrTree option for triggering escapelawn with actual measured rpm stall
-    if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.motorMowRPMTrigFlag){
+  if (ESCAPE_LAWN){ //MrTree option for triggering escapelawn with actual measured rpm stall
+    if ((millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME)) && motor.motorMowStallFlag){
       escapeLawnTriggerTime = millis();                                                                    
       //RPM stalled, reverse from lawn
-      CONSOLE.println("detectLawn(): RPM of mow motor stalled!");    
+      if (ESCAPE_LAWN_MODE == 1) CONSOLE.println("detectLawn(): High mow motor power!");
+      if (ESCAPE_LAWN_MODE == 2) CONSOLE.println("detectLawn(): RPM of mow motor stalled!");    
       if (ESCAPELAWNDISTANCE > lastTargetDist) escapeLawnDistance = lastTargetDist;            //MrTree(svol0) Wenn die Entfernung zum letzten Wegpunkt kleiner als die Strecke zur Reversieren ist, wird nur bis zum Wegpunkt reversiert
         else escapeLawnDistance = ESCAPELAWNDISTANCE;                                          //MrTree  wegpunkt funktioniert leider nicht, da die lasttarget distance immer zum mäher geupdatet wird??     
       //if (activeOp != &escapeLawnOp){ //Only allow trigger if escapeop finished ?  
       if (escapeFinished){
         escapeFinished = false;
-        triggerMowRPMStall();
+        triggerMotorMowStall();
       }
     return;
     }
@@ -780,7 +765,7 @@ void detectSensorMalfunction(){
     }
   }
   //if ((ESCAPE_LAWN)&&(ENABLE_RPM_FAULT_DETECTION)){                                                                                               //MrTree
-  //  if (millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME) && motor.motorMowRPMTrigFlag){                                                                                //MrTree
+  //  if (millis() > (escapeLawnTriggerTime + ESCAPELAWN_DEADTIME) && motor.motorMowStallFlag){                                                                                //MrTree
   //    escapeLawnTriggerTime = millis();                                                                                                           //MrTree             
   //    //RPM stalled, reverse from lawn                                                                          //MrTree
   //    CONSOLE.println("detectSensorMalfunction: RPM of mow motor stalled!"); //MrTree     
@@ -789,7 +774,7 @@ void detectSensorMalfunction(){
   //    //if (activeOp != &escapeLawnOp){ //Only allow trigger if escapeop finished ?  
   //    if (escapeFinished){
   //      escapeFinished = false;
-  //      activeOp->onMowRPMStall();                                                                                                             //MrTree
+  //      activeOp->onMotorMowStall();                                                                                                             //MrTree
   //   }
   //   return;                                                                                                                                   //MrTree                                                                                                                                               //MrTree
   //  }

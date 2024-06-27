@@ -151,8 +151,8 @@ void MowOp::onBatteryLowShouldDock(){
 }
 
 
-void MowOp::onMowRPMStall(){											//MrTree
-	CONSOLE.println("MowOp::onMowRPMStall: Mow motor RPM stall detected");	//**   
+void MowOp::onMotorMowStall(){											//MrTree
+	CONSOLE.println("MowOp::onMotorMowStall: Mow motor RPM stall detected");	//**   
     
     if (ESCAPE_LAWN) {
 		CONSOLE.println("triggerEscapeLawn");

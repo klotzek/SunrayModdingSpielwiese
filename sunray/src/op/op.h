@@ -67,7 +67,7 @@ class Op {
     virtual void onLiftTriggered();
     virtual void onOdometryError();
     virtual void onMotorOverload();
-	  virtual void onMowRPMStall();		//MrTree
+	  virtual void onMotorMowStall();		//MrTree
     virtual void onMotorError();
     virtual void onObstacle();
     virtual void onObstacleRotation();
@@ -124,7 +124,7 @@ class MowOp: public Op {
     virtual void onGpsFixTimeout() override;
     virtual void onOdometryError() override;
     virtual void onMotorOverload() override;
-	  virtual void onMowRPMStall() override;		//MrTree
+	  virtual void onMotorMowStall() override;		//MrTree
     virtual void onMotorError() override;
     virtual void onRainTriggered() override;
     virtual void onTempOutOfRangeTriggered() override;    

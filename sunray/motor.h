@@ -16,8 +16,7 @@ typedef enum MotorSelect MotorSelect;
 
 class Motor {
   public:
-    bool motorMowRPMTrigFlag;//MrTree
-    bool escapeLawnTrigFlag; //MrTree
+    bool motorMowStallFlag;//MrTree
     bool speedUpTrig;
     bool switchedOn;    //MrTree
     int mowRPM_RC; //MrTree
@@ -36,19 +35,19 @@ class Motor {
     bool motorLeftOverload; 
     bool motorRightOverload; 
     bool motorMowOverload;
-    bool motorMowRPMStall;       //MrTree has RPM of mowmotor Stalled?
+    bool motorMowStall;       //MrTree has RPM of mowmotor Stalled?
     bool tractionMotorsEnabled;       
     bool enableMowMotor;
     bool odometryError;       
     unsigned long motorOverloadDuration; // accumulated duration (ms)
-    unsigned long motorMowRPMStallDuration; //MrTree RPM of mowmotor stalled duration (ms)
+    unsigned long motorMowStallDuration; //MrTree RPM of mowmotor stalled duration (ms)
     int pwmMax;
     int mowPwm; 
     bool motorMowSpunUp; //MrTree 
     float mowRpm;//mrTree
     float mowMotorCurrentAverage;
     float mowPowerAct; //MrTree
-    float mowPowerMax; //MrTree
+    //float mowPowerMax; //MrTree
     float motorMowPowerMax = 15; //MrTree
     float motorLeftPowerAct; //MrTree
     float motorLeftPowerMax = 0; //MrTree
@@ -113,9 +112,8 @@ class Motor {
     float motorLeftRpmLast;
     float motorRightRpmLast;
     
-
-    
-   
+    float mowPowerMax;  //MrTree
+    float mowPowerMin; //MrTree
     int motorMowPWMCurr; 
     int motorLeftPWMCurr;
     int motorRightPWMCurr;    
@@ -124,7 +122,7 @@ class Motor {
     float motorRightPWMCurrLP;    
     unsigned long lastControlTime;    
     unsigned long nextSenseTime;
-    unsigned long lastMowRPMCheckTime;  //MrTree
+    unsigned long lastMowStallCheckTime;  //MrTree
     unsigned long drvfixtimer; //MrTree 
     bool drvfixreset; //MrTree 
     unsigned int drvfixcounter;      
@@ -142,7 +140,7 @@ class Motor {
     bool checkOdometryError();
     bool checkMowRpmFault();
     void drvfix();                   //MrTree
-    void checkmotorMowRPMStall();    //MrTree
+    void checkMotorMowStall();    //MrTree
     float adaptiveSpeed();           //MrTree
     bool checkCurrentTooHighError();    
     bool checkCurrentTooLowError();

@@ -211,7 +211,7 @@ void Op::onOdometryError(){
 void Op::onMotorOverload(){
 }
 
-void Op::onMowRPMStall(){					//MrTree
+void Op::onMotorMowStall(){					//MrTree
 }    										//MrTree
 
 void Op::onMotorError(){    
