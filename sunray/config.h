@@ -89,36 +89,37 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //please keep in mind that there are bugs, but if you encounter bugs that stop the operation of mower on an area completely please tell me about it...
 
 //Experimental Modfunctions/Options/Speeds/Time etc. for different stuff and movement operations. Please read the descriptions. Cheers.
-//Mower general times and speeds with their condition parameters
+//Mower general times and speeds with their condition parameters, this section is the easiest to be tuned for one´s needs... so feel free and just tune to what you want to see on the lawn 
 #define MOWSPINUPTIME               10000 // (ms) Adds time to rotate mowingdisc before starting moving, use high value if you enable ESCAPE_LAWN for good reading of idle mow motor RPM
 #define OVERLOADSPEED               0.15  // (m/s) if there is a overloadcurrent of a motordriver, mower will use OVERLOADSPEED
-#define ROTATETOTARGETSPEED1        65.0  // (deg/s) if angle difference to point is more than ANGLEDIFF1 then this value will be used...   warning, a high value will result in extreme gearmotor stress (test at own risk, 65deg/s is still safe and fast)
-#define ROTATETOTARGETSPEED2        40.0  // (deg/s) if angle difference to point is between ANGLEDIFF1 and ANGLEDIFF2 then this value will be used...
-#define ROTATETOTARGETSPEED3        25.0  // (deg/s) if angle difference to point is less than ANGLEDIFF2 then this value will be used...
-#define ANGLEDIFF1                  30.0  // (deg) if angle to point is more than ANGLEDIFF1 --> ROTATETOTARGETSPEED1 will be used 
-#define ANGLEDIFF2                  15.0  // (deg) if angle to point is between ANGLEDIFF1 and ANGLEDIFF2 --> ROTATETOTARGETSPEED2 will be used, if it is less ROTATETOTARGETSPEED3 will be used...
-#define ANGLEPRECISE                5.0   // (deg) if Angle to point ist within 5deg, mower will continue with Linetracker.cpp Stanleycode and NEARWAYPOINT setup
 #define TRACKSLOWSPEED              0.20  // (m/s) e.g the docking speed or functions of the future
-#define NEARWAYPOINTSPEED           0.25  // (m/s) defines the speed of mower when reaching/leaving a waypoint
-#define NEARWAYPOINTDISTANCE        0.45  // (m) defines the distance of mower if approaching and leaving a waypoint and thus triggers NEARWAYPOINTSPEED of mower
+#define NEARWAYPOINTSPEED           0.25  // (m/s) the speed of mower when reaching/leaving a waypoint
+#define NEARWAYPOINTDISTANCE        0.45  // (m) the distance of mower if approaching and leaving a waypoint and thus triggers NEARWAYPOINTSPEED of mower
 #define FLOATSPEED                  0.25  // (m/s) on GPS FLOAT SOLUTION, mower will use FLOATSPEED
 #define SONARSPEED                  0.15  // (m/s) if sonar enabled and used, on sonar trigger mower will use SONARSPEED
-#define DOCKANGULARSPEED            25.0  // (deg/s) the turning rate of mower when docking (no change needed, keep low; tune at your needs if you must)
 #define OBSTACLEAVOIDANCESPEED      0.35  // (m/s) on obstacle evade operations, mower will use OBSTACLEAVOIDANCESPEED
 #define ESCAPE_REVERSE_WAY          0.45  // (m) distance in meters the mover will drive reverse in escapeReverseOp if obstacle triggered eg. by bumper org gps no speed
 #define ESCAPE_FORWARD_WAY          0.25  // (m) distance in meters the mover will drive forward in escapeForwardOp if obstacle triggered by OBSTACLE_ROTATION (no rotation)
 #define GLOBALSPEEDLIMIT            true  // if true, MOTOR_MAX_SPEED and MOTOR_MIN_SPEED will limit possible code bugs or inputs directly in motor.cpp        
 #define MOTOR_MAX_SPEED             0.60  // (m/s) maximum mower speed
 #define MOTOR_MIN_SPEED             0.05  // (m/s) minimal mower speed
+//rotation speeds, also this is easy to tune for your expectations 
+#define DOCKANGULARSPEED            25.0  // (deg/s) the turning rate of mower when docking (no change needed, keep low; tune at your needs if you must)
+#define ROTATETOTARGETSPEED1        65.0  // (deg/s) if angle difference to point is more than ANGLEDIFF1 then this value will be used...   warning, a high value will result in extreme gearmotor stress (test at own risk, 65deg/s is still safe and fast)
+#define ROTATETOTARGETSPEED2        40.0  // (deg/s) if angle difference to point is between ANGLEDIFF1 and ANGLEDIFF2 then this value will be used...
+#define ROTATETOTARGETSPEED3        25.0  // (deg/s) if angle difference to point is less than ANGLEDIFF2 then this value will be used...
+#define ANGLEDIFF1                  30.0  // (deg) if angle to point is more than ANGLEDIFF1              --> ROTATETOTARGETSPEED1 will be used 
+#define ANGLEDIFF2                  15.0  // (deg) if angle to point is between ANGLEDIFF1 and ANGLEDIFF2 --> ROTATETOTARGETSPEED2 will be used, if it is less ROTATETOTARGETSPEED3 will be used...
+#define ANGLEPRECISE                5.0   // (deg) if Angle to point ist within 5deg, mower will continue with Linetracker.cpp Stanleycode and NEARWAYPOINT setup
 //use a PID controller for mowmotor to set an RPM instead of PWM? If you use this (there will be a console output with data after 10sec when you activate the mowmotor and this is enabled)
-#define USE_MOW_RPM_SET             false  // uses RPM instead of PWM to set mowmotor (RPM_FAULT_DETECTION of orig Sunray needs to be TRUE for all RPM based functions!!)
+#define USE_MOW_RPM_SET             false  // uses RPM instead of PWM to set mowmotor (RPM_FAULT_DETECTION of orig Sunray is best to be set TRUE for all RPM based functions!!)
 #define MOWMOTOR_RPM_OFFSET         110   // compensate small RPM offsets (positive if RPM reading is less then RPM setpoint)
 #define MOWMOTOR_PID_KP             0.0024// (0.0024 Mowmotordriver DRV8308) (0.0018 JYQD) this is enough to compensate battery drainage over time and have a slow spinup, there may be a controlleroffset to rpm which has to be thought of... RPM_OFFSET
 #define MOWMOTOR_PID_KI             0.002 // (0.04 (Mowmotordriver DRV8308/JYQD))
 #define MOWMOTOR_PID_KD             0.00  // (0.0000 (Mowmotordriver DRV8308/JYQD))
 //adaptive_speed settings on RPM or LOAD of mowmotor (consider if you have mowmotor odometrie)
-#define ADAPTIVE_SPEED              true  // if true, mowing speed will adjust to RPM or MOWMOTORPOWER of mow motor on all forward speed mow operations, only available if ENABLE_RPM_FAULT_DETECTION true
-#define ADAPTIVE_SPEED_MODE         2     // (1, 2) adaptive speed modes. mode 1 - uses mowmotorpower for speeding up/down; mode 2 - uses rpm of mowmotor for speeding up/down
+#define ADAPTIVE_SPEED              true  // if true, mowing speed will adjust to RPM or MOWMOTORPOWER of mow motor on all forward speed mow operations
+#define ADAPTIVE_SPEED_MODE         2     // (1, 2) adaptive speed modes. mode 1 - uses mowmotorpower measurement for speeding up/down; mode 2 - uses rpm measurement of mowmotor for speeding up/down
 #define MOWPOWERMAX_AUTO            true  // uses highest actual measured mowPower during operation, if true MOWPOWERMAX is ignored
 #define MOWPOWERMIN                 10.0  // (Watt) idle Power of Mowmotor or minimum load power of mowmotor, if under this load mower will have maximum speed
 #define MOWPOWERMAX                 40.0  // (Watt) max load power of mowmotor, when hitting this load mower will be at minspeed
@@ -159,20 +160,17 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_NO_ROTATION            true  // if true, rotation for the mower when reaching or leaving the last dockpoint is not allowed! Make sure mower comes just before the dock in a straight line from the point before, then the last point is the dockposition, on that path angular steering is not allowed!
 #define DOCK_NO_ROTATION_DISTANCE   1.2  // (m) distance to dockpoint to stop angular motion of mower, make sure mower comes straight to dock!
 #define DOCK_NO_ROTATION_TIMER      12000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
-//#define DOCK_NO_ROTATION_DELAY      2000  // (ms) gives the mower time to surpass the point before dockpoint by given time, after this timer angular will be clamped to zero! 
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
 //GPS
 #define GPS_RESET_WAIT_FIX          true  // reset GPS if mower is in a float timeout?
 #define GPS_RESET_WAIT_FIX_TIME     15    // (min) time in minutes to reset gps if mower is in a float timeout without getting fix within GPS_RESET_WAIT_FIX_TIME 
-#define GPS_NO_SPEED_TIME           2000  // (s) time for GPS no speed trigger --> obstacle
-//ODO/ISR
-//other tests
-#define SUPER_SPIKE_ELIMINATOR      false // advanced spike elimination  (experimental, set false to disable)
-#define MOW_START_AT_WAYMOW         true // mowmotor only starts if way state of mower is waymow for the first time, used for mowmotor not starting directly at dock, but at mow area. This is a onetime trigger that only works when mower is ---> undocking ---> wayfree ---> mowarea ---> start mowmotor. After this, mowmotor will behave like it used to be
+#define GPS_NO_SPEED_TIME           2000  // (ms) time for GPS no speed trigger --> obstacle
+//other
+#define MOW_START_AT_WAYMOW          true // mowmotor only starts if way state of mower is waymow for the first time, used for mowmotor not starting directly at dock, but at mow area. This is a onetime trigger that only works when mower is ---> undocking ---> wayfree ---> mowarea ---> start mowmotor. After this, mowmotor will behave like it used to be
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
 #define CHANGE_OBSTACLE_ROTATION    true  // if true, after 2 times moving forward due to an IMUyaw difference or OVERLOAD_ROTATION with escapeForward because of FREEWHEEL_IS_AT_BACKSIDE, escapeReverse with obstacle is triggered (prevent mower going forward if it can´t rotate and already tried to evade with escapeForward op) 
 #define OVERLOAD_ROTATION           true  // this function is dependent of FREEWHEEL_IS_AT_BACKSIDE and is usefull if there is alot of grip of wheels which lead to a high current and can result in a motor error overcurrent, before that happens... we want an evasion of the situation. If FREEWHEEL_IS_AT_BACKSIDE is true mower will drive forward on MOTOROVERLOAD if mower state is shouldrotate... otherwise it will trigger an Obstacle and escapeReverse (front snout of mower is hitting something during rotation) 
-//try to fix 8308 driver with pwm (keep FALSE if you have no issues or no DRV8308, this is for experiments only)
+//try to fix 8308 driver with pwm (keep FALSE if you have no issues or no DRV8308, this is for experiments only) ---> to be removed
 #define DRV8308_FIX                 false // only for testing, if true and charger is connected, drivers pwm will be 1 for DRVFIXITERATIONS iteration of code everytime DRVFIXTIMER is met
 #define DRVFIXITERATIONS            5     // iterations of code for pwm of drivers to be PWM_GEAR and PWM_MOW (below)
 #define DRVFIXTIMER                 60000 // (ms) timer for DRV8308_FIX, everytime timer is met, function will run once for DRVFIXITERATIONS and set pwm of drivers to 1

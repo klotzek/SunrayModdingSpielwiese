@@ -540,9 +540,6 @@ void trackLine(bool runControl) {
     if (dockTimer){
       resetLinearMotionMeasurement();                                         //need to test if this is still neccessary
       if (targetDist<DOCK_NO_ROTATION_DISTANCE) angular = 0;                  //testing easier approach for DOCK_NO_ROTATION setup
-      //if (millis() > reachedPointBeforeDockTime+DOCK_NO_ROTATION_DELAY) {     //let mower pass point with DOCK_NO_ROTATION_DELAY and straighten to dockpoint on path with stanley
-      //  angular = 0;                                                          //stop angular after last point passed
-      //}
       if (millis() > reachedPointBeforeDockTime+DOCK_NO_ROTATION_TIMER){      //check the time until mower has to reach the charger and triger obstacle if not reached
         CONSOLE.println("allowDockRotation = false, not docked in given time, triggering maps.retryDocking!");
         triggerObstacle();

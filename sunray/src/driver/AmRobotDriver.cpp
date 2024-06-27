@@ -20,10 +20,6 @@
   #include "../agcm4/Adafruit_ZeroTimer.h"    // __SAMD51__
 #endif
 
-
-//#define SUPER_SPIKE_ELIMINATOR 1  // advanced spike elimination  (experimental, comment out to disable)  //MrTree moved to config.h
-
-
 volatile int odomTicksLeft  = 0;
 volatile int odomTicksRight = 0;
 volatile int odomTicksMow = 0;
