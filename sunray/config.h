@@ -111,7 +111,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MOTOR_MAX_SPEED             0.60  // (m/s) maximum mower speed
 #define MOTOR_MIN_SPEED             0.05  // (m/s) minimal mower speed
 //use a PID controller for mowmotor to set an RPM instead of PWM? If you use this (there will be a console output with data after 10sec when you activate the mowmotor and this is enabled)
-#define USE_MOW_RPM_SET             true  // uses RPM instead of PWM to set mowmotor (RPM_FAULT_DETECTION of orig Sunray needs to be TRUE for all RPM based functions!!)
+#define USE_MOW_RPM_SET             false  // uses RPM instead of PWM to set mowmotor (RPM_FAULT_DETECTION of orig Sunray needs to be TRUE for all RPM based functions!!)
 #define MOWMOTOR_RPM_OFFSET         110   // compensate small RPM offsets (positive if RPM reading is less then RPM setpoint)
 #define MOWMOTOR_PID_KP             0.0024// (0.0024 Mowmotordriver DRV8308) (0.0018 JYQD) this is enough to compensate battery drainage over time and have a slow spinup, there may be a controlleroffset to rpm which has to be thought of... RPM_OFFSET
 #define MOWMOTOR_PID_KI             0.002 // (0.04 (Mowmotordriver DRV8308/JYQD))
@@ -119,20 +119,20 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //adaptive_speed settings on RPM or LOAD of mowmotor (consider if you have mowmotor odometrie)
 #define ADAPTIVE_SPEED              true  // if true, mowing speed will adjust to RPM or MOWMOTORPOWER of mow motor on all forward speed mow operations, only available if ENABLE_RPM_FAULT_DETECTION true
 #define ADAPTIVE_SPEED_MODE         1     // (1, 2) adaptive speed modes. mode 1 - uses mowmotorpower for speeding up/down; mode 2 - uses rpm of mowmotor for speeding up/down
-#define MOWPOWERMAX_AUTO            true  // uses actual measured mowPower during operation, if true MOWPOWERMAX is ignored
+#define MOWPOWERMAX_AUTO            false  // uses highest actual measured mowPower during operation, if true MOWPOWERMAX is ignored
 #define MOWPOWERMIN                 10.0  // (Watt) idle Power of Mowmotor or minimum load power of mowmotor, if under this load mower will have maximum speed
-#define MOWPOWERMAX                 50.0  // (Watt) max load power of mowmotor, when hitting this load mower will be at minspeed
+#define MOWPOWERMAX                 40.0  // (Watt) max load power of mowmotor, when hitting this load mower will be at minspeed
 #define MOW_RPM_NORMAL              3000  // (3200)(rpm, only used if USE_MOW_RPM_SET = true) mow motor rpm for mowing (WARNING, you should check if your rpm output works as espected! if it does work, but the reading is wrong, you need to calculate the mowmotorticks per second according to realistic rpm!)
 #define MOW_RPM_SLOW                3300  // (3400)(rpm, only used if USE_MOW_RPM_SET = true) mow motor rpm when MOW_RPMtr_SLOW (%) of MOW_RPM_NORMAL (rpm) is met. Should be higher or the same as MOW_RPM_NORMAL
 #define MOW_RPM_RETRY               3600  // (3600)(rpm, only used if USE_MOW_RPM_SET = true) mow motor rpm when MOW_RPMtr_RETRY (%) of MOW_RPM_NORMAL (rpm) is met. Should be higher or the same as MOW_RPM_SLOW4 (is only used by ESCAPE_LAWN)
-#define MOW_PWM_NORMAL              170   // (pwm, only used if USE_MOW_RPM_SET = false) pwm of mow motor for normal mowing
-#define MOW_PWM_SLOW                200   // (pwm, only used if USE_MOW_RPM_SET = false) pwm of mow motor when during mowing a keepslow state is triggered. Should be higher or the same as MOW_PWM_NORMAL
-#define MOW_PWM_RETRY               255   // (pwm, only used if USE_MOW_RPM_SET = false) pwm of mow motor when during mowing a retryslow state is triggered (after escape lawn). Should be higher or the same as MOW_PWM_SLOW
+#define MOW_PWM_NORMAL              175   // (pwm, only used if USE_MOW_RPM_SET = false) pwm of mow motor for normal mowing
+#define MOW_PWM_SLOW                205   // (pwm, only used if USE_MOW_RPM_SET = false) pwm of mow motor when during mowing a keepslow state is triggered. Should be higher or the same as MOW_PWM_NORMAL
+#define MOW_PWM_RETRY               235   // (pwm, only used if USE_MOW_RPM_SET = false) pwm of mow motor when during mowing a retryslow state is triggered (after escape lawn). Should be higher or the same as MOW_PWM_SLOW
 //escapeLawn operation, mower will backup on a mowmotor stall and retry with given values... after the first try and still stalling, it backs up and waits for mowmotor to recover
 #define ESCAPE_LAWN                 true  // mower drives reverse if true and RPM stall of mow motor is detected by more than MOW_RPMtr_STALL(percentage), only available if ENABLE_RPM_FAULT_DETECTION true
 #define ESCAPE_LAWN_MODE            1     // (1, 2) escape lawn modes to trigger escape becouse of high motormow load: mode 1 - uses mowmotorpower for triggering, mode 2 - uses rpm for triggering
-#define MOW_POWERtr_STALL           90    // (%, only used if ESCAPE_LAWN_MODE = 1) if power of mowmotor exceeds e.g 90% of MOWPOWERMAX, escapelawn is triggered 
-#define MOW_POWERtr_SLOW            75    // (%, only used if ESCAPE_LAWN_MODE = 1) if power of mowmotor exceeds e.g 75% of MOWPOWERMAX, keepslow is triggered
+#define MOW_POWERtr_STALL           80    // (%, only used if ESCAPE_LAWN_MODE = 1) if power of mowmotor exceeds e.g 90% of MOWPOWERMAX, escapelawn is triggered 
+#define MOW_POWERtr_SLOW            70    // (%, only used if ESCAPE_LAWN_MODE = 1) if power of mowmotor exceeds e.g 30% of MOWPOWERMAX, keepslow is triggered
 #define MOW_RPMtr_STALL             60    // (70)(%, only used if ESCAPE_LAWN_MODE = 2) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will back up with ESCAPELAWNDISTANCE and ESCAPELAWNSPEED and try again
 #define MOW_RPMtr_SLOW              75    // (85)(%, only used if ESCAPE_LAWN_MODE = 2) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will trigger a keepSlow state with KEEPSLOWSPEED
 #define ESCAPELAWNSPEED             0.35  // (m/s) speed of mower reverse due to MOW_RPM_STALL trigger
@@ -290,7 +290,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // shall the mow motor be activated for normal operation? Deactivate this option for GPS tests and path tracking running tests
 #define ENABLE_MOW_MOTOR true // Default is true, set false for testing purpose to switch off mow motor permanently
 
-#define MOW_PWM 200  // use this to permanently reduce mowing motor power (255=max)
+//#define MOW_PWM 200  // use this to permanently reduce mowing motor power (255=max)
 
 #define MOW_FAULT_CURRENT 5.0       // mowing motor fault current (amps)
 #define MOW_TOO_LOW_CURRENT 0.005   // mowing motor too low current (amps)
@@ -308,7 +308,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define ENABLE_FAULT_DETECTION  true
 //#define ENABLE_FAULT_DETECTION  false       // use this if you keep getting 'motor error'
 
-#define ENABLE_RPM_FAULT_DETECTION  true     // use mow rpm signal to detect a motor fault (requires mowing motor with rpm output!)
+#define ENABLE_RPM_FAULT_DETECTION  false     // use mow rpm signal to detect a motor fault (requires mowing motor with rpm output!)
 //#define ENABLE_RPM_FAULT_DETECTION  false     // do not use mow rpm signal to detect a motor fault
 
 // should the robot trigger obstacle avoidance on motor errors if motor recovery failed?

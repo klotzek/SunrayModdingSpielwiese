@@ -951,15 +951,7 @@ void tuningOutput(){
   CONSOLE.println("TUNING_LOG (disable in config.h): ");
   CONSOLE.println("---------------------------------------------------->");
   CONSOLE.print("motor.cpp: adaptive_speed() -- ");
-      CONSOLE.print("motorMowRpmSet: ");     
-      CONSOLE.print(motor.motorMowRpmSet);
-      CONSOLE.print(" RPM, Batt: ");
-      CONSOLE.print(battery.batteryVoltage);
-      //CONSOLE.print(" V, mowMotorSense: ");
-      //CONSOLE.print(motor.motorMowSense);
-      CONSOLE.print(" V, mowMotorPower: ");
-      CONSOLE.print(motor.mowPowerAct);
-      CONSOLE.println(" Watt");
+      CONSOLE.print("motorMowRpmSet: ");CONSOLE.print(motor.motorMowRpmSet);CONSOLE.print(" RPM");CONSOLE.print("Driver PWM: ");CONSOLE.print(motor.motorMowPWMCurr);CONSOLE.print(" val, ");CONSOLE.print("battV = ");CONSOLE.print(battery.batteryVoltage);CONSOLE.print(" V, mowMotorPower: ");CONSOLE.print(motor.mowPowerAct);CONSOLE.println(" Watt");     
       ///////////////
       CONSOLE.print("                               gpsSpeed: ");
       CONSOLE.print(stateGroundSpeed);

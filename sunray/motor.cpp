@@ -22,24 +22,8 @@ void Motor::begin() {
   switchedOn = false;//MrTree
   mowPowerMax = MOWPOWERMAX;  //MrTree
   mowPowerMin = MOWPOWERMIN;  //MrTree
-
-  #ifdef MOW_PWM
-    if (MOW_PWM <= 255) {
-      mowPwm = MOW_PWM;
-    }
-    else mowPwm = 255;
-  #else 
-    mowPwm = 255;
-  #endif
-
-  #ifdef MOW_RPM_NORMAL                //MrTree
-    if (MOW_RPM_NORMAL <= 6500) {
-      mowRpm = MOW_RPM_NORMAL;
-    }
-    else mowRpm = 6500;
-  #else 
-    mowRpm = 6500;
-  #endif
+  mowPwm = MOW_PWM_NORMAL;
+  mowRpm = MOW_RPM_NORMAL;
   
   //ticksPerRevolution = 1060/2;
   ticksPerRevolution = TICKS_PER_REVOLUTION;
@@ -603,12 +587,14 @@ float Motor::adaptiveSpeed(){
     float y1 = 0;
     float y2 = 0;
 
+    if (MOWPOWERMAX_AUTO) mowPowerMax = motorMowPowerMax;
+
     if (ADAPTIVE_SPEED_MODE == 1) {
-      if (MOWPOWERMAX_AUTO) mowPowerMax = motorMowPowerMax;
-      x = mowPowerAct;
+      x = mowPowerAct * 1000;
       x1 = mowPowerMin * 1000;
-      x2 = mowPowerMax * 1000;
-      y1 = MOTOR_MIN_SPEED/linearCurrSet*100*1000;
+      x2 = mowPowerMax * 0.5 * 1000; //reach minspeed before powermax
+      if (x2 < x1) x2 = x1 + 500;    //safety first
+      y1 = MOTOR_MIN_SPEED/linearSpeedSet*100*1000;
       y2 = 100 * 1000; 
     } 
 
@@ -616,7 +602,7 @@ float Motor::adaptiveSpeed(){
       x = abs(motorMowRpmCurrLPFast) * 1000;
       x1 = (abs(motorMowRpmSet) * MOW_RPMtr_SLOW/100) * 1000;
       x2 = abs(motorMowRpmSet) * 1000;
-      y1 = MOTOR_MIN_SPEED/linearCurrSet*100*1000;
+      y1 = MOTOR_MIN_SPEED/linearSpeedSet*100*1000;
       y2 = 100 * 1000;
     }
 
@@ -629,9 +615,9 @@ float Motor::adaptiveSpeed(){
       mowretry = MOW_RPM_RETRY;
       mowset = motorMowRpmSet;
     } else {
-      slowtrig = mowPowerMax * MOW_POWERtr_SLOW/100;
+      slowtrig = mowPowerMax * ((100-MOW_POWERtr_SLOW)/100); //what is the trigger? do not like this upsidedown turn around.. but it´s needed
       //retrytrig = 0;
-      controlval = abs(mowPowerAct);
+      controlval = mowPowerMax - mowPowerAct;                //because we are rising with mowpower not falling like rpm
       mownormal = MOW_PWM_NORMAL;
       mowslow = MOW_PWM_SLOW;
       mowretry = MOW_PWM_RETRY;
@@ -641,6 +627,8 @@ float Motor::adaptiveSpeed(){
     y = map(x, x1, x2, y2, y1);
     y = y / 1000;
 
+    //CONSOLE.print(x);CONSOLE.print(" ");CONSOLE.print(x1);CONSOLE.print(" ");CONSOLE.print(x2);CONSOLE.print(" ");CONSOLE.print(y2);CONSOLE.print(" ");CONSOLE.println(y1);
+    //CONSOLE.println(y);
     if (keepslow && retryslow) keepslow = false;                                      //reset keepslow because retryslow is prior
  
     if (controlval < slowtrig){   //trigger and set timer once, trigger by rpm percentage
@@ -681,7 +669,6 @@ float Motor::adaptiveSpeed(){
         retryslow = false;
         keepslow = true;
         keepSlowTime = millis()+KEEPSLOWTIME;
-        //speedUpTrig = true; 
       }
     }
 
@@ -708,7 +695,6 @@ float Motor::adaptiveSpeed(){
         speedUpTrig = false;
       }
     }                             
-
     y = constrain(y, MOTOR_MIN_SPEED/linearCurrSet*100, 100);     //limit val
     y_before = y;
     SpeedFactor = y/100.0;                                        //used for linear modifier as: MOTOR_MIN_SPEED/setSpeed*100 < Speedfactor <= 1
@@ -850,11 +836,12 @@ void Motor::sense(){
   if (millis() < nextSenseTime) return;
   nextSenseTime = millis() + 20;
   motorDriver.getMotorCurrent(motorLeftSense, motorRightSense, motorMowSense);
-  float lp = 0.88; //0.90, 0.995
+  float lp = 0.8;
+  motorMowSenseLP = lp * motorMowSenseLP + (1.0-lp) * motorMowSense; 
+  lp = 0.88; //0.90, 0.995
   motorRightSenseLP = lp * motorRightSenseLP + (1.0-lp) * motorRightSense;
   motorLeftSenseLP = lp * motorLeftSenseLP + (1.0-lp) * motorLeftSense;
   lp = 0.9;
-  motorMowSenseLP = lp * motorMowSenseLP + (1.0-lp) * motorMowSense; 
   motorsSenseLP = motorRightSenseLP + motorLeftSenseLP + motorMowSenseLP;
   lp = 0.995;
   motorRightPWMCurrLP = lp * motorRightPWMCurrLP + (1.0-lp) * ((float)motorRightPWMCurr);
@@ -881,14 +868,13 @@ void Motor::sense(){
   motorRightSenseLPNorm = abs(motorRightSenseLP) * robotMass * pitchfactor; 
 
   //////////////////////////////// MrTree need more data
-  mowPowerAct = battery.batteryVoltage * motorMowSense;               //actual mow motor Power
-  motorRightPowerAct = battery.batteryVoltage * motorRightSense;      //actual right motor power
-  motorLeftPowerAct = battery.batteryVoltage * motorLeftSense;        //actual left motor power
+  mowPowerAct = battery.batteryVoltage * motorMowSenseLP;             //actual mow motor Power
+  motorRightPowerAct = battery.batteryVoltage * motorRightSenseLP;      //actual right motor power
+  motorLeftPowerAct = battery.batteryVoltage * motorLeftSenseLP;        //actual left motor power
   motorMowPowerMax = max(motorMowPowerMax, mowPowerAct);              //save mow motor max power during mower activated
   motorRightPowerMax = max(motorRightPowerMax, motorRightPowerAct);   //save right motor max power during mower activated
   motorLeftPowerMax = max(motorLeftPowerMax, motorLeftPowerAct);      //save left motor max power during mower activated
   ///////////////////////////////
-
   checkOverload();  
 }
 
@@ -928,7 +914,7 @@ void Motor::control(){
 
 
   //########################  Calculate PWM for mow motor ############################                          //MrTree
-  //if ((USE_MOW_RPM_SET) && (motorMowRpmSet != 0)){                                                               //**------>
+  if (USE_MOW_RPM_SET) {                                                               //**------>
     if ((mowRPM_RC != 0)&&(RC_Mode)) {
       if (motorMowRpmSet < 0)motorMowRpmSet = -mowRPM_RC; //MrTree
       if (motorMowRpmSet > 0)motorMowRpmSet = mowRPM_RC; //MrTree
@@ -953,9 +939,11 @@ void Motor::control(){
       motorMowPWMCurr = 0.96 * motorMowPWMCurr + 0.04 * motorMowPWMSet;
       if (abs(motorMowRpmCurrLPFast) < 400) motorMowPWMCurr = 0;    
     }                                                                                                           //<------**
-  //}                                                                                                             //MrTree
-  //mow motor ramp
-  if (!USE_MOW_RPM_SET) motorMowPWMCurr = 0.93 * motorMowPWMCurr + 0.07 * motorMowPWMSet;     //MrTree slightly increased spinuprate (0.99|0.01) before) 
+  } else {
+    motorMowPWMCurr = 0.93 * motorMowPWMCurr + 0.07 * motorMowPWMSet;     //MrTree slightly increased spinuprate (0.99|0.01) before) 
+  }                                                                                                            //MrTree
+  
+   
   
   //set PWM for all motors
   if (!tractionMotorsEnabled){

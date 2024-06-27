@@ -47,7 +47,8 @@ class Motor {
     float mowRpm;//mrTree
     float mowMotorCurrentAverage;
     float mowPowerAct; //MrTree
-    //float mowPowerMax; //MrTree
+    float mowPowerMax; //MrTree
+    float mowPowerMin; //MrTree
     float motorMowPowerMax = 15; //MrTree
     float motorLeftPowerAct; //MrTree
     float motorLeftPowerMax = 0; //MrTree
@@ -63,6 +64,7 @@ class Motor {
     unsigned long motorLeftTicks;
     unsigned long motorRightTicks;
     unsigned long motorMowTicks;
+    int motorMowPWMCurr;
     float linearCurrSet;// MrTree helper
     bool motorMowRpmCheck; //MrTree    
     float motorMowRpmSet;//MrTree  
@@ -111,10 +113,6 @@ class Motor {
     float motorMowRpmCurrLPFast;    
     float motorLeftRpmLast;
     float motorRightRpmLast;
-    
-    float mowPowerMax;  //MrTree
-    float mowPowerMin; //MrTree
-    int motorMowPWMCurr; 
     int motorLeftPWMCurr;
     int motorRightPWMCurr;    
     float motorMowPWMCurrLP; 
