@@ -465,9 +465,12 @@ void outputConfig(){
   #ifdef MOTOR_RIGHT_SWAP_DIRECTION
     CONSOLE.println("MOTOR_RIGHT_SWAP_DIRECTION");
   #endif
-  #ifdef MOW_PWM
-    CONSOLE.print("MOW_PWM: ");
-    CONSOLE.println(MOW_PWM);
+  #if (!USE_MOW_RPM_SET)
+    CONSOLE.print("MOW_PWM_NORMAL: ");
+    CONSOLE.println(MOW_PWM_NORMAL);
+  #else
+    CONSOLE.print("MOW_RPM_NORMAL: ");
+    CONSOLE.println(MOW_RPM_NORMAL);
   #endif
   CONSOLE.print("MOW_FAULT_CURRENT: ");
   CONSOLE.println(MOW_FAULT_CURRENT);

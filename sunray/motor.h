@@ -20,6 +20,7 @@ class Motor {
     bool speedUpTrig;
     bool switchedOn;    //MrTree
     int mowRPM_RC; //MrTree
+    int mowPWM_RC;
     bool motorMowRpmError;//MrTree
     float robotPitch;  // robot pitch (rad)
     float wheelBaseCm;  // wheel-to-wheel diameter
@@ -47,9 +48,10 @@ class Motor {
     float mowRpm;//mrTree
     float mowMotorCurrentAverage;
     float mowPowerAct; //MrTree
+    float mowPowerActLP; //MrTree
     float mowPowerMax; //MrTree
     float mowPowerMin; //MrTree
-    float motorMowPowerMax = 15; //MrTree
+    float motorMowPowerMax; //MrTree
     float motorLeftPowerAct; //MrTree
     float motorLeftPowerMax = 0; //MrTree
     float motorRightPowerAct; //MrTree

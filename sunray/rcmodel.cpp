@@ -102,6 +102,7 @@ void RCModel::run()
         motor.setLinearAngularSpeed(0, 0);
         motor.setMowState(false);
         motor.mowRPM_RC = 0;
+        motor.mowPWM_RC = 0;
         digitalWrite(pinRemoteSwitch, HIGH);                                        // RC Receiver Powerdown over Relaisboard K2
         detachInterrupt(digitalPinToInterrupt(pinRemoteMow));                       // Interrupt deaktivieren
         detachInterrupt(digitalPinToInterrupt(pinRemoteSteer));                       // Interrupt deaktivieren
@@ -166,7 +167,8 @@ void RCModel::run()
       { bMow = true; }else{ bMow = false;}    
       mowPWM_RC = CHAN_3;
       //mowRPM_RC = (4000/255)*abs(CHAN_3);
-      motor.mowRPM_RC = (4000/255)*abs(CHAN_3);
+      if (USE_MOW_RPM_SET) motor.mowRPM_RC = (4000/255)*abs(CHAN_3);
+      else motor.mowPWM_RC = CHAN_3;
       //CONSOLE.println(CHAN_3);
     }
     //CONSOLE.println(ch3.getValue());
@@ -201,7 +203,7 @@ void RCModel::run()
     }
 #endif
    motor.setLinearAngularSpeed(linearPPM, angularPPM, false);                     // R/C Signale an Motor leiten
-   motor.setMowState(bMow);                                                       // bMow vom Poti als Schwellwertschalter
+   if (bMow != motor.switchedOn) motor.setMowState(bMow);                         // bMow vom Poti als Schwellwertschalter
    //motor.speedPWM(PWMLeft, PWMRight, 0);
    //motorDriver.setMotorPwm(PWMLeft, PWMRight, 0);
   }

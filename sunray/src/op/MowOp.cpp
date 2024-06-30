@@ -265,11 +265,11 @@ void MowOp::onGpsFixTimeout(){
     // no gps solution
     if (REQUIRE_VALID_GPS){
 #ifdef UNDOCK_IGNORE_GPS_DISTANCE
-        if (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE){
-			iterationcounter = 0;
+        if (iterationcounter > 200 && (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE)){
 #else
         if (!maps.isUndocking() && (iterationcounter > 200)){
 #endif
+            CONSOLE.println("MowOp::onGpsNoSignal iterationcounter over value, triggering gpsWaitFixOp");
             stateSensor = SENS_GPS_FIX_TIMEOUT;
 			iterationcounter = 0;
             changeOp(gpsWaitFixOp, true);
@@ -281,8 +281,7 @@ void MowOp::onGpsNoSignal(){
 	iterationcounter++;
     if (REQUIRE_VALID_GPS){
 #ifdef UNDOCK_IGNORE_GPS_DISTANCE
-        if (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE){
-		iterationcounter = 0;
+        if (iterationcounter > 200 && (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE)){
 #else
         if (!maps.isUndocking() && (iterationcounter > 200)){
 #endif

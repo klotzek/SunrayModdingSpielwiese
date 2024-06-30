@@ -189,11 +189,9 @@ void Op::onKidnapped(bool state){
 }
 
 void Op::onGpsNoSignal(){
-	int iterationcounter = 0;
 }
 
 void Op::onGpsFixTimeout(){
-	int iterationcounter = 0;
 }
 
 void Op::onRainTriggered(){

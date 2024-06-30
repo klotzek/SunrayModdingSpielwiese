@@ -587,7 +587,7 @@ void trackLine(bool runControl) {
       if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){
        // wait until mowing motor is running
        if (!buzzer.isPlaying()) buzzer.sound(SND_WARNING, true);
-        if (DEBUG_LOG) CONSOLE.println("linetracker.cpp trying to wait for mowmotor....");
+        //if (DEBUG_LOG) CONSOLE.println("linetracker.cpp trying to wait for mowmotor....");
         linear = 0;
         angular = 0; 
       }
