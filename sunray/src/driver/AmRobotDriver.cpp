@@ -209,8 +209,8 @@ AmMotorDriver::AmMotorDriver(){
   JYQD.minPwmSpeed = 0;          // minimum PWM speed your driver can operate
   JYQD.maxPwmSpeed = 255;            
   JYQD.pwmFreq = PWM_FREQ_3900;  // choose between PWM_FREQ_3900 and PWM_FREQ_29300 here   
-  JYQD.adcVoltToAmpOfs = -1.65;      // ADC voltage to amps (offset)   // brushless-adapter: 0A=1.65V, resolution 132mV/A
-  JYQD.adcVoltToAmpScale = 7.57; // ADC voltage to amps (scale)
+  JYQD.adcVoltToAmpOfs = -1.677;      // ADC voltage to amps (offset)   // brushless-adapter: 0A=1.65V, resolution 132mV/A
+  JYQD.adcVoltToAmpScale = 14.4; // (7.57) ADC voltage to amps (scale)
   JYQD.adcVoltToAmpPow = 1.0;    // ADC voltage to amps (power of number)
 
   // owlDrive 

@@ -97,7 +97,7 @@ void Motor::begin() {
   mowPowerAct = 0; //MrTree
   mowPowerActLP = 0; //MrTree
   motorMowPWMSet = 0;
-  motorMowPowerMax = 25; //MrTree  
+  motorMowPowerMax = 35; //MrTree  
   motorMowForwardSet = true;
   toggleMowDir = MOW_TOGGLE_DIR;
 
@@ -566,9 +566,9 @@ float Motor::adaptiveSpeed(){
     }
 
     //prepare variables
-    int slowtrig = 0;
-    int retrytrig = 0;
-    int controlval = 0;
+    float slowtrig = 0;
+    float retrytrig = 0;
+    float controlval = 0;
     int mownormal = 0;
     int mowslow = 0;
     int mowretry = 0;
@@ -597,7 +597,7 @@ float Motor::adaptiveSpeed(){
 
     if (ADAPTIVE_SPEED_MODE == 2) {
       x = abs(motorMowRpmCurrLPFast) * 1000;
-      x1 = (abs(motorMowRpmSet) * MOW_RPMtr_SLOW/100) * 1000;
+      x1 = (abs(motorMowRpmSet) * (MOW_RPMtr_SLOW+5)/100) * 1000; //add some offset to trigger slow, because we dont want to trigger slowstate but become slow before that happens
       x2 = abs(motorMowRpmSet) * 1000;
       y1 = 100;
       y2 = MOTOR_MIN_SPEED/linearCurrSet*100; //linearSpeedSet
@@ -621,7 +621,8 @@ float Motor::adaptiveSpeed(){
       mowset = motorMowPWMSet;
     }
 
-    y = map(x, x1, x2, y2, y1);                            
+    y = map(x, x1, x2, y2, y1);
+    //CONSOLE.print("y= "); CONSOLE.print(y);CONSOLE.print("   x= "); CONSOLE.print(x); CONSOLE.print(" x1= ");CONSOLE.print(x1); CONSOLE.print(" x2= ");CONSOLE.print(x2);CONSOLE.print(" y2= ");CONSOLE.print(y2);CONSOLE.print(" y1= ");CONSOLE.println(y1);                             
     y = constrain(y, MOTOR_MIN_SPEED/linearCurrSet*100, 100);     //limit val
     y_before = y;
     SpeedFactor = y/100.0;                                        //used for linear modifier as: MOTOR_MIN_SPEED/setSpeed*100 < Speedfactor <= 1
@@ -629,6 +630,7 @@ float Motor::adaptiveSpeed(){
     if (keepslow && retryslow) keepslow = false;             //reset keepslow because retryslow is prior
  
     if (controlval < slowtrig){                              //trigger and set timer once, trigger by rpm percentage
+      //CONSOLE.print("controlval = ");CONSOLE.print(controlval);CONSOLE.print("slowtrig = ");CONSOLE.println(slowtrig);
       if ((!keepslow) && (!retryslow)){                      //only if not already trigged
         CONSOLE.println("Adaptive_Speed: Keeping slow!");
         keepslow = true;                                          //enable keepslow state
@@ -942,7 +944,7 @@ void Motor::control(){
       if (motorMowPWMSet < 0)motorMowPWMSet = -mowPWM_RC; //MrTree
       if (motorMowPWMSet > 0)motorMowPWMSet = mowPWM_RC; //MrTree
     } 
-    motorMowPWMCurr = 0.93 * motorMowPWMCurr + 0.07 * motorMowPWMSet;     //MrTree slightly increased spinuprate (0.99|0.01) before)
+    motorMowPWMCurr = 0.85 * motorMowPWMCurr + 0.15 * motorMowPWMSet;     //MrTree slightly increased spinuprate (0.99|0.01) before)
   }                                                                                                            //MrTree
   
   //set PWM for all motors

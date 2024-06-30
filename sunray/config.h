@@ -112,8 +112,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define ANGLEDIFF2                  15.0  // (deg) if angle to point is between ANGLEDIFF1 and ANGLEDIFF2 --> ROTATETOTARGETSPEED2 will be used, if it is less ROTATETOTARGETSPEED3 will be used...
 #define ANGLEPRECISE                5.0   // (deg) if Angle to point ist within 5deg, mower will continue with Linetracker.cpp Stanleycode and NEARWAYPOINT setup
 //use a PID controller for mowmotor to set an RPM instead of PWM? If you use this (there will be a console output with data after 10sec when you activate the mowmotor and this is enabled)
-//CONFIG HINT: for the following options it is important if you have mow motor odometrie: USE_MOW_RPM_SET, ADAPTIVE_SPEED_MODE, ESCAPE_LAWN_MODE. If you do not have odometrie: use mode 1 on both cases and set USE_MOW_RPM_SET = false
-#define USE_MOW_RPM_SET             false  // uses RPM instead of PWM to set mowmotor (RPM_FAULT_DETECTION of orig Sunray is best to be set TRUE for all RPM based functions!!)
+//CONFIG HINT: for the following options it is important if you have mow motor odometrie: USE_MOW_RPM_SET, ADAPTIVE_SPEED_MODE, ESCAPE_LAWN_MODE. If you do not have odometrie: use mode 1 on both cases and set USE_MOW_RPM_SET = false, if you have odometrie use mode 2 on both cases and set USE_MOW_RPM_SET = true (recommended)
+#define USE_MOW_RPM_SET             true  // uses RPM instead of PWM to set mowmotor (RPM_FAULT_DETECTION of orig Sunray is best to be set TRUE for all RPM based functions!!)
 #define MOWMOTOR_RPM_OFFSET         110   // compensate small RPM offsets (positive if RPM reading is less then RPM setpoint)
 #define MOWMOTOR_PID_KP             0.0024// (0.0024 Mowmotordriver DRV8308) (0.0018 JYQD) this is enough to compensate battery drainage over time and have a slow spinup, there may be a controlleroffset to rpm which has to be thought of... RPM_OFFSET
 #define MOWMOTOR_PID_KI             0.002 // (0.04 (Mowmotordriver DRV8308/JYQD))
@@ -122,8 +122,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define ADAPTIVE_SPEED              true  // if true, mowing speed will adjust to RPM or MOWMOTORPOWER of mow motor on all forward speed mow operations
 #define ADAPTIVE_SPEED_MODE         2     // (1, 2) adaptive speed modes. mode 1 - uses mowmotorpower measurement for speeding up/down; mode 2 - uses rpm measurement of mowmotor for speeding up/down
 #define MOWPOWERMAX_AUTO            true  // uses highest actual measured mowPower during operation, if true MOWPOWERMAX is ignored
-#define MOWPOWERMIN                 5.0  // (Watt) idle Power of Mowmotor or minimum load power of mowmotor, if under this load mower will have maximum speed
-#define MOWPOWERMAX                 25.0  // (Watt) max load power of mowmotor, when hitting this load mower will be at minspeed
+#define MOWPOWERMIN                 10.0  // (Watt) idle Power of Mowmotor or minimum load power of mowmotor, if under this load mower will have maximum speed
+#define MOWPOWERMAX                 35.0  // (Watt) max load power of mowmotor, when hitting this load mower will be at minspeed
 #define MOW_RPM_NORMAL              3000  // (3200)(rpm, only used if USE_MOW_RPM_SET = true) mow motor rpm for mowing (WARNING, you should check if your rpm output works as espected! if it does work, but the reading is wrong, you need to calculate the mowmotorticks per second according to realistic rpm!)
 #define MOW_RPM_SLOW                3300  // (3400)(rpm, only used if USE_MOW_RPM_SET = true) mow motor rpm when MOW_RPMtr_SLOW (%) of MOW_RPM_NORMAL (rpm) is met. Should be higher or the same as MOW_RPM_NORMAL
 #define MOW_RPM_RETRY               3600  // (3600)(rpm, only used if USE_MOW_RPM_SET = true) mow motor rpm when MOW_RPMtr_RETRY (%) of MOW_RPM_NORMAL (rpm) is met. Should be higher or the same as MOW_RPM_SLOW4 (is only used by ESCAPE_LAWN)
@@ -134,9 +134,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define ESCAPE_LAWN                 true  // mower drives reverse if true and RPM stall of mow motor is detected by more than MOW_RPMtr_STALL(percentage), only available if ENABLE_RPM_FAULT_DETECTION true
 #define ESCAPE_LAWN_MODE             2    // (1, 2) escape lawn modes to trigger escape becouse of high motormow load: mode 1 - uses mowmotorpower for triggering, mode 2 - uses rpm for triggering
 #define MOW_POWERtr_STALL           80    // (%, only used if ESCAPE_LAWN_MODE = 1) if power of mowmotor exceeds e.g 90% of MOWPOWERMAX, escapelawn is triggered 
-#define MOW_POWERtr_SLOW            70    // (%, only used if ESCAPE_LAWN_MODE = 1) if power of mowmotor exceeds e.g 30% of MOWPOWERMAX, keepslow is triggered
+#define MOW_POWERtr_SLOW            70    // (%, only used if ESCAPE_LAWN_MODE = 1) if power of mowmotor exceeds e.g 70% of MOWPOWERMAX, keepslow is triggered
 #define MOW_RPMtr_STALL             60    // (70)(%, only used if ESCAPE_LAWN_MODE = 2) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will back up with ESCAPELAWNDISTANCE and ESCAPELAWNSPEED and try again
-#define MOW_RPMtr_SLOW              85    // (85)(%, only used if ESCAPE_LAWN_MODE = 2) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will trigger a keepSlow state with KEEPSLOWSPEED
+#define MOW_RPMtr_SLOW              80    // (85)(%, only used if ESCAPE_LAWN_MODE = 2) if RPM of mowmotor stalls under % of MOW_RPM_NORMAL mower will trigger a keepSlow state with KEEPSLOWSPEED
 #define ESCAPELAWNSPEED             0.35  // (m/s) speed of mower reverse due to MOW_RPM_STALL trigger
 #define ESCAPELAWNDISTANCE          0.5   // (m) distance mower reverses with ESCAPELAWNSPEED due to MOW_RPM_STALL triggered
 #define ESCAPELAWNWAITTIME          5000  // (ms)after reversing the second time within ESCAPELAWNTIMER, mower will wait for this time before continue (recover rpm)
@@ -159,7 +159,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_SLOW_ONLY_LAST_POINTS  4     // (pt) Svol0: dockingpoint number (counted from last dockingpoint) where slow speed will be used to reach the dockingstation (0 = all points will be reached with slow speed)
 //keep mower from rotating in dock by all means, needs situation dependent tuning, so be aware!
 #define DOCK_NO_ROTATION            true  // if true, rotation for the mower when reaching or leaving the last dockpoint is not allowed! Make sure mower comes just before the dock in a straight line from the point before, then the last point is the dockposition, on that path angular steering is not allowed!
-#define DOCK_NO_ROTATION_DISTANCE   1.2  // (m) distance to dockpoint to stop angular motion of mower, make sure mower comes straight to dock!
+#define DOCK_NO_ROTATION_DISTANCE   1.2  // (m) distance to dockpoint to stop angular motion of mower, make sure mower comes straight to dock and the point distance from dockpoint to pointbefore is double this number!
 #define DOCK_NO_ROTATION_TIMER      12000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
 //GPS
@@ -167,7 +167,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define GPS_RESET_WAIT_FIX_TIME     15    // (min) time in minutes to reset gps if mower is in a float timeout without getting fix within GPS_RESET_WAIT_FIX_TIME 
 #define GPS_NO_SPEED_TIME           2000  // (ms) time for GPS no speed trigger --> obstacle
 //other
-#define MOW_START_AT_WAYMOW          true // mowmotor only starts if way state of mower is waymow for the first time, used for mowmotor not starting directly at dock, but at mow area. This is a onetime trigger that only works when mower is ---> undocking ---> wayfree ---> mowarea ---> start mowmotor. After this, mowmotor will behave like it used to be
+#define MOW_START_AT_WAYMOW         true // mowmotor only starts if way state of mower is waymow for the first time, used for mowmotor not starting directly at dock, but at mow area. This is a onetime trigger that only works when mower is ---> undocking ---> wayfree ---> mowarea ---> start mowmotor. After this, mowmotor will behave like it used to be
 //obstacle behaviour when OBSTACLE_ROTATION is enabled and escapeForward is triggered due to IMUYaw difference (wheel at backside, popo situation)
 #define CHANGE_OBSTACLE_ROTATION    true  // if true, after 2 times moving forward due to an IMUyaw difference or OVERLOAD_ROTATION with escapeForward because of FREEWHEEL_IS_AT_BACKSIDE, escapeReverse with obstacle is triggered (prevent mower going forward if it can´t rotate and already tried to evade with escapeForward op) 
 #define OVERLOAD_ROTATION           true  // this function is dependent of FREEWHEEL_IS_AT_BACKSIDE and is usefull if there is alot of grip of wheels which lead to a high current and can result in a motor error overcurrent, before that happens... we want an evasion of the situation. If FREEWHEEL_IS_AT_BACKSIDE is true mower will drive forward on MOTOROVERLOAD if mower state is shouldrotate... otherwise it will trigger an Obstacle and escapeReverse (front snout of mower is hitting something during rotation) 
