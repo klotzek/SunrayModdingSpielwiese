@@ -96,7 +96,7 @@ void EscapeLawnOp::run(){
 				  CONSOLE.println("EscapeLawnOp: triggering retryslow!");
 				  escapeFinished = true;
 				  motor.motorMowStallFlag = false; //MrTree reset flag if triggered by rpm stall
-				  motor.retryslow = true;
+				  if (CHANGE_SPEED_SET) motor.retryslow = true;
 				  motor.retrySlowTime = millis()+RETRYSLOWTIME; 	//trigger slow retry, set keepSlowTime 
 				  changeOp(*nextOp, false);						// continue current operation
 				}

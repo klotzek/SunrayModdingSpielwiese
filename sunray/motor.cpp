@@ -39,16 +39,18 @@ void Motor::begin() {
   motorRightPID.Ki       = motorLeftPID.Ki;
   motorRightPID.Kd       = motorLeftPID.Kd;
   motorRightPID.reset();
+  motorMowPID.Kp       = MOWMOTOR_PID_KP; //MrTree
+  motorMowPID.Ki       = MOWMOTOR_PID_KI; //MrTree
+  motorMowPID.Kd       = MOWMOTOR_PID_KD; //MrTree
+  motorMowPID.reset();     	              //MrTree
 
   motorLeftLpf.Tf = MOTOR_PID_LP;
   motorLeftLpf.reset();
   motorRightLpf.Tf = MOTOR_PID_LP;  
   motorRightLpf.reset();
-
-  motorMowPID.Kp       = MOWMOTOR_PID_KP; //MrTree
-  motorMowPID.Ki       = MOWMOTOR_PID_KI; //MrTree
-  motorMowPID.Kd       = MOWMOTOR_PID_KD; //MrTree
-  motorMowPID.reset();     	              //MrTree
+  motorMowLpf.Tf = MOWMOTOR_PID_LP;
+  motorMowLpf.reset();
+ 
 
   robotPitch = 0;
   #ifdef MOTOR_DRIVER_BRUSHLESS
@@ -178,47 +180,54 @@ void Motor::speedPWM ( int pwmLeft, int pwmRight, int pwmMow )
 //      V     = (VR + VL) / 2       =>  VR = V + omega * L/2
 //      omega = (VR - VL) / L       =>  VL = V - omega * L/2
 void Motor::setLinearAngularSpeed(float linear, float angular, bool useLinearRamp){  
-   if (millis() < motorMowSpinUpTime + MOWSPINUPTIME){      //searching for a bug.... when mower will move without waiting for mowmotor
-    //CONSOLE.println("Motor::setLinearAngularSpeed trying to wait for mowmotor....");
-    linear = 0;                                     //workaround
+  if (millis() < motorMowSpinUpTime + MOWSPINUPTIME){                     
+    linear = 0;
     angular = 0; 
-   }
-   if (angular == 0) resetAngularMotionMeasurement(); //MrTree
-   if (linear == 0) resetLinearMotionMeasurement();  //MrTree
-   setLinearAngularSpeedTimeout = millis() + 1000;
-   setLinearAngularSpeedTimeoutActive = true;
-   linearCurrSet = linear;//MrTree
-   if ((ADAPTIVE_SPEED)&&(linear > 0)) {   
-     linear = linear * adaptiveSpeed();
-     if ((speedUpTrig)&&(linear >= linearCurrSet)) linear = 0.998 * linearSpeedSet + 0.002 * linear; //Speed up slow if triggered from adaptive speed function
-   }   
-   if ((activateLinearSpeedRamp) && (useLinearRamp)) {
-     linearSpeedSet = 0.82 * linearSpeedSet + 0.18 * linear;                                                                        //MrTree reduce overshooting lp changed from 0.9 to 0.82 //svolos calculated ramp would be better, but must be used here as own function besides adaptivespeed
-     if ((linear == 0) && (fabs(linearSpeedSet) < 0.1)) linearSpeedSet = 0;                                                         //MrTree further reduce overshooting with cutting ramp if ramp speed is lower than (value) and setspeed is 0 
-   } else {
-     linearSpeedSet = linear;
-   }
-   //Global linear Speedlimit                                                                                                       //MrTree this code is obsolete if there is no false behaviour of other code
-   if (GLOBALSPEEDLIMIT) {                                                                                                          //MrTree
-    if (linearSpeedSet >0){                                                                                                         //MrTree
-      linearSpeedSet = max(linearSpeedSet,MOTOR_MIN_SPEED);    //If positive linear is less than MINSPEED, use MINSPEED as limit    //MrTree
-      linearSpeedSet = min(linearSpeedSet,MOTOR_MAX_SPEED);    //If positive linear is more than MAXSPEED, use MAXSPEED as limit    //MrTree
-    }                                                                                                                               //MrTree
-    if (linearSpeedSet <0){                                                                                                         //MrTree
-      linearSpeedSet = min(linearSpeedSet,-1*MOTOR_MIN_SPEED); //If negative linear is more than -MINSPEED, use -MINSPEED as limit  //MrTree
-      linearSpeedSet = max(linearSpeedSet,-1*MOTOR_MAX_SPEED); //If negative linear is less than -MAXSPEED, use -MAXSPEED as limit  //MrTree
-    }                                                                                                                               //MrTree
-   }
-   angularSpeedSet = angular;   
-   float rspeed = linearSpeedSet + angularSpeedSet * (wheelBaseCm /100.0 /2);          
-   float lspeed = linearSpeedSet - angularSpeedSet * (wheelBaseCm /100.0 /2);          
-   // RPM = V / (2*PI*r) * 60
-   if (fabs(linearSpeedSet) < MOTOR_MIN_SPEED) resetLinearMotionMeasurement(); //MrTree less than MOTOR_MIN_SPEED 
-   if (fabs(angularSpeedSet) <= 0,02) resetAngularMotionMeasurement(); //MrTree less then 1deg/s
+  }
 
-   motorRightRpmSet =  rspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;   
-   motorLeftRpmSet = lspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;   
+  if (angular == 0) resetAngularMotionMeasurement();                          //MrTree
+  if (linear == 0) resetLinearMotionMeasurement();                            //MrTree
+  setLinearAngularSpeedTimeout = millis() + 2500;                             //Changed to 2500 from 1000, this possibly causes the stop and go if mower is controlled manually over WiFi 
+  setLinearAngularSpeedTimeoutActive = true;
+  
+  float linearDelta = linear - linearSpeedSet;                                 //need a delta for triggering ramp
+  bool speedChange = (abs(linearDelta) > 2*MOTOR_MIN_SPEED);
+  linearCurrSet = linear;                                                     //MrTree safe linear in a global before messing around with it
 
+
+  //CONSOLE.print("MOTOR START linearCurrSet: "); CONSOLE.println(linearCurrSet);
+  //CONSOLE.print("MOTOR START linearDelta: "); CONSOLE.println(linearDelta);
+
+  if (activateLinearSpeedRamp && useLinearRamp && speedChange ){                              //this is a speed ramp for changes in speed during operation, to smooth transitions a little bit. needs to be quick
+    //linearSpeedSet = 0.82 * linearSpeedSet + 0.18 * linear;
+    if (linearCurrSet > linearSpeedSet) linear = linearSpeedSet + 0.20/20;         //cm/s² acc ramp with estimated controlfreq of 20Hz (50ms), only trigger this if larger speedchanges
+    if (linearCurrSet < linearSpeedSet) linear = linearSpeedSet - 0.20/20;        //cm/s² dec ramp with estimated controlfreq of 20Hz (50ms), only trigger this if larger speedchanges                
+    
+    //CONSOLE.print("RAMP   linear: "); CONSOLE.println(linear);
+
+  }
+ 
+  linearSpeedSet = linear;
+  
+  //Global linear Speedlimit 
+  if (GLOBALSPEEDLIMIT) {                                                     //MrTree
+    if (linearSpeedSet > 0){
+      constrain(linearSpeedSet, MOTOR_MIN_SPEED, MOTOR_MAX_SPEED);
+    }
+    if (linearSpeedSet < 0){
+      constrain(linearSpeedSet, -MOTOR_MAX_SPEED, -MOTOR_MIN_SPEED);
+    }
+  }
+
+  angularSpeedSet = angular;   
+  float rspeed = linearSpeedSet + angularSpeedSet * (wheelBaseCm /100.0 /2);          
+  float lspeed = linearSpeedSet - angularSpeedSet * (wheelBaseCm /100.0 /2);          
+  // RPM = V / (2*PI*r) * 60
+  if (fabs(linearSpeedSet) < MOTOR_MIN_SPEED) resetLinearMotionMeasurement(); //MrTree less than MOTOR_MIN_SPEED 
+  if (fabs(angularSpeedSet) <= 0,02) resetAngularMotionMeasurement(); //MrTree less then 1deg/s
+
+  motorRightRpmSet =  rspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;   
+  motorLeftRpmSet = lspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;
 }
 
 
@@ -313,9 +322,10 @@ void Motor::stopImmediately(bool includeMowerMotor){
   // reset PID
   motorLeftPID.reset();
   motorRightPID.reset();
+  motorMowPID.reset();//MrTree
   motorLeftLpf.reset();
   motorRightLpf.reset();
-  motorMowPID.reset();//MrTree
+  motorMowLpf.reset();
   // reset unread encoder ticks
   int ticksLeft=0;
   int ticksRight=0;
@@ -336,6 +346,7 @@ void Motor::run() {
   }
     
   sense();
+  changeSpeedSet();             //MrTree
   checkMotorMowStall();         //MrTree
   drvfix();
   
@@ -362,10 +373,11 @@ void Motor::run() {
         recoverMotorFaultCounter++;                                               
         CONSOLE.print("motor fault recover counter ");
         CONSOLE.println(recoverMotorFaultCounter);
+        //stopImmediately(true);
         motorDriver.resetMotorFaults();
         recoverMotorFault = false;  
         if (recoverMotorFaultCounter >= 10){ // too many successive motor faults
-          //stopImmediately();
+          //stopImmediately(true);
           CONSOLE.println("ERROR: motor recovery failed");
           recoverMotorFaultCounter = 0;
           motorError = true;
@@ -438,7 +450,7 @@ void Motor::run() {
 bool Motor::checkCurrentTooHighError(){
   bool motorLeftFault = (motorLeftSense > MOTOR_FAULT_CURRENT);
   bool motorRightFault = (motorRightSense > MOTOR_FAULT_CURRENT);
-  bool motorMowFault = (motorMowSense > MOW_FAULT_CURRENT);     //MrTree evade Current Spikes of mowmotor
+  bool motorMowFault = (motorMowSenseLP > MOW_FAULT_CURRENT);     //MrTree evade Current Spikes of mowmotor
   if (motorLeftFault || motorRightFault || motorMowFault){
     CONSOLE.print("ERROR motor current too high: ");
     CONSOLE.print("  current=");
@@ -482,7 +494,7 @@ bool Motor::checkCurrentTooLowError(){
 
 
 // check motor driver (signal) faults
-bool Motor::checkFault() {
+bool Motor::checkFault(){
   bool fault = false;
   bool leftFault = false;
   bool rightFault = false;
@@ -507,7 +519,7 @@ bool Motor::checkFault() {
 
 
 // check odometry errors
-bool Motor::checkOdometryError() {
+bool Motor::checkOdometryError(){
   if (ENABLE_ODOMETRY_ERROR_DETECTION){
     if  (   ( (abs(motorLeftPWMCurr) > 100) && (abs(motorLeftPWMCurrLP) > 100) && (abs(motorLeftRpmCurrLP) < 0.001))    
         ||  ( (abs(motorRightPWMCurr) > 100) && (abs(motorRightPWMCurrLP) > 100) && (abs(motorRightRpmCurrLP) < 0.001))  )
@@ -522,7 +534,31 @@ bool Motor::checkOdometryError() {
   }
   return false;
 }
+/*
+float Motor::distanceRamp(float linear){
+  //CONSOLE.print("targetDist: "), CONSOLE.print(targetDist); CONSOLE.print("   lastTargetDist: "), CONSOLE.println(lastTargetDist);
+  if ((targetDist < NEARWAYPOINTDISTANCE) || (lastTargetDist < NEARWAYPOINTDISTANCE)){
+    float maxSpeed = linearCurrSet*1000;
+    float minSpeed = MOTOR_MIN_SPEED*1000;                            //make RAMP_MIN_SPEED?
+    float maxDist = NEARWAYPOINTDISTANCE*1000;                        //make RAMP_MAX_DIST?
+    float minDist = TARGET_REACHED_TOLERANCE*1000;                    //make RAMP_MIN_DIST?
+    float actDist = 0; //targetDist*1000;
+    float rampSpeed = 0;
 
+    if (targetDist < lastTargetDist) actDist = targetDist;
+    else actDist = lastTargetDist;
+    actDist *= 1000;
+
+    rampSpeed = map(actDist, minDist, maxDist, minSpeed, maxSpeed);
+    CONSOLE.print("rampSpeed before: "), CONSOLE.println(rampSpeed/1000);
+
+    rampSpeed = constrain(rampSpeed/1000, minSpeed/1000, maxSpeed/1000);
+    CONSOLE.print("rampSpeed: "), CONSOLE.println(rampSpeed);
+    return rampSpeed;
+  } else {
+      return linear;
+  }
+} */
 
 // check motor overload
 void Motor::checkOverload(){
@@ -555,24 +591,29 @@ float Motor::adaptiveSpeed(){
         CONSOLE.println("motor.cpp: adaptive_speed() conditions not met... RETURNING 1"); 
       }
       return 1;
-    } 
+    }
+
     if (!switchedOn) {
+      /*
       keepslow = false;
       retryslow = false;
       keepSlowTime = 0;
       retrySlowTime = 0;
       speedUpTrig = false;
+      */
       return 1;
     }
 
     //prepare variables
+
+    /*
     float slowtrig = 0;
     float retrytrig = 0;
     float controlval = 0;
     int mownormal = 0;
     int mowslow = 0;
     int mowretry = 0;
-    int mowset = 0;
+    int mowset = 0;*/
 
     float x = 0;
     float x1 = 0;
@@ -598,11 +639,11 @@ float Motor::adaptiveSpeed(){
     if (ADAPTIVE_SPEED_MODE == 2) {
       x = abs(motorMowRpmCurrLPFast) * 1000;
       x1 = (abs(motorMowRpmSet) * (MOW_RPMtr_SLOW+5)/100) * 1000; //add some offset to trigger slow, because we dont want to trigger slowstate but become slow before that happens
-      x2 = abs(motorMowRpmSet) * 1000;
+      x2 = (abs(motorMowRpmSet) - MOW_RPM_DEADZONE) * 1000;         
       y1 = 100;
       y2 = MOTOR_MIN_SPEED/linearCurrSet*100; //linearSpeedSet
     }
-
+/*
     if (USE_MOW_RPM_SET){
       slowtrig = MOW_RPM_NORMAL * MOW_RPMtr_SLOW/100;
       //retrytrig = 0;
@@ -620,13 +661,17 @@ float Motor::adaptiveSpeed(){
       mowretry = MOW_PWM_RETRY;
       mowset = motorMowPWMSet;
     }
-
+*/  float unfiltered = 0;
     y = map(x, x1, x2, y2, y1);
     //CONSOLE.print("y= "); CONSOLE.print(y);CONSOLE.print("   x= "); CONSOLE.print(x); CONSOLE.print(" x1= ");CONSOLE.print(x1); CONSOLE.print(" x2= ");CONSOLE.print(x2);CONSOLE.print(" y2= ");CONSOLE.print(y2);CONSOLE.print(" y1= ");CONSOLE.println(y1);                             
     y = constrain(y, MOTOR_MIN_SPEED/linearCurrSet*100, 100);     //limit val
+    unfiltered = y;
+    if (y > y_before) y = y_before + 0.2;//y = 0.995 * y_before + 0.005 * y; //if speed was reduced use a ramp for getting faster only (smoothing)
+    //CONSOLE.print("unfiltered: ");CONSOLE.print(unfiltered);CONSOLE.print("  y: ");CONSOLE.println(y);
+    //if ((speedUpTrig)&&(linear >= linearCurrSet)) linear = 0.998 * linearSpeedSet + 0.002 * linear; //Speed up slow if triggered from adaptive speed function
     y_before = y;
     SpeedFactor = y/100.0;                                        //used for linear modifier as: MOTOR_MIN_SPEED/setSpeed*100 < Speedfactor <= 1
-
+/*
     if (keepslow && retryslow) keepslow = false;             //reset keepslow because retryslow is prior
  
     if (controlval < slowtrig){                              //trigger and set timer once, trigger by rpm percentage
@@ -694,7 +739,7 @@ float Motor::adaptiveSpeed(){
         speedUpTrig = false;
       }
     }
-    
+    */
     return SpeedFactor;
 
   } else {                                                        //MrTree adaptive speed is not activated
@@ -705,6 +750,113 @@ float Motor::adaptiveSpeed(){
   }
 }  
 
+void Motor::changeSpeedSet(){
+
+  if (!CHANGE_SPEED_SET) return;
+  if (!switchedOn || (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME)) {
+      keepslow = false;
+      retryslow = false;
+      keepSlowTime = 0;
+      retrySlowTime = 0;
+      speedUpTrig = false;
+      return;
+    }
+
+  //prepare variables
+  float slowtrig = 0;
+  float retrytrig = 0;
+  float controlval = 0;
+  int mownormal = 0;
+  int mowslow = 0;
+  int mowretry = 0;
+  int mowset = 0;
+
+  if (USE_MOW_RPM_SET){
+    slowtrig = MOW_RPM_NORMAL * MOW_RPMtr_SLOW/100;
+    //retrytrig = 0;
+    controlval = abs(motorMowRpmCurrLPFast);
+    mownormal = MOW_RPM_NORMAL;
+    mowslow = MOW_RPM_SLOW;
+    mowretry = MOW_RPM_RETRY;
+    mowset = motorMowRpmSet;
+  } else {
+    slowtrig = mowPowerAct;                           //because we are rising with mowpower not falling like rpm, we flip the controlval to be the trigger
+    //retrytrig = 0;
+    controlval = mowPowerMax * MOW_POWERtr_SLOW/100;  //set the trigger to be the controlval....
+    mownormal = MOW_PWM_NORMAL;
+    mowslow = MOW_PWM_SLOW;
+    mowretry = MOW_PWM_RETRY;
+    mowset = motorMowPWMSet;
+  }
+
+  if (keepslow && retryslow) keepslow = false;             //reset keepslow because retryslow is prior
+
+  if (controlval < slowtrig){                              //trigger and set timer once, trigger by rpm percentage
+    //CONSOLE.print("controlval = ");CONSOLE.print(controlval);CONSOLE.print("slowtrig = ");CONSOLE.println(slowtrig);
+    if ((!keepslow) && (!retryslow)){                      //only if not already trigged
+      CONSOLE.println("Adaptive_Speed: Keeping slow!");
+      keepslow = true;                                          //enable keepslow state
+      if (abs(mowset) != mowslow){                              //set the keepslow rpm
+        if (USE_MOW_RPM_SET){
+          CONSOLE.println("Adaptive_Speed: Using MOW_RPM_SLOW");
+          if (motorMowRpmSet > 0) motorMowRpmSet = mowslow;                    //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?
+          if (motorMowRpmSet < 0) motorMowRpmSet = -mowslow;                   //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?    
+        } else {
+          CONSOLE.println("Adaptive_Speed: Using MOW_PWM_SLOW");
+          if (motorMowPWMSet > 0) motorMowPWMSet = mowslow;                    //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing?
+          if (motorMowPWMSet < 0) motorMowPWMSet = -mowslow;                   //set new rpm. should use max pwm, cause no one knows if controller can reach rpmset with drained batterie without testing? 
+        }                                                   
+      }
+    }                                                                  //step out of trigger condition
+    if (keepslow) keepSlowTime = millis()+KEEPSLOWTIME;                //set or refresh keepslowtimer
+    if (retryslow) retrySlowTime = millis()+RETRYSLOWTIME;             //if we already are in retryslow condition, we refresh the timer of retry also                               
+  }                                          
+  
+  if (retryslow){                                                 //retryslow is triggered by the end of escapelawnop                       
+    if (abs(mowset) != mowretry) {
+      if (USE_MOW_RPM_SET){
+        CONSOLE.println("Adaptive_Speed: Using MOW_RPM_RETRY");
+        if (motorMowRpmSet > 0) motorMowRpmSet = mowretry; 
+        if (motorMowRpmSet < 0) motorMowRpmSet = -mowretry;
+      } else {
+        CONSOLE.println("Adaptive_Speed: Using MOW_RPM_RETRY");
+        if (motorMowPWMSet > 0) motorMowPWMSet = mowretry; 
+        if (motorMowPWMSet < 0) motorMowPWMSet = -mowretry; 
+      }                      
+    }            
+    if (millis() > retrySlowTime) {
+      CONSOLE.println("Adaptive_Speed: Retryslow done! Going to Keepslow!");
+      //CONSOLE.println("Adaptive_Speed: Speeding up!");
+      retryslow = false;
+      keepslow = true;
+      keepSlowTime = millis()+KEEPSLOWTIME;
+    }
+  }
+
+  if (keepslow){                                                //keepslow is triggered in this function, retryslow in escapelawnOp   
+    if (millis() > keepSlowTime) {
+      CONSOLE.println("Adaptive_Speed: Keepslow done!");
+      CONSOLE.println("Adaptive_Speed: Speeding up!");
+      keepslow = false;                                         //reset keepslow if no rpm stall      
+      speedUpTrig = true;
+    }
+  }
+
+  if (speedUpTrig){
+    if (millis() > keepSlowTime + KEEPSLOWTIME) {
+      CONSOLE.println("Adaptive_Speed: Speeding up done!");
+      CONSOLE.println("Adaptive_Speed: Using MOW_RPM_NORMAL");
+      if (USE_MOW_RPM_SET){
+        if (motorMowRpmSet > 0) motorMowRpmSet = mownormal;
+        if (motorMowRpmSet < 0) motorMowRpmSet = -mownormal;
+      } else {
+        if (motorMowPWMSet > 0) motorMowPWMSet = mownormal;
+        if (motorMowPWMSet < 0) motorMowPWMSet = -mownormal;
+      }
+      speedUpTrig = false;
+    }
+  }
+}
 
 // check mow motor RPM stalls                                                          
 void Motor::checkMotorMowStall(){ 
@@ -760,6 +912,7 @@ void Motor::checkMotorMowStall(){
             CONSOLE.println(abs(motorMowRpmSet));
         }
       }
+
       if (USE_MOW_RPM_SET) motorMowStall = (abs(motorMowRpmCurrLPFast) < (abs(MOW_RPM_NORMAL)*MOW_RPMtr_STALL/100));  //LPFast? // changed motorMowRpmSet to mowRpm
       else motorMowStall = (abs(motorMowRpmCurrLPFast) < (abs(motorMowRpmSet)*MOW_RPMtr_STALL/100));
     }
@@ -884,7 +1037,7 @@ void Motor::control(){
     
   //########################  Calculate PWM for left driving motor ############################
 
-  motorLeftPID.TaMax = 0.20;
+  motorLeftPID.TaMax = 0.25;
   motorLeftPID.x = motorLeftLpf(motorLeftRpmCurr);
   motorLeftPID.w  = motorLeftRpmSet;
   motorLeftPID.y_min = -pwmMax;
@@ -899,7 +1052,7 @@ void Motor::control(){
 
   //########################  Calculate PWM for right driving motor ############################
   
-  motorRightPID.TaMax = 0.20;
+  motorRightPID.TaMax = 0.25;
   motorRightPID.x = motorRightLpf(motorRightRpmCurr);
   motorRightPID.w = motorRightRpmSet;
   motorRightPID.y_min = -pwmMax;
@@ -923,12 +1076,13 @@ void Motor::control(){
     float comp = MOWMOTOR_RPM_OFFSET;
     if (motorMowRpmSet < 0) comp = -comp;
     
-    motorMowPID.TaMax = 0.20;
-    motorMowPID.x = motorMowRpmCurrLPFast-comp; //LPFast;
+    motorMowPID.TaMax = 0.25;
+    motorMowPID.x = motorMowLpf(motorMowRpmCurr) - comp;             //motorMowRpmCurrLPFast-comp; //LPFast;
     motorMowPID.w = motorMowRpmSet;
     motorMowPID.y_min = -pwmMax;
     motorMowPID.y_max = pwmMax;
     motorMowPID.max_output = pwmMax;
+    motorMowPID.output_ramp = MOWMOTOR_PID_RAMP;
     motorMowPID.compute();
     motorMowPWMCurr = motorMowPWMCurr + motorMowPID.y;
 

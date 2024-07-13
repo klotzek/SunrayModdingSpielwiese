@@ -605,7 +605,7 @@ void UBLOX::run()
 	if (millis() > solutionTimeout){
     //CONSOLE.println("UBLOX::solutionTimeout");
     solution = SOL_INVALID;
-    solutionTimeout = millis() + 1000;
+    solutionTimeout = millis() + SOLUTION_TIMEOUT;
     solutionAvail = true;
   }
 

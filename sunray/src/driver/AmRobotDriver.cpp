@@ -468,18 +468,21 @@ void AmMotorDriver::resetMotorFaults(){
   if (digitalRead(pinMotorLeftFault) == gearsDriverChip.faultActive) {
     if (gearsDriverChip.resetFaultByToggleEnable){
       digitalWrite(pinMotorEnable, !gearsDriverChip.enableActive);
+      delay(100); //MrTree freeze code in this situation to keep pinstate for driver recognition
       digitalWrite(pinMotorEnable, gearsDriverChip.enableActive);
     }
   }
   if  (digitalRead(pinMotorRightFault) == gearsDriverChip.faultActive) {
     if (gearsDriverChip.resetFaultByToggleEnable){
       digitalWrite(pinMotorEnable, !gearsDriverChip.enableActive);
+      delay(100); //MrTree freeze code in this situation to keep pinstate for driver recognition
       digitalWrite(pinMotorEnable, gearsDriverChip.enableActive);
     }
   }
   if (digitalRead(pinMotorMowFault) == mowDriverChip.faultActive) {
     if (mowDriverChip.resetFaultByToggleEnable){
       digitalWrite(pinMotorMowEnable, !mowDriverChip.enableActive);
+      delay(100); //MrTree freeze code in this situation to keep pinstate for driver recognition
       digitalWrite(pinMotorMowEnable, mowDriverChip.enableActive);
     }
   }

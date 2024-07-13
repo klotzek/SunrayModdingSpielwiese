@@ -216,7 +216,6 @@ void watchdogSetup (void){}
 // reset linear motion measurement
 void resetLinearMotionMeasurement(){
   linearMotionStartTime = millis();  
-  //stateGroundSpeed = 1.0;
 }
 
 // reset angular motion measurement
@@ -910,7 +909,7 @@ bool detectObstacleRotation(){
     return true;
   }
   if (OVERLOAD_ROTATION){       
-    if ((motor.motorLeftOverload) || (motor.motorRightOverload)){
+    if ((motor.motorLeftOverload || motor.motorRightOverload) && millis() > angularMotionStartTime + OVERLOAD_ROTATION_TIMEOUT){
       if (FREEWHEEL_IS_AT_BACKSIDE){
         CONSOLE.println("Overload on traction motors while robot should rotate! Assuming obstacle in the back!");    
         statMowRotationTimeoutCounter++;
@@ -1112,6 +1111,7 @@ void run(){
 
   gps.run();
   
+  
   if (millis() > nextTimetableTime){
     nextTimetableTime = millis() + 30000;
     gps.decodeTOW();
@@ -1125,7 +1125,7 @@ void run(){
   if (millis() >= nextControlTime){        
     nextControlTime = millis() + 20; 
     controlLoops++;    
-    
+    //CONSOLE.print("gpsSpeed: ");CONSOLE.println(stateGroundSpeed);
     computeRobotState();
     if (!robotShouldMove()){
       resetLinearMotionMeasurement();

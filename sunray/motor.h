@@ -67,9 +67,9 @@ class Motor {
     unsigned long motorRightTicks;
     unsigned long motorMowTicks;
     int motorMowPWMCurr;
-    float linearCurrSet;// MrTree helper
     bool motorMowRpmCheck; //MrTree    
-    float motorMowRpmSet;//MrTree  
+    float motorMowRpmSet;//MrTree
+    float linearCurrSet;// MrTree helper  
     float linearSpeedSet; // m/s
     float angularSpeedSet; // rad/s
     float motorLeftSense; // left motor current (amps)
@@ -90,7 +90,8 @@ class Motor {
     PID motorRightPID;
     PID motorMowPID;       //MrTree    
     LowPassFilter motorLeftLpf;
-    LowPassFilter motorRightLpf; 
+    LowPassFilter motorRightLpf;
+    LowPassFilter motorMowLpf; //MrTree 
     void begin();
     void run();      
     void test();
@@ -102,7 +103,7 @@ class Motor {
     void stopImmediately(bool includeMowerMotor);    
      
   protected: 
-    float motorLeftRpmSet; // set speed
+    float motorLeftRpmSet;                //set speed
     float motorRightRpmSet;
     
     float motorMowPWMSet;  
@@ -123,8 +124,8 @@ class Motor {
     unsigned long lastControlTime;    
     unsigned long nextSenseTime;
     unsigned long lastMowStallCheckTime;  //MrTree
-    unsigned long drvfixtimer; //MrTree 
-    bool drvfixreset; //MrTree 
+    unsigned long drvfixtimer;            //MrTree 
+    bool drvfixreset;                     //MrTree 
     unsigned int drvfixcounter;      
     bool recoverMotorFault;
     int recoverMotorFaultCounter;
@@ -139,9 +140,11 @@ class Motor {
     void checkOverload();   
     bool checkOdometryError();
     bool checkMowRpmFault();
-    void drvfix();                   //MrTree
-    void checkMotorMowStall();    //MrTree
-    float adaptiveSpeed();           //MrTree
+    void drvfix();                    //MrTree
+    void checkMotorMowStall();        //MrTree
+    float adaptiveSpeed();            //MrTree
+    //float distanceRamp(float linear); //MrTree
+    void changeSpeedSet();            //MrTree
     bool checkCurrentTooHighError();    
     bool checkCurrentTooLowError();
     void sense();

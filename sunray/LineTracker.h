@@ -10,7 +10,6 @@
 
 #include <Arduino.h>
 
-
 extern float stanleyTrackingNormalK;
 extern float stanleyTrackingNormalP;
 extern float stanleyTrackingSlowK;
@@ -26,6 +25,9 @@ extern float targetDist;  //MrTree
 extern float lastTargetDist;//MrTree
 
 void trackLine(bool runControl);  
-
+float distanceRamp(float linear); //MrTree
+void speedState();
+void stanleyTracker();
+void gpsRebootDock();
 
 #endif

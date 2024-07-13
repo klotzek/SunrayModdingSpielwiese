@@ -226,11 +226,10 @@ void computeRobotState(){
     resetLastPos = true;
   }
   
-  if ((gps.solutionAvail) 
-      && ((gps.solution == SOL_FIXED) || (gps.solution == SOL_FLOAT))  )
-  {
+  if (gps.solutionAvail && (gps.solution == SOL_FIXED || gps.solution == SOL_FLOAT)){
     gps.solutionAvail = false;        
-    stateGroundSpeed = 0.9 * stateGroundSpeed + 0.1 * abs(gps.groundSpeed);    
+    //stateGroundSpeed = 0.9 * stateGroundSpeed + 0.1 * abs(gps.groundSpeed);
+    stateGroundSpeed = 0.7 * stateGroundSpeed + 0.3 * gps.groundSpeed;    
     //CONSOLE.println(stateGroundSpeed);
     float distGPS = sqrt( sq(posN-lastPosN)+sq(posE-lastPosE) );
     if ((distGPS > 0.3) || (resetLastPos)){
