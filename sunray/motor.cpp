@@ -156,6 +156,18 @@ void Motor::setMowPwm( int val ){
   mowPwm = val;
 }
 
+bool Motor::waitMowMotor() {
+  static bool waitMowMotor;
+
+  if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){
+      // wait until mowing motor is running
+      if (!buzzer.isPlaying()) buzzer.sound(SND_WARNING, true);
+      if (DEBUG_LOG && !waitMowMotor) CONSOLE.println("Motor::waitMowMotor() trying to wait for mowmotor....");
+      waitMowMotor = true;
+    } else waitMowMotor = false;
+  return waitMowMotor;
+}
+
 void Motor::speedPWM ( int pwmLeft, int pwmRight, int pwmMow )
 { 
   //Correct Motor Direction
@@ -180,11 +192,10 @@ void Motor::speedPWM ( int pwmLeft, int pwmRight, int pwmMow )
 //      V     = (VR + VL) / 2       =>  VR = V + omega * L/2
 //      omega = (VR - VL) / L       =>  VL = V - omega * L/2
 void Motor::setLinearAngularSpeed(float linear, float angular, bool useLinearRamp){  
-  if (millis() < motorMowSpinUpTime + MOWSPINUPTIME){                     
+  if (waitMowMotor()) {                     
     linear = 0;
     angular = 0; 
   }
-
   if (angular == 0) resetAngularMotionMeasurement();                          //MrTree
   if (linear == 0) resetLinearMotionMeasurement();                            //MrTree
   setLinearAngularSpeedTimeout = millis() + 2500;                             //Changed to 2500 from 1000, this possibly causes the stop and go if mower is controlled manually over WiFi 
@@ -200,8 +211,8 @@ void Motor::setLinearAngularSpeed(float linear, float angular, bool useLinearRam
 
   if (activateLinearSpeedRamp && useLinearRamp && speedChange ){                              //this is a speed ramp for changes in speed during operation, to smooth transitions a little bit. needs to be quick
     //linearSpeedSet = 0.82 * linearSpeedSet + 0.18 * linear;
-    if (linearCurrSet > linearSpeedSet) linear = linearSpeedSet + 0.20/20;         //cm/s² acc ramp with estimated controlfreq of 20Hz (50ms), only trigger this if larger speedchanges
-    if (linearCurrSet < linearSpeedSet) linear = linearSpeedSet - 0.20/20;        //cm/s² dec ramp with estimated controlfreq of 20Hz (50ms), only trigger this if larger speedchanges                
+    if (linearCurrSet > linearSpeedSet) linear = linearSpeedSet + 0.10/20;         //cm/s² acc ramp with estimated controlfreq of 20Hz (50ms), only trigger this if larger speedchanges
+    if (linearCurrSet < linearSpeedSet) linear = linearSpeedSet - 0.15/20;        //cm/s² dec ramp with estimated controlfreq of 20Hz (50ms), only trigger this if larger speedchanges                
     
     //CONSOLE.print("RAMP   linear: "); CONSOLE.println(linear);
 
@@ -223,8 +234,8 @@ void Motor::setLinearAngularSpeed(float linear, float angular, bool useLinearRam
   float rspeed = linearSpeedSet + angularSpeedSet * (wheelBaseCm /100.0 /2);          
   float lspeed = linearSpeedSet - angularSpeedSet * (wheelBaseCm /100.0 /2);          
   // RPM = V / (2*PI*r) * 60
-  if (fabs(linearSpeedSet) < MOTOR_MIN_SPEED) resetLinearMotionMeasurement(); //MrTree less than MOTOR_MIN_SPEED 
-  if (fabs(angularSpeedSet) <= 0,02) resetAngularMotionMeasurement(); //MrTree less then 1deg/s
+  //if (fabs(linearSpeedSet) < MOTOR_MIN_SPEED) resetLinearMotionMeasurement(); //MrTree less than MOTOR_MIN_SPEED 
+  //if (fabs(angularSpeedSet) <= 0,02) resetAngularMotionMeasurement(); //MrTree less then 1deg/s
 
   motorRightRpmSet =  rspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;   
   motorLeftRpmSet = lspeed / (PI*(((float)wheelDiameter)/1000.0)) * 60.0;

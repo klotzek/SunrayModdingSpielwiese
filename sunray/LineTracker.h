@@ -29,5 +29,6 @@ float distanceRamp(float linear); //MrTree
 void speedState();
 void stanleyTracker();
 void gpsRebootDock();
+bool AngleToTargetFits();
 
 #endif

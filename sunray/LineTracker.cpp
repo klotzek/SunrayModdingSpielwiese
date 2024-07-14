@@ -26,7 +26,6 @@ float targetDist = 0;     //MrTree
 float lastTargetDist = 0; //MrTree
 
 float setSpeed = 0.1; //externally controlled (app) linear speed (m/s)
-//float lastSpeed = 0;  //MrTree
 float CurrSpeed = 0;  //actual used speed from motor.linearSpeedSet
 float linear = 0;
 float angular = 0;
@@ -41,8 +40,6 @@ Point lastPoint;
 bool mow = false;
 bool trackslow_allowed = false;
 bool straight = false;
-bool rotateLeft = false;
-bool rotateRight = false;
 bool shouldRotate = false;                      //MrTree
 bool shouldRotatel = false;                     //MrTree
 bool angleToTargetFits = false;
@@ -50,6 +47,7 @@ bool angleToTargetPrecise = true;
 bool langleToTargetFits = false;
 bool targetReached = false;
 float trackerDiffDelta = 0;
+float distToPath = 0;
 bool stateKidnapped = false;
 unsigned long reachedPointBeforeDockTime = 0;   //MrTree
 bool dockTimer = false;                         //MrTree
@@ -74,28 +72,40 @@ int counterCheckPos = 0;                    // check if gps position is reliable
 bool printmotoroverload = false;
 bool trackerDiffDelta_positive = false;
 
+bool AngleToTargetFits() {
+  // allow rotations only near last or next waypoint or if too far away from path
+  if (targetDist < 0.3 || lastTargetDist < 0.3 || fabs(distToPath) > 1.0 ) {
+    angleToTargetFits = (fabs(trackerDiffDelta) / PI * 180.0 < 20);                                       //MrTree we have more than 20deg difference to point
+  } else {
+	// while tracking the mowing line do allow rotations if angle to target increases (e.g. due to gps jumps)
+    angleToTargetFits = (fabs(trackerDiffDelta)/PI*180.0 < 45);       
+  }
+
+  if ((!angleToTargetFits || !angleToTargetPrecise) && !dockTimer) angleToTargetFits = false;   //MrTree added !dockTimer to prevent the jumping gps point to cause linear=0 because of !angleToTargetFits, added !angleToTargetPrecise 
+
+  return angleToTargetFits;  
+}
+
 void rotateToTarget() {
   // angular control (if angle to far away, rotate to next waypoint)
     if (!angleToTargetFits) angleToTargetPrecise = false;
-    linear = 0;                                                       //MrTree while turning from >= 20/45 deg difference, linear is 0... still decelerating or accelerating on stepin/out
+    linear = 0; //MrTree while turning from >= 20/45 deg difference, linear is set to 0... still decelerating or accelerating on stepin/out
     if ((maps.isDocking() || maps.isUndocking()) && maps.trackSlow && trackslow_allowed){
       angular = DOCKANGULARSPEED / 180.0 * PI;  //MrTree use DOCKANGULARSPEED in config.h, added trackslowallowed  : RTT=29deg/s=0.5 rad/s;  
     } else {
+      if (ROTATION_RAMP) {
+        angular =  1.8 * fabs(trackerDiffDelta);
+        angular = constrain(angular, ROTATION_RAMP_MIN / 180.0 * PI, ROTATION_RAMP_MAX / 180.0 * PI);
+      } else {
         if (fabs(trackerDiffDelta)/PI*180.0 >= ANGLEDIFF1) angular = ROTATETOTARGETSPEED1 / 180.0 * PI;   //MrTree set angular to fast defined in config.h
         if (fabs(trackerDiffDelta)/PI*180.0 < ANGLEDIFF1) angular = ROTATETOTARGETSPEED2  / 180.0 * PI;    //MrTree slow down turning when near desired angle     
         if (fabs(trackerDiffDelta)/PI*180.0 <= ANGLEDIFF2) angular = ROTATETOTARGETSPEED3 / 180.0 * PI;    //MrTree slow down turning even more when almost at desired angle     
+      }
     }
     if (trackerDiffDelta < 0) {     //MrTree set rotation direction and do not keep it :)
-      rotateLeft = true;
-      rotateRight = false;
-    } else { 
-      rotateRight = true;
-      rotateLeft = false;
-    }                   
-    if (rotateLeft) angular *= -1;  
-    if (fabs(trackerDiffDelta)/PI*180.0 < ANGLEPRECISE){          
-      rotateLeft = false;                                   // reset rotate direction
-      rotateRight = false;
+      angular *= -1;
+    }                     
+    if (fabs(trackerDiffDelta)/PI*180.0 < ANGLEPRECISE){
       angleToTargetPrecise = true;                          //MrTree Step out of everything when angle is precise...
       angular = 0;
     } 
@@ -129,7 +139,7 @@ void stanleyTracker() {
                                                                                                                                 //MrTree
   angular =  p * trackerDiffDelta + atan2(k * lateralError, (0.001 + fabs(CurrSpeed)));       //MrTree, use actual speed correct for path errors
   // restrict steering angle for stanley  (not required anymore after last state estimation bugfix)
-  angular = max(-PI/16, min(PI/16, angular)); //MrTree still used here because of gpsfix jumps that would lead to an extreme rotation speed
+  angular = max(-PI/6, min(PI/6, angular)); //MrTree still used here because of gpsfix jumps that would lead to an extreme rotation speed
 
 }
 
@@ -209,7 +219,7 @@ void linearSpeedState(){
 
   //consider the distance ramp wih the chosen speed if we are approaching or leaving a waypoint
   if (DISTANCE_RAMP) {
-    if (targetDist < NEARWAYPOINTDISTANCE || lastTargetDist < NEARWAYPOINTDISTANCE) {
+    if (targetDist < 2 * NEARWAYPOINTDISTANCE || lastTargetDist < 2 * NEARWAYPOINTDISTANCE) {
       linear = distanceRamp(linear);
     }
   }
@@ -221,29 +231,34 @@ void linearSpeedState(){
 
 float distanceRamp(float linear){
     float maxSpeed = linear*1000;
-    float minSpeed = MOTOR_MIN_SPEED * 1000; //2*MOTOR_MIN_SPEED*1000;
+    float minSpeed = 2*MOTOR_MIN_SPEED * 1000;
     float maxDist = (linear * NEARWAYPOINTDISTANCE /setSpeed) * 1000;     //if we are going slow for example because of float, the ramp will kick in when mower is nearer to point
-    float minDist = 0;            //TARGET_REACHED_TOLERANCE*1000;
+    float minDist = 0;                                                    //TARGET_REACHED_TOLERANCE*1000;
     float actDist = 0;
     float rampSpeed = 0;
-    //straight = maps.nextPointIsStraight();
+    static bool wasStraight;
 
     if (targetDist <= lastTargetDist) {                                  //need to decide what ramp, leaving or aproaching? --> approaching
+      maxDist += maxSpeed;                                               //add an speed dependent offset to target distance when approaching, because mower comes with high speed that causes a timing issue
       actDist = targetDist;
-      if (straight) minSpeed *= linear * 0.70;                           //if we don´t need to rotate, do not decellarate too much: just for approaching but not for leaving
+      if (straight) minSpeed = maxSpeed * 0.5;                           //if we don´t need to rotate, do not decellarate too much
+      wasStraight = straight;
+    } else {
+      if (wasStraight) minSpeed = maxSpeed * 0.5;
+      actDist = lastTargetDist;
+      //actDist += 0.05; //add an offset      
     }
-    else actDist = lastTargetDist;
-    actDist += 0.05; //add an offset 
+
     actDist *= 1000;
 
     if (targetDist + lastTargetDist < maxDist) { //points are not far away from each other
-      actDist *= 2;                          //multiply the actDist to trick the map function (hurryup because we wont reach full speed anyway)
+      actDist *= 2;                              //multiply the actDist to trick the map function (hurryup because we wont reach full speed anyway)
     }
 
     rampSpeed = map(actDist, minDist, maxDist, minSpeed, maxSpeed);
     rampSpeed = constrain(rampSpeed, minSpeed, maxSpeed);
     rampSpeed /= 1000;
-
+    //CONSOLE.print(straight); CONSOLE.print(" "); CONSOLE.println(rampSpeed);
     return rampSpeed;
 }
 
@@ -356,10 +371,7 @@ void gpsRebootDock() {
 
       case 4:
         dockGpsRebootState      = 0; // finished
-        //     blockKidnapByUndocking  = false;  // enable Kidnap detection
-        //    maps.setLastTargetPoint(stateX, stateY);  // Manipulate last target point to avoid "KIDNAP DETECT"
         CONSOLE.println("LineTracker.cpp  dockGpsRebootState - gps-pos is stable; continue undocking/docking;");
-
         break;
 
       case 10:
@@ -374,7 +386,7 @@ void gpsRebootDock() {
       angular = 0;
       mow = false;
     }
-  } //if (dockGpsRebootState > 0)
+  }
 }
 
 // control robot velocity (linear,angular) to track line to next waypoint (target)
@@ -384,10 +396,9 @@ void trackLine(bool runControl) {
   Point target = maps.targetPoint;
   Point lastTarget = maps.lastTargetPoint;
   CurrSpeed = motor.linearSpeedSet;           //MrTree take the real speed from motor.linearSpeedSet
-  linear = 0;                           //MrTree Changed from 1.0
+  linear = 0;                                 //MrTree Changed from 1.0
   angular = 0;
-  mow = false;                           //MrTree changed to false
-
+  mow = false;                                //MrTree changed to false
 
   if (MOW_START_AT_WAYMOW &! oneTrigger) {                                                             
     if (maps.wayMode == WAY_MOW) {            //MrTree do not activate mow until there is a first waymow 
@@ -398,46 +409,27 @@ void trackLine(bool runControl) {
     mow = true;                               //MrTree --> original condition, mow will be true here and is maybe changed by a condition later in linetracker
   }
 
-  if ((stateOp == OP_DOCK) || (maps.shouldDock == true)) {
+  if (stateOp == OP_DOCK || maps.shouldDock == true) {
     mow = false;
     oneTrigger = false;
   }
   
-  //trackslow_allowed = false;             //MrTree: definition moved up in code
-  
   float targetDelta = pointsAngle(stateX, stateY, target.x(), target.y());
   if (maps.trackReverse) targetDelta = scalePI(targetDelta + PI);
-   else targetDelta = scalePIangles(targetDelta, stateDelta);//** */
+   else targetDelta = scalePIangles(targetDelta, stateDelta);
   trackerDiffDelta = distancePI(stateDelta, targetDelta);
   lateralError = distanceLineInfinite(stateX, stateY, lastTarget.x(), lastTarget.y(), target.x(), target.y());
-  float distToPath = distanceLine(stateX, stateY, lastTarget.x(), lastTarget.y(), target.x(), target.y());
+  distToPath = distanceLine(stateX, stateY, lastTarget.x(), lastTarget.y(), target.x(), target.y());
   targetDist = maps.distanceToTargetPoint(stateX, stateY);
-  lastTargetDist = maps.distanceToLastTargetPoint(stateX, stateY);   //MrTree (changed varscope)
- 
-  
-  // limitation for setSpeed //SOew                           //MrTree (svol0)
-  if (setSpeed > MOTOR_MAX_SPEED) setSpeed = MOTOR_MAX_SPEED; //MrTree
-  if (setSpeed < MOTOR_MIN_SPEED) setSpeed = MOTOR_MIN_SPEED; //MrTree
-
+  lastTargetDist = maps.distanceToLastTargetPoint(stateX, stateY);
   targetReached = (targetDist < TARGET_REACHED_TOLERANCE);
 
-
-  // allow rotations only near last or next waypoint or if too far away from path
-  if (targetDist < 0.3 || lastTargetDist < 0.3 || fabs(distToPath) > 1.0 || rotateLeft || rotateRight){
-    angleToTargetFits = (fabs(trackerDiffDelta) / PI * 180.0 < 20);                                       //MrTree we have more than 20deg difference to point
-  } else {
-	// while tracking the mowing line do allow rotations if angle to target increases (e.g. due to gps jumps)
-    angleToTargetFits = (fabs(trackerDiffDelta)/PI*180.0 < 45);       
-  }
-
-  if ((!angleToTargetFits || !angleToTargetPrecise) && !dockTimer){   //MrTree added !dockTimer to prevent the jumping gps point to cause linear=0 because of !angleToTargetFits, added !angleToTargetPrecise 
+  
+  if (!AngleToTargetFits()) { 
     rotateToTarget();
   } else {
-    //straight = maps.nextPointIsStraight();
-
     linearSpeedState();  //compares the linear Speed to use according to configured mower state
     stanleyTracker();
-    
   }
   // check some pre-conditions that can make linear+angular speed zero
   if (fixTimeout != 0) {
@@ -508,136 +500,7 @@ void trackLine(bool runControl) {
   }
 
 
-gpsRebootDock();
-
- /* // reboot gps by undocking at a specified docking point (please see "DOCK_POINT_GPS_REBOOT" in config.h) //SOew
-  if (maps.wayMode == WAY_MOW)dockGpsRebootState = 0; //MrTree searching for bug....
-  if (dockGpsRebootState == 0){  // status dockGpsReboot: 0= off, 1= reset gps, 2= wait for gps-fix, 3= check for stable gps-fix
-    counterCheckPos = 0;
-  } else if (maps.wayMode == WAY_DOCK){ //MrTree only step in if waymode is dock ....searching for bug
-    switch (dockGpsRebootState) {
-
-      case 1:
-        // reboot gps to get new GPS fix
-        CONSOLE.println("LineTracker.cpp  dockGpsRebootState - start gps-reboot or waiting for FIX if GPS_REBOOT = false");
-        if (GPS_REBOOT){
-          gps.reboot();   // reboot gps to get new GPS fix
-          dockGpsRebootTime = millis() + GPSWAITREBOOT; // load check timer for gps-fix with 10sec //MrTree moved to config.h
-        } else {
-          dockGpsRebootTime = millis()+2000;
-        }
-        
-        dockGpsRebootFixCounter = 0;
-        dockGpsRebootState = 2;
-        //if ((maps.wayMode == WAY_FREE) || (maps.wayMode == WAY_MOW))dockGpsRebootState = 0; //MrTree changed to force finish step if waymode is free or mow
-        break;
-
-      case 2:
-        // wait for gps-fix solution
-        if (dockGpsRebootTime <= millis()) {
-          if (gps.solution == SOL_FIXED) {
-            //     maps.setLastTargetPoint(stateX, stateY);  // Manipulate last target point to avoid "KIDNAP DETECT"
-            dockGpsRebootState = 3;
-            dockGpsRebootFeedbackTimer  = millis();
-            dockGpsRebootTime = millis(); // load check timer for stable gps-fix
-            dockGpsRebootDistGpsTrg = false; // reset trigger
-            CONSOLE.print("LineTracker.cpp  dockGpsRebootState - got gps-fix after ");
-            CONSOLE.print(dockGpsRebootFixCounter);
-            CONSOLE.println(" sec");
-          }
-          else {
-            dockGpsRebootTime += 10000; // load check timer for gps-fix with 10sec
-            dockGpsRebootFixCounter += 10;  // add 10 seconds
-            if (!buzzer.isPlaying()) buzzer.sound(SND_TILT, true);
-            CONSOLE.print("LineTracker.cpp  dockGpsRebootState - still no gps-fix after ");
-            CONSOLE.print(dockGpsRebootFixCounter);
-            CONSOLE.println(" sec");
-          }
-        }
-        break;
-
-      case 3:
-        // wait if gps-fix position stays stable for at least GPS_STABLETIME
-        if ((gps.solution == SOL_FIXED) && (millis() - dockGpsRebootTime > GPS_STABLETIME)) { //MrTree changed to variable Time
-          // zur Sicherheit wird mind. 2 mal die Position kontrolliert
-          if (counterCheckPos < 3) {
-            if (counterCheckPos == 0) {
-              stateX_1 = stateX;
-              stateY_1 = stateY;
-              counterCheckPos += 1;
-              //dockGpsRebootState = 1; // erneuten reboot einleiten
-              CONSOLE.print("LineTracker.cpp  1. gps-fix pos  x = ");
-              CONSOLE.print(stateX_1);
-              CONSOLE.print(" y = ");
-              CONSOLE.println(stateY_1);
-            } else if (counterCheckPos == 1) {
-              stateX_2 = stateX;
-              stateY_2 = stateY;
-              counterCheckPos += 1;
-              if ((fabs(stateX_1 - stateX_2) <= 0.05) && (fabs(stateY_1 - stateY_2) <= 0.05)) {
-                dockGpsRebootState = 4; // sicherer Fix
-              } else {
-                //dockGpsRebootState = 1; // erneuten reboot einleiten
-              }
-              CONSOLE.print("LineTracker.cpp  2. gps-fix pos  x = ");
-              CONSOLE.print(stateX_2);
-              CONSOLE.print(" y = ");
-              CONSOLE.println(stateY_2);
-            } else if (counterCheckPos == 2) {
-              stateX_3 = stateX;
-              stateY_3 = stateY;
-              counterCheckPos += 1;
-              if (((fabs(stateX_1 - stateX_3) <= 0.05) && (fabs(stateY_1 - stateY_3) <= 0.05)) ||
-                  ((fabs(stateX_2 - stateX_3) <= 0.05) && (fabs(stateY_2 - stateY_3) <= 0.05))) {
-                dockGpsRebootState = 4; // sicherer Fix
-              } else {
-                counterCheckPos = 0;  // reset counter
-                //dockGpsRebootState = 1; // erneuten reboot einleiten
-              }
-              CONSOLE.print("LineTracker.cpp  3. gps-fix pos  x = ");
-              CONSOLE.print(stateX_3);
-              CONSOLE.print(" y = ");
-              CONSOLE.println(stateY_3);
-            }
-          }
-        }
-        if (gps.solution != SOL_FIXED) dockGpsRebootState = 2; // wait for gps-fix again
-        if (dockGpsRebootDistGpsTrg == true) { // gps position is changing to much
-          dockGpsRebootDistGpsTrg = false; // reset trigger
-          dockGpsRebootTime = millis();
-          CONSOLE.print("LineTracker.cpp  dockGpsRebootState - gps-pos is moving; timereset after");
-          CONSOLE.print((millis() - dockGpsRebootTime));
-          CONSOLE.println("msec");
-          if (!buzzer.isPlaying()) buzzer.sound(SND_ERROR, true);
-        }
-        if (dockGpsRebootFeedbackTimer <= millis()) {
-          dockGpsRebootFeedbackTimer = millis() + 5000;
-          if (!buzzer.isPlaying()) buzzer.sound(SND_READY, true);
-        }
-        break;
-
-      case 4:
-        dockGpsRebootState      = 0; // finished
-        //     blockKidnapByUndocking  = false;  // enable Kidnap detection
-        //    maps.setLastTargetPoint(stateX, stateY);  // Manipulate last target point to avoid "KIDNAP DETECT"
-        CONSOLE.println("LineTracker.cpp  dockGpsRebootState - gps-pos is stable; continue undocking/docking;");
-
-        break;
-
-      case 10:
-        // Wenn ohne GPS fix oder float das undocking gestartet wird, muss bei erreichen von fix oder float die "linearMotionStartTime" resetet werden, um "gps no speed => obstacle!" zu vermeiden
-        //resetLinearMotionMeasurement();
-        break;
-
-    } // switch (dockGpsRebootState)
-    if (dockGpsRebootState < 10) {
-      // stop mower
-      linear = 0;
-      angular = 0;
-      mow = false;
-    }
-  } //if (dockGpsRebootState > 0)
-*/
+  gpsRebootDock();
 
   if (!allowDockRotation && !maps.isUndocking()){        //MrTree step in algorithm if allowDockRotation (computed in maps.cpp) is false and mower is not undocking
     if (!dockTimer){                                                  //set helper bool to start a timer and print info once
@@ -671,7 +534,7 @@ gpsRebootDock();
     }
 
     shouldRotate = robotShouldRotate();
-    if ((shouldRotate != shouldRotatel) && DEBUG_LOG){
+    if (shouldRotate != shouldRotatel && DEBUG_LOG){
       CONSOLE.print("Linetracker.cpp ShouldRotate = ");
       CONSOLE.println(shouldRotate);
       shouldRotatel = shouldRotate;
@@ -683,7 +546,7 @@ gpsRebootDock();
       angular = 0; 
     }
 
-    if ((mow != motor.switchedOn) && motor.enableMowMotor){
+    if (mow != motor.switchedOn && motor.enableMowMotor){
       if (DEBUG_LOG) {
         CONSOLE.print("Linetracker.cpp changes mow status: ");
         CONSOLE.println(mow);
@@ -691,17 +554,6 @@ gpsRebootDock();
       motor.setMowState(mow); 
     }
 
-    if (mow)  {      
-      if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){
-       // wait until mowing motor is running
-       if (!buzzer.isPlaying()) buzzer.sound(SND_WARNING, true);
-        if (DEBUG_LOG && linear != 0) CONSOLE.println("linetracker.cpp trying to wait for mowmotor....");
-        linear = 0;
-        angular = 0; 
-      }
-    }
-
-    //lastSpeed = linear;
     motor.setLinearAngularSpeed(linear, angular, true);    
   }
 
@@ -718,8 +570,6 @@ gpsRebootDock();
   }
   
   if (targetReached) {
-    rotateLeft = false;
-    rotateRight = false;
     activeOp->onTargetReached();
     straight = maps.nextPointIsStraight();
     if (!maps.nextPoint(false, stateX, stateY)) {

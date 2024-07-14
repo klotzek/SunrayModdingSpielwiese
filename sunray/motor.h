@@ -99,7 +99,8 @@ class Motor {
     void enableTractionMotors(bool enable);
     void setLinearAngularSpeed(float linear, float angular, bool useLinearRamp = true);
     void setMowState(bool switchOn); 
-    void setMowPwm( int val );  
+    void setMowPwm( int val );
+    bool waitMowMotor();  
     void stopImmediately(bool includeMowerMotor);    
      
   protected: 

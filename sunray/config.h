@@ -101,9 +101,12 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define ESCAPE_REVERSE_WAY          0.45  // (m) distance in meters the mover will drive reverse in escapeReverseOp if obstacle triggered eg. by bumper org gps no speed
 #define ESCAPE_FORWARD_WAY          0.25  // (m) distance in meters the mover will drive forward in escapeForwardOp if obstacle triggered by OBSTACLE_ROTATION (no rotation)
 #define GLOBALSPEEDLIMIT            true  // if true, MOTOR_MAX_SPEED and MOTOR_MIN_SPEED will limit possible code bugs or inputs directly in motor.cpp        
-#define MOTOR_MAX_SPEED             0.60  // (m/s) maximum mower speed
-#define MOTOR_MIN_SPEED             0.05  // (m/s) minimal mower speed
-#define DISTANCE_RAMP               true  // is using NEARWAYPOINTDISTANCE, MOTOR_MIN_SPEED and the actual setspeed to calculate deceleration ramp to the next waypoint, if this is true, NEARWAYPOINTSPEED in linetracker.cpp is disabled
+#define MOTOR_MAX_SPEED             0.60  // (m/s) maximum mower speed --> has not much to to with configuration of speeds: acts as a failsafe
+#define MOTOR_MIN_SPEED             0.05  // (m/s) minimal mower speed --> has not much to to with configuration of speeds: acts as a failsafe
+#define DISTANCE_RAMP               true  // is using NEARWAYPOINTDISTANCE, MOTOR_MIN_SPEED and the actual setspeed to calculate an indirect deceleration ramp to the next waypoint, if this is true, NEARWAYPOINTSPEED in linetracker.cpp is disabled
+#define ROTATION_RAMP               true  //
+#define ROTATION_RAMP_MAX           75
+#define ROTATION_RAMP_MIN           5
 //rotation speeds, also this is easy to tune for your expectations --> going to be changed to angularRamp() with less parameters
 #define DOCKANGULARSPEED            25.0  // (deg/s) the turning rate of mower when docking (no change needed, keep low; tune at your needs if you must)
 #define ROTATETOTARGETSPEED1        65.0  // (deg/s) if angle difference to point is more than ANGLEDIFF1 then this value will be used...   warning, a high value will result in extreme gearmotor stress (test at own risk, 65deg/s is still safe and fast)
@@ -242,7 +245,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //#define TICKS_PER_REVOLUTION  1050 /2  // odometry ticks per wheel revolution 
 
 // ...for the brushless motor april 2021   https://wiki.ardumower.de/index.php?title=Datei:BLUnit.JPG
-#define TICKS_PER_REVOLUTION  620   // 1330/2 (1194/2)  odometry ticks per wheel revolution //MrTrees: 1210 
+#define TICKS_PER_REVOLUTION  640   // 1330/2 (1194/2)  odometry ticks per wheel revolution //MrTrees: 1210 
 
 // #define TICKS_PER_REVOLUTION  304 /2    // odometry ticks per wheel revolution (RM18)
 
@@ -511,7 +514,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_RETRY_TOUCH true   // robot will retry touching docking contacts (max. 1cm) if loosing docking contacts during charging
 //#define DOCK_RETRY_TOUCH false   // robot will not retry touching docking contacts (max. 1cm) if loosing docking contacts during charging
 
-#define DOCK_UNDOCK_TRACKSLOW_DISTANCE 3 // set distance (m) from dock for trackslow (speed limit)
+#define DOCK_UNDOCK_TRACKSLOW_DISTANCE 4 // set distance (m) from dock for trackslow (speed limit)
 
 #define UNDOCK_IGNORE_GPS_DISTANCE 2 // set distance (m) from dock to ignore gps while undocking
 
@@ -521,11 +524,11 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define TARGET_REACHED_TOLERANCE 0.07
 
 // stanley control for path tracking - determines gain how fast to correct for lateral path errors
-#define STANLEY_CONTROL_P_NORMAL  3.4   // 3.0 for path tracking control (angular gain) when mowing
-#define STANLEY_CONTROL_K_NORMAL  2.3   // 1.0 for path tracking control (lateral gain) when mowing
+#define STANLEY_CONTROL_P_NORMAL  4   // 3.4 // 3.0 for path tracking control (angular gain) when mowing
+#define STANLEY_CONTROL_K_NORMAL  3   // 2.3 // 1.0 for path tracking control (lateral gain) when mowing
 
-#define STANLEY_CONTROL_P_SLOW    1.0   // 3.0 for path tracking control (angular gain) when docking tracking
-#define STANLEY_CONTROL_K_SLOW    0.05  // 0.1 for path tracking control (lateral gain) when mowing or docking
+#define STANLEY_CONTROL_P_SLOW    1.5   // 1 // 3.0 for path tracking control (angular gain) when docking tracking
+#define STANLEY_CONTROL_K_SLOW    0.05  // 0.05 // 0.1 for path tracking control (lateral gain) when mowing or docking
 
 
 // ----- other options --------------------------------------------
