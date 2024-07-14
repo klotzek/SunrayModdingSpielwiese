@@ -12,11 +12,6 @@
 #include "src/op/op.h"
 #include "Stats.h"
 
-
-//PID pidLine(0.2, 0.01, 0); // not used
-//PID pidAngle(2, 0.1, 0);  // not used
-//Polygon circle(8);
-
 float stanleyTrackingNormalK = STANLEY_CONTROL_K_NORMAL;
 float stanleyTrackingNormalP = STANLEY_CONTROL_P_NORMAL;
 float stanleyTrackingSlowK = STANLEY_CONTROL_K_SLOW;
@@ -35,8 +30,9 @@ float y_old = 0;
 float x_new = 0;
 float y_new = 0;
 Point lastPoint;
+Point target;
+Point lastTarget;
 
-//Point last_rotation_target;
 bool mow = false;
 bool trackslow_allowed = false;
 bool straight = false;
@@ -46,17 +42,20 @@ bool angleToTargetFits = false;
 bool angleToTargetPrecise = true;
 bool langleToTargetFits = false;
 bool targetReached = false;
-float trackerDiffDelta = 0;
-float distToPath = 0;
 bool stateKidnapped = false;
-unsigned long reachedPointBeforeDockTime = 0;   //MrTree
 bool dockTimer = false;                         //MrTree
 bool oneTrigger = false;                        //MrTree
+bool printmotoroverload = false;
+float trackerDiffDelta = 0;
+float targetDelta = 0;
+float distToPath = 0;
 int dockGpsRebootState;                     // Svol0: status for gps-reboot at specified docking point by undocking action
+int counterCheckPos = 0;                    // check if gps position is reliable
 bool blockKidnapByUndocking;                // Svol0: kidnap detection is blocked by undocking without gps
 unsigned long dockGpsRebootTime;            // Svol0: retry timer for gps-fix after gps-reboot
 unsigned long dockGpsRebootFixCounter;      // Svol0: waitingtime for fix after gps-reboot
 unsigned long dockGpsRebootFeedbackTimer;   // Svol0: timer to generate acustic feedback
+unsigned long reachedPointBeforeDockTime = 0;   //MrTree
 bool dockGpsRebootDistGpsTrg = false;       // Svol0: trigger to check solid gps-fix position (no jump)
 bool allowDockLastPointWithoutGPS = false;  // Svol0: allow go on docking by loosing gps fix
 bool allowDockRotation = true;              //MrTree: disable rotation on last dockingpoint
@@ -67,10 +66,6 @@ float stateX_2 = 0;                         // Svol0
 float stateY_2 = 0;                         // Svol0
 float stateX_3 = 0;                         // Svol0
 float stateY_3 = 0;                         // Svol0
-int counterCheckPos = 0;                    // check if gps position is reliable
-
-bool printmotoroverload = false;
-bool trackerDiffDelta_positive = false;
 
 bool AngleToTargetFits() {
   // allow rotations only near last or next waypoint or if too far away from path
@@ -389,48 +384,7 @@ void gpsRebootDock() {
   }
 }
 
-// control robot velocity (linear,angular) to track line to next waypoint (target)
-// uses a stanley controller for line tracking
-// https://medium.com/@dingyan7361/three-methods-of-vehicle-lateral-control-pure-pursuit-stanley-and-mpc-db8cc1d32081
-void trackLine(bool runControl) {
-  Point target = maps.targetPoint;
-  Point lastTarget = maps.lastTargetPoint;
-  CurrSpeed = motor.linearSpeedSet;           //MrTree take the real speed from motor.linearSpeedSet
-  linear = 0;                                 //MrTree Changed from 1.0
-  angular = 0;
-  mow = false;                                //MrTree changed to false
-
-  if (MOW_START_AT_WAYMOW &! oneTrigger) {                                                             
-    if (maps.wayMode == WAY_MOW) {            //MrTree do not activate mow until there is a first waymow 
-      mow = true;                             //MrTree this will only work directly after undocking and way free, the first time it is in waymow, mow will be true forever like before     
-      oneTrigger = true;
-    }                                              
-  } else {
-    mow = true;                               //MrTree --> original condition, mow will be true here and is maybe changed by a condition later in linetracker
-  }
-
-  if (stateOp == OP_DOCK || maps.shouldDock == true) {
-    mow = false;
-    oneTrigger = false;
-  }
-  
-  float targetDelta = pointsAngle(stateX, stateY, target.x(), target.y());
-  if (maps.trackReverse) targetDelta = scalePI(targetDelta + PI);
-   else targetDelta = scalePIangles(targetDelta, stateDelta);
-  trackerDiffDelta = distancePI(stateDelta, targetDelta);
-  lateralError = distanceLineInfinite(stateX, stateY, lastTarget.x(), lastTarget.y(), target.x(), target.y());
-  distToPath = distanceLine(stateX, stateY, lastTarget.x(), lastTarget.y(), target.x(), target.y());
-  targetDist = maps.distanceToTargetPoint(stateX, stateY);
-  lastTargetDist = maps.distanceToLastTargetPoint(stateX, stateY);
-  targetReached = (targetDist < TARGET_REACHED_TOLERANCE);
-
-  
-  if (!AngleToTargetFits()) { 
-    rotateToTarget();
-  } else {
-    linearSpeedState();  //compares the linear Speed to use according to configured mower state
-    stanleyTracker();
-  }
+void gpsConditions() {
   // check some pre-conditions that can make linear+angular speed zero
   if (fixTimeout != 0) {
     if (millis() > lastFixTime + fixTimeout * 1000.0) {
@@ -498,10 +452,9 @@ void trackLine(bool runControl) {
       }
     }
   }
+}
 
-
-  gpsRebootDock();
-
+void noDockRotation() {
   if (!allowDockRotation && !maps.isUndocking()){        //MrTree step in algorithm if allowDockRotation (computed in maps.cpp) is false and mower is not undocking
     if (!dockTimer){                                                  //set helper bool to start a timer and print info once
       reachedPointBeforeDockTime = millis();                          //start a timer when going to last dockpoint
@@ -520,26 +473,89 @@ void trackLine(bool runControl) {
   } else {
       dockTimer = false;     
   }
+}
+
+void checkMowAllowed() {
+  mow = false;                                //MrTree changed to false
+  if (MOW_START_AT_WAYMOW &! oneTrigger) {                                                             
+    if (maps.wayMode == WAY_MOW) {            //MrTree do not activate mow until there is a first waymow 
+      mow = true;                             //MrTree this will only work directly after undocking and way free, the first time it is in waymow, mow will be true forever like before     
+      oneTrigger = true;
+    }                                              
+  } else {
+    mow = true;                               //MrTree --> original condition, mow will be true here and is maybe changed by a condition later in linetracker
+  }
+
+  if (stateOp == OP_DOCK || maps.shouldDock == true) {
+    mow = false;
+    oneTrigger = false;
+  }
+}
+
+// control robot velocity (linear,angular) to track line to next waypoint (target)
+// uses a stanley controller for line tracking
+// https://medium.com/@dingyan7361/three-methods-of-vehicle-lateral-control-pure-pursuit-stanley-and-mpc-db8cc1d32081
+void trackLine(bool runControl) {
+  target = maps.targetPoint;
+  lastTarget = maps.lastTargetPoint;
+  CurrSpeed = motor.linearSpeedSet;           //MrTree take the real speed from motor.linearSpeedSet
+  linear = 0;                                 //MrTree Changed from 1.0
+  angular = 0;
+  
+  targetDelta = pointsAngle(stateX, stateY, target.x(), target.y());
+  if (maps.trackReverse) targetDelta = scalePI(targetDelta + PI);
+   else targetDelta = scalePIangles(targetDelta, stateDelta);
+  trackerDiffDelta = distancePI(stateDelta, targetDelta);
+  lateralError = distanceLineInfinite(stateX, stateY, lastTarget.x(), lastTarget.y(), target.x(), target.y());
+  distToPath = distanceLine(stateX, stateY, lastTarget.x(), lastTarget.y(), target.x(), target.y());
+  targetDist = maps.distanceToTargetPoint(stateX, stateY);
+  lastTargetDist = maps.distanceToLastTargetPoint(stateX, stateY);
+  targetReached = (targetDist < TARGET_REACHED_TOLERANCE);
+
+  
+  if (!AngleToTargetFits()) { 
+    rotateToTarget();
+  } else {
+    linearSpeedState();  //compares the linear Speed to use according to configured mower state
+    stanleyTracker();
+  }
+  gpsConditions();  //check for gps conditions to eg. trigger obstacle or fixtimeout (shouldn´t that be in mowop???)
+  gpsRebootDock();  //perform gps reboot after undock
+  noDockRotation();
+  checkMowAllowed();
 
   if (runControl) {
 
-    if (angleToTargetFits != langleToTargetFits && DEBUG_LOG) {
-      CONSOLE.print("Linetracker.cpp angular: ");
-      CONSOLE.println(angular*180.0/PI);
-      //CONSOLE.print("angleToTargetFits: ");
-      //CONSOLE.print(angleToTargetFits);
-      //CONSOLE.print(" trackerDiffDelta: ");
-      //CONSOLE.println(trackerDiffDelta);
-      langleToTargetFits = angleToTargetFits;
-    }
-
     shouldRotate = robotShouldRotate();
-    if (shouldRotate != shouldRotatel && DEBUG_LOG){
-      CONSOLE.print("Linetracker.cpp ShouldRotate = ");
-      CONSOLE.println(shouldRotate);
-      shouldRotatel = shouldRotate;
-    }
 
+    if (DEBUG_LOG) {
+      if (angleToTargetFits != langleToTargetFits) {
+        CONSOLE.print("Linetracker.cpp angular: ");
+        CONSOLE.println(angular*180.0/PI);
+        CONSOLE.print(" angleToTargetFits: ");
+        CONSOLE.print(angleToTargetFits);
+        CONSOLE.print(" trackerDiffDelta: ");
+        CONSOLE.println(trackerDiffDelta);
+        langleToTargetFits = angleToTargetFits;
+      }
+      if (shouldRotate != shouldRotatel) {
+        CONSOLE.print("Linetracker.cpp ShouldRotate = ");
+        CONSOLE.println(shouldRotate);
+        shouldRotatel = shouldRotate;
+      }
+      x_new = target.x();
+      y_new = target.y();
+
+      if (x_old != x_new || y_old != y_new) {
+        CONSOLE.print("LineTracker.cpp targetPoint  x = ");
+        CONSOLE.print(x_new);
+        CONSOLE.print(" y = ");
+        CONSOLE.println(y_new);
+        x_old = x_new;
+        y_old = y_new;
+      }
+    }
+    
     if (detectLift()){ // in any case, turn off mower motor if lifted  
       mow = false;  // also, if lifted, do not turn on mowing motor so that the robot will drive and can do obstacle avoidance 
       linear = 0;
@@ -557,18 +573,6 @@ void trackLine(bool runControl) {
     motor.setLinearAngularSpeed(linear, angular, true);    
   }
 
-  x_new = target.x();
-  y_new = target.y();
-
-  if ((x_old != x_new || y_old != y_new) && DEBUG_LOG){
-    CONSOLE.print("LineTracker.cpp targetPoint  x = ");
-    CONSOLE.print(x_new);
-    CONSOLE.print(" y = ");
-    CONSOLE.println(y_new);
-    x_old = x_new;
-    y_old = y_new;
-  }
-  
   if (targetReached) {
     activeOp->onTargetReached();
     straight = maps.nextPointIsStraight();

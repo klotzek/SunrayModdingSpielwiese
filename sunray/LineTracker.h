@@ -29,6 +29,9 @@ float distanceRamp(float linear); //MrTree
 void speedState();
 void stanleyTracker();
 void gpsRebootDock();
+void gpsConditions();
+void noDockRotation();
+void checkMowAllowed();
 bool AngleToTargetFits();
 
 #endif
