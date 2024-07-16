@@ -165,7 +165,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define DOCK_SLOW_ONLY_LAST_POINTS  4     // (pt) Svol0: dockingpoint number (counted from last dockingpoint) where slow speed will be used to reach the dockingstation (0 = all points will be reached with slow speed)
 //keep mower from rotating in dock by all means, needs situation dependent tuning, so be aware!
 #define DOCK_NO_ROTATION            true  // if true, rotation for the mower when reaching or leaving the last dockpoint is not allowed! Make sure mower comes just before the dock in a straight line from the point before, then the last point is the dockposition, on that path angular steering is not allowed!
-#define DOCK_NO_ROTATION_DISTANCE   1.2   // (m) distance to dockpoint to stop angular motion of mower, make sure mower comes straight to dock and the point distance from dockpoint to pointbefore is double this number!
+#define DOCK_NO_ROTATION_DISTANCE   0.3   // (m) distance to from prelast dockpoint to stop angular motion of mower, make sure mower comes straight to dock on a nice straight and long line. Angular will be 0 after the mower surpassed the prelast point to chargerconntacts and traveled for DOCK_NO_ROTATION DISTANCE, make sure the mower has fix and is not dangling around when this function takes over
 #define DOCK_NO_ROTATION_TIMER      12000 // (ms) if mower doesnt hit the charger in given time after passing dockpoint before last dockpoint(charger), an obstacle will be triggered and mower will reverse to gps reboot point and try again.
 #define DOCK_NO_ROTATION_SPEED      0.15  // (m/s) (original it was 0.10, made it changeable...) when angular is not allowed while going to dockposition, this speed is used
 //GPS
@@ -224,7 +224,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // NOTE: if using non-default Ardumower chassis and your freewheel is at frontside (gear motors at backside), have may have to swap motor cables, 
 // more info here: https://wiki.ardumower.de/index.php?title=Ardumower_Chassis_%27mountain_mod%27)
 #define FREEWHEEL_IS_AT_BACKSIDE   true  // default Ardumower: true   (change to false, if your freewheel is at frontside) - this is used for obstacle avoidance
-#define WHEEL_BASE_CM         37         // wheel-to-wheel distance (cm)        
+#define WHEEL_BASE_CM         36         // wheel-to-wheel distance (cm)        
 #define WHEEL_DIAMETER        250        // (250) wheel diameter (mm)                 
 #define MOWER_SIZE            1         // mower / chassis size / length in cm
 
@@ -271,7 +271,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 #define MOTOR_FAULT_CURRENT 3.5    // gear motors fault current (amps)
 #define MOTOR_TOO_LOW_CURRENT 0.005   // gear motor too low current (amps)
-#define MOTOR_OVERLOAD_CURRENT 1.0    // gear motors overload current (amps)
+#define MOTOR_OVERLOAD_CURRENT 1.5    // gear motors overload current (amps)
 
 #define USE_LINEAR_SPEED_RAMP  true      // use a speed ramp for the linear speed //MrTree overshooting is reduced, deceleration is more agressive: keep enabled! (recommended)
 //#define USE_LINEAR_SPEED_RAMP  false      // do not use a speed ramp 
@@ -483,7 +483,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define OBSTACLE_DETECTION_ROTATION true // detect robot rotation stuck (requires IMU)
 //#define OBSTACLE_DETECTION_ROTATION false   // NOTE: recommended to turn this off for slope environment   
 #define ROTATION_TIMEOUT              5000    //15000 Timeout of rotation movement that triggers an obstacle with escapeReverse
-#define ROTATION_TIME                 1000    //3000 Time the code expects to rotate without a IMU yaw difference
+#define ROTATION_TIME                 1200    //3000 Time the code expects to rotate without a IMU yaw difference
 
 
 #define OBSTACLE_AVOIDANCE true   // try to find a way around obstacle

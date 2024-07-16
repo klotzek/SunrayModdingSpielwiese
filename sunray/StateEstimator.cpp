@@ -202,7 +202,10 @@ void resetImuTimeout(){
 // to fusion GPS heading (long-term) and IMU heading (short-term)
 // with IMU: heading (stateDelta) is computed by gyro (stateDeltaIMU)
 // without IMU: heading (stateDelta) is computed by odometry (deltaOdometry)
-void computeRobotState(){  
+void computeRobotState(){
+  static unsigned long timeLast;
+  float deltaTime;
+
   long leftDelta = motor.motorLeftTicks-stateLeftTicks;
   long rightDelta = motor.motorRightTicks-stateRightTicks;  
   stateLeftTicks = motor.motorLeftTicks;
@@ -215,6 +218,9 @@ void computeRobotState(){
   
   float posN = 0;
   float posE = 0;
+
+  deltaTime = (millis() - timeLast)/1000.0;
+
   if (absolutePosSource){
     relativeLL(absolutePosSourceLat, absolutePosSourceLon, gps.lat, gps.lon, posN, posE);    
   } else {
@@ -298,14 +304,14 @@ void computeRobotState(){
     stateDelta = scalePI(stateDelta + deltaOdometry);  
   }
   if (imuDriver.imuFound){
-    stateDeltaSpeedIMU = 0.99 * stateDeltaSpeedIMU + 0.01 * stateDeltaIMU / 0.02; // IMU yaw rotation speed (20ms timestep)
+    stateDeltaSpeedIMU = 0.99 * stateDeltaSpeedIMU + 0.01 * stateDeltaIMU / deltaTime; // IMU yaw rotation speed (20ms timestep)
   }
-  stateDeltaSpeedWheels = 0.99 * stateDeltaSpeedWheels + 0.01 * deltaOdometry / 0.02; // wheels yaw rotation speed (20ms timestep) 
+  stateDeltaSpeedWheels = 0.99 * stateDeltaSpeedWheels + 0.01 * deltaOdometry / deltaTime; // wheels yaw rotation speed (20ms timestep) 
   //CONSOLE.println(stateDelta / PI * 180.0);
   stateDeltaIMU = 0;
 
   // compute yaw rotation speed (delta speed)
-  stateDeltaSpeed = (stateDelta - stateDeltaLast) / 0.02;  // 20ms timestep
+  stateDeltaSpeed = (stateDelta - stateDeltaLast) / deltaTime;  // 20ms timestep
   stateDeltaSpeedLP = stateDeltaSpeedLP * 0.95 + fabs(stateDeltaSpeed) * 0.05;     
   stateDeltaLast = stateDelta;
   //CONSOLE.println(stateDeltaSpeedLP/PI*180.0);
@@ -313,10 +319,12 @@ void computeRobotState(){
   if (imuDriver.imuFound) {
     // compute difference between IMU yaw rotation speed and wheels yaw rotation speed
     diffIMUWheelYawSpeed = stateDeltaSpeedIMU - stateDeltaSpeedWheels;
-    diffIMUWheelYawSpeedLP = diffIMUWheelYawSpeedLP * 0.95 + fabs(diffIMUWheelYawSpeed) * 0.05;  
+    diffIMUWheelYawSpeedLP = diffIMUWheelYawSpeedLP * 0.95 + fabs(diffIMUWheelYawSpeed) * 0.05;  //MrTree changed from diffIMUWheelYawSpeedLP = diffIMUWheelYawSpeedLP * 0.95 + fabs(diffIMUWheelYawSpeed) * 0.05;
     //CONSOLE.println(diffIMUWheelYawSpeedLP/PI*180.0);
     //CONSOLE.print(stateDeltaSpeedIMU/PI*180.0);
     //CONSOLE.print(",");
     //CONSOLE.println(stateDeltaSpeedWheels/PI*180.0);
   }
+
+  timeLast = millis();
 }

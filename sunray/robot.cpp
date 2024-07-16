@@ -232,10 +232,6 @@ void updateGPSMotionCheckTime(){
   nextGPSMotionCheckTime = millis() + GPS_MOTION_DETECTION_TIMEOUT * 1000;     
 }
 
-
-
-
-
 void sensorTest(){
   CONSOLE.println("testing sensors for 60 seconds...");
   unsigned long stopTime = millis() + 60000;  
@@ -289,7 +285,6 @@ void sensorTest(){
   }
   CONSOLE.println("end of sensor test - please ignore any IMU/GPS errors");
 }
-
 
 void startWIFI(){
 #ifdef __linux__
@@ -359,8 +354,6 @@ void startWIFI(){
   }  
 }
 
-
-
 // check for RTC module
 bool checkAT24C32() {
   byte b = 0;
@@ -385,7 +378,6 @@ bool checkAT24C32() {
     return (r == 1);
   #endif
 }
-
 
 void outputConfig(){
   #ifdef ENABLE_PASS
@@ -569,7 +561,6 @@ void outputConfig(){
   #endif
 }
 
-
 // robot start routine
 void start(){    
   pinMan.begin();
@@ -699,20 +690,20 @@ bool robotShouldMove(){
   /*CONSOLE.print(motor.linearSpeedSet);
   CONSOLE.print(",");
   CONSOLE.println(motor.angularSpeedSet / PI * 180.0);  */
-  return ( fabs(motor.linearSpeedSet) >= MOTOR_MIN_SPEED ); //MrTree changed from 0.001
+  return (fabs(motor.linearSpeedSet) >= MOTOR_MIN_SPEED); //MrTree changed from 0.001
 }
 
 bool robotShouldMoveForward(){
-   return ( motor.linearSpeedSet >= MOTOR_MIN_SPEED/2 );   //MrTree changed from 0.001, reduced linearSpeedSet condition
+   return (motor.linearSpeedSet >= MOTOR_MIN_SPEED / 2.0);   //MrTree changed from 0.001, reduced linearSpeedSet condition
 }
 
 // should robot rotate?
 bool robotShouldRotate(){
-  if ((fabs(motor.linearSpeedSet) < MOTOR_MIN_SPEED/2) &&  (((fabs(motor.angularSpeedSet))/PI*180.0) > 2.5)) return (true);//MrTree changed to deg/s (returned true before if angularspeedset > 0.57deg/s), reduced linearSpeedSet condition
+  if (fabs(motor.linearSpeedSet) < MOTOR_MIN_SPEED / 2.0 && fabs(motor.angularSpeedSet)/PI*180.0 > 5.0) return (true);//MrTree changed to deg/s (returned true before if angularspeedset > 0.57deg/s), reduced linearSpeedSet condition
   else {
     //stateDeltaSpeedLP = 0;      //MrTree reset measurement
     //diffIMUWheelYawSpeed = 0;   //MrTree reset measurement
-    diffIMUWheelYawSpeedLP = 0; //MrTree reset measurement
+    //diffIMUWheelYawSpeedLP = 0; //MrTree reset measurement
     return (false); 
   }
 }
@@ -814,7 +805,7 @@ bool detectLift(){
 // detect obstacle (bumper, sonar, ToF)
 // returns true, if obstacle detected, otherwise false
 bool detectObstacle(){   
-  if (! ((robotShouldMoveForward()) || (robotShouldRotate())) ) return false;      
+  if (!robotShouldMoveForward() || !robotShouldRotate()) return false;      
   if (TOF_ENABLE){
     if (millis() >= nextToFTime){
       nextToFTime = millis() + 200;
@@ -891,11 +882,11 @@ void triggerObstacleRotation(){
 
 // stuck rotate detection (e.g. robot cannot due to an obstacle outside of robot rotation point)
 // returns true, if stuck detected, otherwise false
-bool detectObstacleRotation(){  
+bool detectObstacleRotation(){
+  if (!OBSTACLE_DETECTION_ROTATION) return false;  
   if (!robotShouldRotate()) {
     return false;
   }  
-  if (!OBSTACLE_DETECTION_ROTATION) return false; 
   //MrTree: This is the Situation without an IMU!
   if (millis() > angularMotionStartTime + ROTATION_TIMEOUT) { // too long rotation time (timeout), e.g. due to obstacle
     CONSOLE.println("too long rotation time (timeout) for requested rotation => assuming obstacle");
@@ -933,11 +924,11 @@ bool detectObstacleRotation(){
         triggerObstacleRotation();
         return true;      
       }
-      if (diffIMUWheelYawSpeedLP > 10.0/180.0 * PI) {  // yaw speed difference between wheels and IMU more than 8 degree/s, e.g. due to obstacle
+      if (diffIMUWheelYawSpeedLP > 10.0/180.0 * PI && fabs(stateDeltaSpeedIMU) < 10/180 * PI ) {  // yaw speed difference between wheels and IMU more than 8 degree/s, e.g. due to obstacle AND imu shows not enough rotation
         CONSOLE.println("yaw difference between wheels and IMU for requested rotation => assuming obstacle");
         statMowDiffIMUWheelYawSpeedCounter++;
-        diffIMUWheelYawSpeed = 0;   //MrTree reset measurement
-        diffIMUWheelYawSpeedLP = 0; //MrTree reset measurement
+        //diffIMUWheelYawSpeed = 0;   //MrTree reset measurement
+        //diffIMUWheelYawSpeedLP = 0; //MrTree reset measurement
         resetAngularMotionMeasurement();  //MrTree reset starttime            
         triggerObstacleRotation();
         return true;            
@@ -966,16 +957,15 @@ void tuningOutput(){
       CONSOLE.println();
   CONSOLE.println("IMU              -- ");
       CONSOLE.print("      ");CONSOLE.print("diffIMUWheelYawSpeedLP: ");CONSOLE.print(diffIMUWheelYawSpeedLP/PI*180.0);CONSOLE.println(" deg/s");
-      CONSOLE.print("      ");CONSOLE.print("stateDeltaSpeedIMU: ");CONSOLE.print(stateDeltaSpeedIMU/PI*180.0);CONSOLE.println(" deg/s");
-      CONSOLE.print("      ");CONSOLE.print("stateDeltaSpeedWheels: ");CONSOLE.print(stateDeltaSpeedWheels/PI*180.0);CONSOLE.println(" deg/s");
-      CONSOLE.print("      ");CONSOLE.print("stateDeltaSpeedLP: ");CONSOLE.print(stateDeltaSpeedLP/PI*180.0);CONSOLE.println(" deg/s");
-      CONSOLE.print("      ");CONSOLE.print("heading: ");CONSOLE.print(imuDriver.heading);CONSOLE.println(" none");
-      CONSOLE.print("      ");CONSOLE.print("ax: ");CONSOLE.print(imuDriver.ax);CONSOLE.print(" g, ay: "); CONSOLE.print(imuDriver.ay);CONSOLE.print(" g, az: ");CONSOLE.print(imuDriver.az);CONSOLE.println(" g");
-      CONSOLE.print("      ");CONSOLE.print("roll: ");CONSOLE.print(imuDriver.roll);CONSOLE.print(" rad, pitch: "); CONSOLE.print(imuDriver.pitch);CONSOLE.print("rad, yaw: ");CONSOLE.print(imuDriver.yaw);CONSOLE.println(" rad");
+      CONSOLE.print("      ");CONSOLE.print("    stateDeltaSpeedIMU: ");CONSOLE.print(stateDeltaSpeedIMU/PI*180.0);CONSOLE.println(" deg/s");
+      CONSOLE.print("      ");CONSOLE.print(" stateDeltaSpeedWheels: ");CONSOLE.print(stateDeltaSpeedWheels/PI*180.0);CONSOLE.println(" deg/s");
+      CONSOLE.print("      ");CONSOLE.print("     stateDeltaSpeedLP: ");CONSOLE.print(stateDeltaSpeedLP/PI*180.0);CONSOLE.println(" deg/s");
+      CONSOLE.print("      ");CONSOLE.print("               heading: ");CONSOLE.print(imuDriver.heading);CONSOLE.println(" none");
+      CONSOLE.print("      ");CONSOLE.print("                    ax: ");CONSOLE.print(imuDriver.ax);CONSOLE.print(" g, ay: "); CONSOLE.print(imuDriver.ay);CONSOLE.print(" g, az: ");CONSOLE.print(imuDriver.az);CONSOLE.println(" g");
+      CONSOLE.print("      ");CONSOLE.print("                  roll: ");CONSOLE.print(imuDriver.roll);CONSOLE.print(" rad, pitch: "); CONSOLE.print(imuDriver.pitch);CONSOLE.print("rad, yaw: ");CONSOLE.print(imuDriver.yaw);CONSOLE.println(" rad");
       CONSOLE.println("<----------------------------------------------------");
       CONSOLE.println();
 }
-
 
 // robot main loop
 void run(){  
@@ -1018,7 +1008,6 @@ void run(){
       tuningOutput();
     }
   }
-  
   
   // temp
   if (millis() > nextTempTime){
@@ -1066,8 +1055,7 @@ void run(){
   }
 
   gps.run();
-  
-  
+   
   if (millis() > nextTimetableTime){
     nextTimetableTime = millis() + 30000;
     gps.decodeTOW();
@@ -1076,7 +1064,6 @@ void run(){
   }
   
   calcStats();  
-  
   
   if (millis() >= nextControlTime){        
     nextControlTime = millis() + 20; 

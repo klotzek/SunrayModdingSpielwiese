@@ -463,7 +463,7 @@ void noDockRotation() {
     }
     if (dockTimer){
       resetLinearMotionMeasurement();                                         //need to test if this is still neccessary
-      if (targetDist < DOCK_NO_ROTATION_DISTANCE) angular = 0;                  //testing easier approach for DOCK_NO_ROTATION setup
+      if (lastTargetDist > DOCK_NO_ROTATION_DISTANCE) angular = 0;                  //testing easier approach for DOCK_NO_ROTATION setup
       if (millis() > reachedPointBeforeDockTime+DOCK_NO_ROTATION_TIMER){      //check the time until mower has to reach the charger and triger obstacle if not reached
         CONSOLE.println("allowDockRotation = false, not docked in given time, triggering maps.retryDocking!");
         triggerObstacle();
