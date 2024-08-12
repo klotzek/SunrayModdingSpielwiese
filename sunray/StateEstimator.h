@@ -14,10 +14,12 @@
 extern float stateX;  // position-east (m)
 extern float stateY;  // position-north (m)
 extern float stateDelta;  // direction (rad)
+extern float stateHeading;
 extern float stateRoll;
 extern float statePitch;
 extern float stateDeltaGPS;
 extern float stateDeltaIMU;
+//extern float stateDeltaWheels; //Mr.Tree
 extern float stateGroundSpeed; // m/s
 extern float lateralError; // lateral error
 

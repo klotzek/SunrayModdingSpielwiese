@@ -11,21 +11,21 @@
 #include "../../config.h"
 
 
-String EscapeReverseOp::name(){
-    return "EscapeReverse";
+String EscapeRotationOp::name(){
+    return "EscapeRotation";
 }
 
-void EscapeReverseOp::begin(){
+void EscapeRotationOp::begin(){
     // obstacle avoidance
     driveReverseStopTime = millis() + (ESCAPE_REVERSE_WAY/OBSTACLEAVOIDANCESPEED*1000);
 }
 
 
-void EscapeReverseOp::end(){
+void EscapeRotationOp::end(){
 }
 
 
-void EscapeReverseOp::run(){
+void EscapeRotationOp::run(){
     battery.resetIdle();
 	if (!detectObstacle()){ 			//Mr.Tree
         detectObstacleRotation();       //Mr.Tree                       
@@ -34,7 +34,7 @@ void EscapeReverseOp::run(){
     motor.setLinearAngularSpeed(-OBSTACLEAVOIDANCESPEED,0,false);				
 																				
 	if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (motor.switchedOn)) {	//MrTree
-      CONSOLE.println("EscapeReverseOp:: switch OFF mowmotor");			//MrTree
+      CONSOLE.println("EscapeRotationOp:: switch OFF mowmotor");			//MrTree
 	  motor.setMowState(false);  																	  	
 	}  																                                   																					
     if (millis() > driveReverseStopTime){
@@ -52,8 +52,8 @@ void EscapeReverseOp::run(){
             // continue without obstacles
             changeOp(*nextOp, false);    // continue current operation
         } else {
-            CONSOLE.println("continue operation with virtual obstacle");
-            maps.addObstacle(stateX, stateY);              
+            CONSOLE.println("continue operation without virtual obstacle");
+            //maps.addObstacle(stateX, stateY);              
             //Point pt;
             //if (!maps.findObstacleSafeMowPoint(pt)){
             //    changeOp(dockOp); // dock if no more (valid) mowing points
@@ -65,12 +65,12 @@ void EscapeReverseOp::run(){
 
 
 
-void EscapeReverseOp::onImuTilt(){
+void EscapeRotationOp::onImuTilt(){
     stateSensor = SENS_IMU_TILT;
     changeOp(errorOp);
 }
 
-void EscapeReverseOp::onImuError(){
+void EscapeRotationOp::onImuError(){
     stateSensor = SENS_IMU_TIMEOUT;
     changeOp(errorOp);
 }

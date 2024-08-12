@@ -12,6 +12,7 @@
 #include "RobotDriver.h"
 #include "../mpu/SparkFunMPU9250-DMP.h"
 
+//extern unsigned int robot_control_cycle;
 
 class MpuDriver: public ImuDriver {    
   public:    
@@ -22,6 +23,7 @@ class MpuDriver: public ImuDriver {
     bool isDataAvail() override;         
     void resetData() override;        
   protected:
+   
     MPU9250_DMP mpu;    
     void selectChip();
 };

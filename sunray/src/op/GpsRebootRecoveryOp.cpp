@@ -31,7 +31,7 @@ void GpsRebootRecoveryOp::run(){
         // restart current operation from new position (restart path planning)
         CONSOLE.println("restarting operation (retryOperationTime)");
         retryOperationTime = 0;
-        motor.stopImmediately(true);
+        motor.stopImmediately(false);
         changeOp(*nextOp);    // restart current operation      
     }
 }

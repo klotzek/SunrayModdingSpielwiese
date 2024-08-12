@@ -15,9 +15,9 @@ String ErrorOp::name(){
 
 
 void ErrorOp::begin(){
-    CONSOLE.println("OP_ERROR"); 
+    CONSOLE.println("OP_ERROR - stop immediately"); 
     //if (stateOp == OP_CHARGE){
-    //  CONSOLE.println(" - ignoring because we are charging");
+    //  
     //  op = stateOp;
     //} else {        
     motor.stopImmediately(true); // do not use PID to get to stop

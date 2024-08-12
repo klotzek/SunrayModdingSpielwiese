@@ -1,33 +1,26 @@
-// Ardumower Sunray 
-//MrTree: Some things can be deleted here... cause its of no use....
+// Ardumower Sunray
+
+// this works with a 2,4ghz rc receiver low voltage directly connected from servo/driver pwm receiver output to digital interrupt"capable" 
+// input pins of ardumower pcb (not too many... rc connector has 4, but only 2 are interrupt capable, that´s why here the tilt Pin is used for mow motor)
+// low voltage means that rc receiver is powered directly from the pcb 5volt distributor array without anything else
+// -- > calculate and map the pwm modulated channel inputs from the receiver to according values for linear and angular speeds, 
+// also switch on rc mow flag and set rpm or pwm for mow driver in motor.cpp with .h include vars (could use globals?)
 
 #include "config.h"
 #include "rcmodel.h"
 #include "robot.h"
 #include "motor.h"
-//#include "PWM.hpp"
-//#include <RunningMedian.h>
+#include <RunningMedian.h>
 
-//RunningMedian CHAN_1x_med = RunningMedian(3);
-//RunningMedian CHAN_2x_med = RunningMedian(3);
-//RunningMedian CHAN_3x_med = RunningMedian(5);
-
-//PWM ch3(pinRemoteMow);
-
+RunningMedian<unsigned int, 5> CHAN_1_med;
+RunningMedian<unsigned int, 5> CHAN_2_med;
+RunningMedian<unsigned int, 5> CHAN_3_med;
 
 bool bMow = false;
-//int mowRPM_RC = 0;
 
-float CHAN_1;             //Kanal 1 -255 .. 255 (Linear)
-float CHAN_2;             //Kanal 2 -255 .. 255 (Angular)
-float CHAN_3;             //Kanal 3 -255 .. 255 (Workaround kleiner -150 = Mähwerk aus/ größer 150 = Mähwerk an, bMow)
-float CHAN_1x;            //Kanal 1 als Real für SetLinearAngular funktion (Linear)
-float CHAN_2x;            //Kanal 2 als Real für SetLinearAngular funktion (Angular)
-float CHAN_3x;            //Kanal 3 als Real für SetLinearAngular funktion (nicht verwendet da keine Mähmotorübergabe in Funktion)
-  
-
-int PWMLeft;
-int PWMRight;
+float CHAN_1x;            //Channel 1 RC --- float for SetLinearAngular function (linear)
+float CHAN_2x;            //Channel 2 RC --- float for SetLinearAngular function (angular)
+int CHAN_3;               //Channel 3 RC --- mapped to +-8Bits: -255 .. 255 
 
 volatile unsigned long PPM_start_linear = 0;
 volatile unsigned long PPM_end_linear = 0;                
@@ -35,6 +28,7 @@ volatile unsigned long PPM_start_angular = 0;
 volatile unsigned long PPM_end_angular = 0 ;        
 volatile unsigned long PPM_start_mow = 0;
 volatile unsigned long PPM_end_mow = 0 ;      
+
 
 void get_lin_PPM()                                                        // Interrupt Service Routine
 {
@@ -60,22 +54,16 @@ void RCModel::begin()
 {                                   
   RC_Mode = false; 
   nextControlTime = 0;
-  // R/C
+
   pinMode(pinRemoteMow, INPUT);
   pinMode(pinRemoteSteer, INPUT);
   pinMode(pinLift, INPUT);  
-  pinMode(pinRemoteSwitch, OUTPUT); //Relaisboard IN2 for Powerup RC Receiver, K2 switching Receiver Ground On/Off
-  digitalWrite(pinRemoteSwitch, HIGH); //RC Receiver ausschalten und auf RC_Mode warten
-  //ch3.begin(true);
+  pinMode(pinRemoteSwitch, OUTPUT);     //Relaisboard IN2 for Powerup RC Receiver, K2 switching Receiver Ground On/Off
+  digitalWrite(pinRemoteSwitch, HIGH);  //RC Receiver ausschalten und auf RC_Mode warten
   
 #ifdef RC_DEBUG
   nextOutputTime = millis() + 1000;
 #endif
-  if (RCMODEL_ENABLE)
-  {
-    //attachInterrupt(digitalPinToInterrupt(pinRemoteMow), get_lin_PPM, CHANGE);// Interrupt aktivieren
-    //attachInterrupt(digitalPinToInterrupt(pinRemoteSteer), get_ang_PPM, CHANGE);// Interrupt aktivieren 
-  }
 } 
 
 void RCModel::run()
@@ -121,68 +109,45 @@ void RCModel::run()
     }
          
     //lin_PPM = 0;
-    if (PPM_start_linear < PPM_end_linear) lin_PPM = PPM_end_linear - PPM_start_linear; 
-    if (lin_PPM < 2001 && lin_PPM > 999)                                        // Wert innerhalb 1100 bis 1900µsec
+    if (PPM_start_linear < PPM_end_linear) lin_PWM = PPM_end_linear - PPM_start_linear; 
+    if (lin_PWM < 2001 && lin_PWM > 999)                                        // Wert innerhalb 1100 bis 1900µsec
     { 
-      CHAN_1x = (lin_PPM - 1500) / 1500;                                        // PPM auf kompletten Bereich....
-      CHAN_1 = (lin_PPM - 1500) / 2;                                            // halbieren...
-      
-      //CHAN_1x_med.add(CHAN_1x);                                                 
-      //CHAN_1x = CHAN_1x_med.getMedian();
-   
-      if ((CHAN_1 > -10) && (CHAN_1 < 10)) CHAN_1 = 0;
-      if ((CHAN_1x < 0.02) && (CHAN_1x > -0.02)) CHAN_1x = 0;                   // NullLage vergrössern         
-      linearPPM = CHAN_1x*2;                                                    // Weitergabe
+      CHAN_1_med.add(lin_PWM);
+      CHAN_1_med.getMedian(lin_PWM);
+      CHAN_1x = map(lin_PWM, 1000, 2000, -600, 600);
+      CHAN_1x /= 1000.0;
+      if ((CHAN_1x < 0.02) && (CHAN_1x > -0.02)) CHAN_1x = 0;                   // NullLage vergrössern
+      rc_linear = CHAN_1x;                                                    // Weitergabe
     }
 
     //ang_PPM = 0;
-    if (PPM_start_angular < PPM_end_angular) ang_PPM = PPM_end_angular - PPM_start_angular; 
-    if (ang_PPM < 2001 && ang_PPM > 999)                                        // Wert innerhalb 1100 bis 1900µsec
-    {   
-      CHAN_2x = (ang_PPM - 1500) / 1500;                                        // PPM auf kompletten Bereich....
-      CHAN_2 = (ang_PPM - 1500) / 2;                                            // halbieren...
-
-      //CHAN_2x_med.add(CHAN_2x);
-      //CHAN_2x = CHAN_2x_med.getMedian();
-     
-      if ((CHAN_2 > -10) && (CHAN_2 < 10)) CHAN_2 = 0; 
+    if (PPM_start_angular < PPM_end_angular) ang_PWM = PPM_end_angular - PPM_start_angular; 
+    if (ang_PWM < 2001 && ang_PWM > 999)                                        // Wert innerhalb 1100 bis 1900µsec
+    {
+      CHAN_2_med.add(ang_PWM);
+      CHAN_2_med.getMedian(ang_PWM);   
+      CHAN_2x = map(ang_PWM, 1000, 2000, -PI*1000, PI*1000);
+      CHAN_2x /= 1000.0;
       if ((CHAN_2x < 0.01) && (CHAN_2x > -0.01)) CHAN_2x = 0;                   // NullLage vergrössern         
-      angularPPM = CHAN_2x*8;
+      rc_angular = CHAN_2x;
     }
     
-    //mow_PPM = 0;
-    if (PPM_start_mow < PPM_end_mow) mow_PPM = PPM_end_mow - PPM_start_mow; 
-    if (mow_PPM < 2001 && mow_PPM > 999)                                      // Wert innerhalb 1100 bis 1900µsec
+    //mowmotor
+    if (PPM_start_mow < PPM_end_mow) mow_PWM = PPM_end_mow - PPM_start_mow; 
+    if (mow_PWM < 2101 && mow_PWM > 899)                                      // Wert innerhalb 1100 bis 1900µsec
     { 
-      CHAN_3x = (mow_PPM - 1500) / 1500;                                      // PPM auf kompletten Bereich....
-      CHAN_3 = (mow_PPM - 1500) / 2;                                          // halbieren...
+      CHAN_3_med.add(mow_PWM);
+      CHAN_3_med.getMedian(mow_PWM);
+      CHAN_3 = (mow_PWM - 1500) / 2;                                          // halbieren... -255 | +255
+      if (CHAN_3 > 50 || CHAN_3 < -50) bMow = true;
+        else bMow = false;    
+      rc_mowPWM = CHAN_3;
+      rc_mowRPM= 4000/255 * abs(CHAN_3);
 
-      //CHAN_3x_med.add(CHAN_3x);
-      //CHAN_3x = CHAN_3x_med.getMedian();
-      
-      if ((CHAN_3 > -10) && (CHAN_3 < 10)) CHAN_3 = 0;                        // Nullage PPM
-      if ((CHAN_3x < 0.05) && (CHAN_3x > -0.05)) CHAN_3x = 0;                 // NullLage vergrössern         
-      mowPPM = CHAN_3x;
-      if ((CHAN_3 > 50) || (CHAN_3 < -50)) 
-      { bMow = true; }else{ bMow = false;}    
-      mowPWM_RC = CHAN_3;
-      //mowRPM_RC = (4000/255)*abs(CHAN_3);
-      if (USE_MOW_RPM_SET) motor.mowRPM_RC = (4000/255)*abs(CHAN_3);
-      else motor.mowPWM_RC = CHAN_3;
-      //CONSOLE.println(CHAN_3);
+      if (USE_MOW_RPM_SET) motor.mowRPM_RC = rc_mowRPM;
+      else motor.mowPWM_RC = rc_mowPWM;
     }
-    //CONSOLE.println(ch3.getValue());
-    
-    //Mix Channels to PWM Out -255..255
-    PWMLeft = CHAN_1 - CHAN_2;
-    PWMRight = CHAN_1 + CHAN_2;
-    //Safetycheck
-    if (PWMLeft > 255) PWMLeft = 255;
-    if (PWMRight > 255) PWMRight = 255;
-    if (PWMLeft < -255) PWMLeft = -255;
-    if (PWMRight < -255) PWMRight = -255;
-  
-#ifdef RC_DEBUG
+/*#ifdef RC_DEBUG
     if (t >= nextOutputTime) 
     {
       nextOutputTime = t + 1000;
@@ -201,10 +166,8 @@ void RCModel::run()
       //CONSOLE.print("RC: mow_PPM= ");
       //CONSOLE.print(mow_PPM);
     }
-#endif
-   motor.setLinearAngularSpeed(linearPPM, angularPPM, false);                     // R/C Signale an Motor leiten
+#endif*/
+   motor.setLinearAngularSpeed(rc_linear, rc_angular, false);                     // R/C Signale an Motor leiten
    if (bMow != motor.switchedOn) motor.setMowState(bMow);                         // bMow vom Poti als Schwellwertschalter
-   //motor.speedPWM(PWMLeft, PWMRight, 0);
-   //motorDriver.setMotorPwm(PWMLeft, PWMRight, 0);
   }
 }

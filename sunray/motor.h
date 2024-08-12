@@ -13,6 +13,7 @@
 enum MotorSelect {MOTOR_LEFT, MOTOR_RIGHT, MOTOR_MOW} ;
 typedef enum MotorSelect MotorSelect;
 
+extern unsigned int robot_control_cycle;
 
 class Motor {
   public:
@@ -103,7 +104,14 @@ class Motor {
     bool waitMowMotor();  
     void stopImmediately(bool includeMowerMotor);    
      
-  protected: 
+  protected:
+    float lp005;
+    float lp01; //Very very slow
+    float lp1;
+    float lp2;
+    float lp3;
+    float lp4;
+
     float motorLeftRpmSet;                //set speed
     float motorRightRpmSet;
     
@@ -121,9 +129,12 @@ class Motor {
     int motorRightPWMCurr;    
     float motorMowPWMCurrLP; 
     float motorLeftPWMCurrLP;
-    float motorRightPWMCurrLP;    
+    float motorRightPWMCurrLP;
+    unsigned long currTime;
+    unsigned long deltaControlTimeMs;
+    float deltaControlTimeSec;    
     unsigned long lastControlTime;    
-    unsigned long nextSenseTime;
+    //unsigned long nextSenseTime;
     unsigned long lastMowStallCheckTime;  //MrTree
     unsigned long drvfixtimer;            //MrTree 
     bool drvfixreset;                     //MrTree 

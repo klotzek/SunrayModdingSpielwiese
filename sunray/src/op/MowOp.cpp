@@ -23,8 +23,6 @@ String MowOp::name(){
 
 void MowOp::begin(){	
 	
-	int iterationcounter = 0;
-	
     bool error = false;
     bool routingFailed = false;      
 	
@@ -50,9 +48,9 @@ void MowOp::begin(){
             lastFixTime = millis();                
             maps.setLastTargetPoint(stateX, stateY);        
             //stateSensor = SENS_NONE;
-            //if (!motor.switchedOn) {
-			  CONSOLE.println("MowOp::begin switch ON mowmotor --> startMowing");
-			  motor.setMowState(true);
+            //if (maps.wayMode == WAY_MOW && !motor.switchedOn) {
+			//  CONSOLE.println("MowOp::begin switch ON mowmotor --> startMowing");
+			//  motor.setMowState(true);
 			//}
         } else {
             error = true;
@@ -91,11 +89,7 @@ void MowOp::end(){
 }
 
 void MowOp::run(){
-	//if (millis() < motor.motorMowSpinUpTime + MOWSPINUPTIME){      //searching for a bug.... when mower will move without waiting for mowmotor
-	//	CONSOLE.println("MowOp::run trying to wait for mowmotor....");
-	//	motor.setLinearAngularSpeed(0,0);
-	//	return;
-   //}
+	
 
     if (!detectObstacle()){
         detectObstacleRotation();                              
@@ -176,8 +170,17 @@ void MowOp::onObstacle(){
             return;
         }
     } 
-    if ((OBSTACLE_AVOIDANCE) && (maps.wayMode != WAY_DOCK)){    
+    /*if (OBSTACLE_AVOIDANCE && maps.wayMode != WAY_DOCK){    
         changeOp(escapeReverseOp, true);      
+    } else {     
+        stateSensor = SENS_OBSTACLE;
+        CONSOLE.println("error: obstacle!");            
+        changeOp(errorOp);                
+    }*/
+    if (OBSTACLE_AVOIDANCE){
+        if (robotShouldMoveForward() && robotShouldRotate()) changeOp(escapeRotationOp, true); 
+        if (robotShouldMoveForward()) changeOp(escapeReverseOp, true);
+        if (robotShouldMoveBackward()) changeOp(escapeForwardOp, true);      
     } else {     
         stateSensor = SENS_OBSTACLE;
         CONSOLE.println("error: obstacle!");            
@@ -261,37 +264,36 @@ void MowOp::onTargetReached(){
 
 
 void MowOp::onGpsFixTimeout(){
-	iterationcounter++;
     // no gps solution
     if (REQUIRE_VALID_GPS){
 #ifdef UNDOCK_IGNORE_GPS_DISTANCE
-        if (iterationcounter > 200 && (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE)){
+        if (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE){
 #else
-        if (!maps.isUndocking() && (iterationcounter > 200)){
+        if (!maps.isUndocking()){
 #endif
-            CONSOLE.println("MowOp::onGpsNoSignal iterationcounter over value, triggering gpsWaitFixOp");
+            CONSOLE.println("MowOp::onGpsFixTimeout, triggering gpsWaitFixOp");
             stateSensor = SENS_GPS_FIX_TIMEOUT;
-			iterationcounter = 0;
             changeOp(gpsWaitFixOp, true);
         }
     }
 }
 
 void MowOp::onGpsNoSignal(){
-	iterationcounter++;
+    gpsNoSignalTime += deltaTime;
     if (REQUIRE_VALID_GPS){
 #ifdef UNDOCK_IGNORE_GPS_DISTANCE
-        if (iterationcounter > 200 && (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE)){
+        if (gpsNoSignalTime > NO_GPS_SIGNAL_TIMEOUT && (!maps.isUndocking() || getDockDistance() > UNDOCK_IGNORE_GPS_DISTANCE)){    
 #else
-        if (!maps.isUndocking() && (iterationcounter > 200)){
+        if (!maps.isUndocking() && (gpsNoSignalTime > NO_GPS_SIGNAL_TIMEOUT)){
 #endif
-            CONSOLE.println("MowOp::onGpsNoSignal iterationcounter over value, triggering gpsWaitFloatOp");
+            CONSOLE.println("MowOp::onGpsNoSignal timeout reached, triggering gpsWaitFloatOp");
 			stateSensor = SENS_GPS_INVALID;
-			iterationcounter = 0;
+            gpsNoSignalTime = 0;
             changeOp(gpsWaitFloatOp, true);
         }
     }
 }
+
 
 void MowOp::onKidnapped(bool state){
     if (state){

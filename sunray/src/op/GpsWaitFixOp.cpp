@@ -38,7 +38,7 @@ void GpsWaitFixOp::run(){
     battery.resetIdle();
     if (GPS_RESET_WAIT_FIX){
         if (millis() > resetGpsTimer) {
-            CONSOLE.println("GpsWaitFixOp::run - rest gps timer triggered! Resetting GPS!");
+            CONSOLE.println("GpsWaitFixOp::run - reset gps timer triggered! Resetting GPS!");
             resetGpsTimer = millis() + (GPS_RESET_WAIT_FIX_TIME*1000*60);
             gps.reboot();
         }

@@ -18,8 +18,6 @@
 // Conversion from uS to distance (round result to nearest cm or inch).
 #define NewPingConvert(echoTime, conversionFactor) (max(((unsigned int)echoTime + conversionFactor / 2) / conversionFactor, (echoTime ? 1 : 0)))
 
-
-
 RunningMedian<unsigned int, 9> sonarLeftMeasurements;
 RunningMedian<unsigned int, 9> sonarRightMeasurements;
 RunningMedian<unsigned int, 9> sonarCenterMeasurements;
@@ -118,7 +116,7 @@ void Sonar::run() {
     added = false;
   }
   if (millis() > nextEvalTime) {
-    nextEvalTime = millis() + 200;
+    nextEvalTime = millis() + 50; //SONAR CHANGE EVAL
     float value;
     //sonarLeftMeasurements.getLowest(distanceLeft);
     sonarLeftMeasurements.getMedian(distanceLeft);

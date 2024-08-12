@@ -918,7 +918,7 @@ bool Map::nextPointIsStraight(){
   angleNext = scalePIangles(angleNext, angleCurr);                    
   float diffDelta = distancePI(angleCurr, angleNext);                 
   //CONSOLE.println(fabs(diffDelta)/PI*180.0);
-  return ((fabs(diffDelta)/PI*180.0) < 30);         //(20) MrTree slightly increased
+  return ((fabs(diffDelta)/PI*180.0) < 35);         //(20) MrTree slightly increased
 }
 
 
@@ -1134,8 +1134,8 @@ bool Map::findObstacleSafeMowPoint(Point &findPathToPoint){
   bool safe;  
   Point dst;  
   while (true){
-    resetAngularMotionMeasurement(); //MrTree
-    resetLinearMotionMeasurement(); //MrTree
+    //resetAngularMotionMeasurement(); //MrTree
+    //resetLinearMotionMeasurement(); //MrTree
     safe = true;  
     dst.assign(mowPoints.points[mowPointsIdx]);
     CONSOLE.print("findObstacleSafeMowPoint checking ");    

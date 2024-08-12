@@ -188,7 +188,8 @@ void cmdControl(){
 // request motor 
 void cmdMotor(){
   if (cmd.length()<6) return;
-  if(activeOp->name() != "Idle")activeOp->changeOp(idleOp); //MrTree Silberstreifens change to put mower in idleop if user interferes  
+  if (stateOp != OP_IDLE) activeOp->changeOp(idleOp); //MrTree Silberstreifens change to put mower in idleop if user interferes  
+  //if(activeOp->name() != "Idle")activeOp->changeOp(idleOp); //MrTree Silberstreifens change to put mower in idleop if user interferes  
   int counter = 0;
   int lastCommaIdx = 0;
   float linear=0;
@@ -212,7 +213,7 @@ void cmdMotor(){
   CONSOLE.print(linear);
   CONSOLE.print(" angular=");
   CONSOLE.println(angular);*/
-  motor.setLinearAngularSpeed(linear, angular, true);
+  motor.setLinearAngularSpeed(linear, angular, false);
   String s = F("M");
   cmdAnswer(s);
 }

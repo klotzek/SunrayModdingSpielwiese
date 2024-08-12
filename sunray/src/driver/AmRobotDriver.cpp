@@ -468,21 +468,21 @@ void AmMotorDriver::resetMotorFaults(){
   if (digitalRead(pinMotorLeftFault) == gearsDriverChip.faultActive) {
     if (gearsDriverChip.resetFaultByToggleEnable){
       digitalWrite(pinMotorEnable, !gearsDriverChip.enableActive);
-      delay(100); //MrTree freeze code in this situation to keep pinstate for driver recognition
+      //delayMicroseconds(25); //MrTree freeze code in this situation to keep pinstate for driver recognition
       digitalWrite(pinMotorEnable, gearsDriverChip.enableActive);
     }
   }
   if  (digitalRead(pinMotorRightFault) == gearsDriverChip.faultActive) {
     if (gearsDriverChip.resetFaultByToggleEnable){
       digitalWrite(pinMotorEnable, !gearsDriverChip.enableActive);
-      delay(100); //MrTree freeze code in this situation to keep pinstate for driver recognition
+      //delayMicroseconds(25); //MrTree freeze code in this situation to keep pinstate for driver recognition
       digitalWrite(pinMotorEnable, gearsDriverChip.enableActive);
     }
   }
   if (digitalRead(pinMotorMowFault) == mowDriverChip.faultActive) {
     if (mowDriverChip.resetFaultByToggleEnable){
       digitalWrite(pinMotorMowEnable, !mowDriverChip.enableActive);
-      delay(100); //MrTree freeze code in this situation to keep pinstate for driver recognition
+      //delayMicroseconds(25); //MrTree freeze code in this situation to keep pinstate for driver recognition
       digitalWrite(pinMotorMowEnable, mowDriverChip.enableActive);
     }
   }
@@ -492,22 +492,25 @@ void AmMotorDriver::getMotorCurrent(float &leftCurrent, float &rightCurrent, flo
   // current (amps)= ((ADCvoltage + ofs)^pow) * scale
   float ValuePosCheck	= 0;
   ValuePosCheck = (((float)ADC2voltage(analogRead(pinMotorLeftSense))) + gearsDriverChip.adcVoltToAmpOfs);
-  if (ValuePosCheck < 0) ValuePosCheck = 0;	// avoid negativ numbers
+  if (ValuePosCheck < 0) ValuePosCheck = 0;	// avoid negativ numbers //MrTree: doesnt work
   leftCurrent = pow(
       ValuePosCheck, gearsDriverChip.adcVoltToAmpPow
       )  * gearsDriverChip.adcVoltToAmpScale;
+  if (leftCurrent < 0) leftCurrent = 0.0;
 
   ValuePosCheck = (((float)ADC2voltage(analogRead(pinMotorRightSense))) + gearsDriverChip.adcVoltToAmpOfs);
-  if (ValuePosCheck < 0) ValuePosCheck = 0;	// avoid negativ numbers
+  if (ValuePosCheck < 0) ValuePosCheck = 0;	// avoid negativ numbers //MrTree: doesnt work
   rightCurrent = pow(
       ValuePosCheck, gearsDriverChip.adcVoltToAmpPow
       )  * gearsDriverChip.adcVoltToAmpScale;
+  if (rightCurrent < 0) rightCurrent = 0.0;
 
   ValuePosCheck = (((float)ADC2voltage(analogRead(pinMotorMowSense))) + gearsDriverChip.adcVoltToAmpOfs);
-  if (ValuePosCheck < 0) ValuePosCheck = 0;	// avoid negativ numbers
+  if (ValuePosCheck < 0) ValuePosCheck = 0;	// avoid negativ numbers //MrTree: doesnt work
   mowCurrent = pow(
             ValuePosCheck, mowDriverChip.adcVoltToAmpPow
       )  * mowDriverChip.adcVoltToAmpScale;
+  if (mowCurrent < 0) mowCurrent = 0.0;     
 }
 
 void AmMotorDriver::getMotorEncoderTicks(int &leftTicks, int &rightTicks, int &mowTicks){
@@ -585,7 +588,9 @@ float AmBatteryDriver::getChargeCurrent(){
 float AmBatteryDriver::getBatteryTemperature(){
   #ifdef USE_TEMP_SENSOR
     // https://learn.sparkfun.com/tutorials/htu21d-humidity-sensor-hookup-guide
-    return(myHumidity.readTemperature());
+    float temp = myHumidity.readTemperature();
+    if (temp > 100.0 || temp < 0) return(45);
+    return(temp);
     //float humidity = myHumidity.readHumidity();                  
   #else
     return 0;

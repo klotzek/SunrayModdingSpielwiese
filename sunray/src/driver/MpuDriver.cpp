@@ -53,16 +53,18 @@ bool MpuDriver::begin(){
     if (mpu.begin() != INV_SUCCESS){
         return false;
     }
+    unsigned short fiforate = (1000/ROBOT_CONTROL_CYCLE) - 10;     // Set rate of imu lower than controlcyle to not fill the fifo
     //mpu.setAccelFSR(2);	      
     mpu.dmpBegin(DMP_FEATURE_6X_LP_QUAT  // Enable 6-axis quat
                | DMP_FEATURE_GYRO_CAL // Use gyro calibration
                //|DMP_FEATURE_SEND_CAL_GYRO
                | DMP_FEATURE_SEND_RAW_ACCEL
-              , IMU_FIFO_RATE); // Set DMP FIFO rate
+              , fiforate); // Set DMP FIFO rate
     // DMP_FEATURE_LP_QUAT can also be used. It uses the 
     // accelerometer in low-power mode to estimate quat's.
     // DMP_FEATURE_LP_QUAT and 6X_LP_QUAT are mutually exclusive    
     //mpu.dmpSetOrientation(orientationMatrix);
+    //mpu.setLPF(98); //test against spikes in gyrodata
     return true;
 }
 
@@ -73,9 +75,10 @@ void MpuDriver::run(){
 
 bool MpuDriver::isDataAvail(){
     //selectChip();
-    bool avail = (mpu.fifoAvailable() > 0);    
+    int bytes = mpu.fifoAvailable();
+    bool avail = (bytes > 0);
+    //CONSOLE.print("fifoBytes ");CONSOLE.println(bytes);    
     if (!avail) return false;
-    //CONSOLE.println("fifoAvailable");
     // Use dmpUpdateFifo to update the ax, gx, mx, etc. values
     if ( mpu.dmpUpdateFifo() != INV_SUCCESS) return false;
     // computeEulerAngles can be used -- after updating the
@@ -108,7 +111,7 @@ bool MpuDriver::isDataAvail(){
     //mpu.calcAccel(Z_AXIS);
     //heading = mpu.heading; //MrTree heading of mpu
 
-
+    //if (bytes > 448) resetData(); //test
     return true;
 }         
     

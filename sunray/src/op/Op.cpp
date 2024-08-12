@@ -17,6 +17,7 @@ DockOp dockOp;
 IdleOp idleOp;
 MowOp mowOp;
 EscapeLawnOp escapeLawnOp; 		//MrTree
+EscapeRotationOp escapeRotationOp;
 EscapeReverseOp escapeReverseOp;
 EscapeForwardOp escapeForwardOp;
 KidnapWaitOp kidnapWaitOp;

@@ -16,15 +16,16 @@ class RCModel {
     public:
       void begin();      
       void run(); 
-      int mowPWM_RC;
-      //bool RC_Mode;     
+      int rc_mowPWM;
+      float rc_mowRPM;    
     protected:
-      float lin_PPM ;                                            
-      float linearPPM ;                                         
-      float ang_PPM ;                                            
-      float angularPPM ;
-      float mow_PPM ;                                            
-      float mowPPM ;                                     
+      unsigned int lin_PWM ;                                            
+      float rc_linear ;                                         
+      unsigned int ang_PWM ;                                            
+      float rc_angular ;
+      unsigned int mow_PWM ;                                            
+      
+                                           
                                                
       unsigned long nextControlTime ;
     private:

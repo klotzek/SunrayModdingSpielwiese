@@ -33,7 +33,7 @@ class Op {
     // returns chained op's as a string (starting with active op, going until goal op) 
     // (example: "ImuCalibration->GpsWaitFix->Mow")
     String getOpChain();
-	String OpChain;
+	  String OpChain;
 
     // op's can be chained, this returns the current goal op:
     // examples:    
@@ -114,7 +114,8 @@ class MowOp: public Op {
   public:	
     bool lastMapRoutingFailed;
     int mapRoutingFailedCounter;
-	  int iterationcounter = 0;
+    unsigned int gpsNoSignalTime = 0;
+
     MowOp();
     virtual String name() override;
     virtual void begin() override;
@@ -246,6 +247,18 @@ class EscapeLawnOp: public Op {					//MrTree
     virtual void onImuError() override;
 };												//**
 
+// escape rotation (drive backwards)
+class EscapeRotationOp: public Op {
+  public:        
+    unsigned long driveReverseStopTime;
+    virtual String name() override;
+    virtual void begin() override;
+    virtual void end() override;
+    virtual void run() override;
+    virtual void onImuTilt() override;
+    virtual void onImuError() override;
+};
+
 // escape obstacle (drive backwards)
 class EscapeReverseOp: public Op {
   public:        
@@ -281,6 +294,7 @@ class ErrorOp: public Op {
     virtual void run() override;
 };
 
+extern unsigned int deltaTime;
 
 extern ChargeOp chargeOp;
 extern ErrorOp errorOp;
@@ -288,6 +302,7 @@ extern DockOp dockOp;
 extern IdleOp idleOp;
 extern MowOp mowOp;
 extern EscapeLawnOp escapeLawnOp;			//MrTree
+extern EscapeRotationOp escapeRotationOp;
 extern EscapeReverseOp escapeReverseOp;
 extern EscapeForwardOp escapeForwardOp;
 extern KidnapWaitOp kidnapWaitOp;

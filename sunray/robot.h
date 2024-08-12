@@ -84,6 +84,7 @@ extern String gpsSolText; // current gps solution as text
 extern int stateButton;  // button state
 extern float stateTemp;  // current temperature
 
+//extern unsigned int robot_control_cycle;
 extern float setSpeed; // linear speed (m/s)
 extern int fixTimeout;
 extern bool finishAndRestart; // auto-restart when mowing finished?
@@ -195,9 +196,14 @@ void detectLawn(); //MrTree
 bool detectLift();
 bool detectObstacle();
 bool detectObstacleRotation();
+void resetStateEstimation();
 void resetLinearMotionMeasurement(); //Svol0
 void resetAngularMotionMeasurement(); //MrTree
 void resetOverallMotionTimeout(); //MrTree
+bool robotShouldBeInMotion();
 bool robotShouldRotate(); //MrTree
+bool robotShouldMove();
+bool robotShouldMoveForward();
+bool robotShouldMoveBackward();
 
 #endif
