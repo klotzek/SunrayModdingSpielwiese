@@ -638,7 +638,7 @@ float Motor::adaptiveSpeed(){
     }
 
     y = map(x, x1, x2, y2, y1);
-    CONSOLE.print("y= "); CONSOLE.print(y);CONSOLE.print("   x= "); CONSOLE.print(x); CONSOLE.print(" x1= ");CONSOLE.print(x1); CONSOLE.print(" x2= ");CONSOLE.print(x2);CONSOLE.print(" y2= ");CONSOLE.print(y2);CONSOLE.print(" y1= ");CONSOLE.println(y1);                             
+    //CONSOLE.print("y= "); CONSOLE.print(y);CONSOLE.print("   x= "); CONSOLE.print(x); CONSOLE.print(" x1= ");CONSOLE.print(x1); CONSOLE.print(" x2= ");CONSOLE.print(x2);CONSOLE.print(" y2= ");CONSOLE.print(y2);CONSOLE.print(" y1= ");CONSOLE.println(y1);                             
     y = constrain(y, MOTOR_MIN_SPEED/linearCurrSet*100, 100);     //limit val
     
     if (y > y_before) y = y_before + 5*deltaControlTimeSec; //0.2;//y = 0.995 * y_before + 0.005 * y; //if speed was reduced use a ramp for getting faster only (smoothing)

@@ -17,7 +17,7 @@ String EscapeRotationOp::name(){
 
 void EscapeRotationOp::begin(){
     // obstacle avoidance
-    driveReverseStopTime = millis() + (ESCAPE_REVERSE_WAY/OBSTACLEAVOIDANCESPEED*1000);
+    driveReverseStopTime = millis() + (ESCAPE_FORWARD_WAY/OBSTACLEAVOIDANCESPEED*1000);
 }
 
 
@@ -27,11 +27,11 @@ void EscapeRotationOp::end(){
 
 void EscapeRotationOp::run(){
     battery.resetIdle();
-	if (!detectObstacle()){ 			//Mr.Tree
-        detectObstacleRotation();       //Mr.Tree                       
-    }
+	//if (!detectObstacle()){ 			//Mr.Tree
+    //    detectObstacleRotation();       //Mr.Tree                       
+    //}
 
-    motor.setLinearAngularSpeed(-OBSTACLEAVOIDANCESPEED,0,false);				
+    motor.setLinearAngularSpeed(OBSTACLEAVOIDANCESPEED,0,false);				
 																				
 	if ((DISABLE_MOW_MOTOR_AT_OBSTACLE) && (motor.switchedOn)) {	//MrTree
       CONSOLE.println("EscapeRotationOp:: switch OFF mowmotor");			//MrTree

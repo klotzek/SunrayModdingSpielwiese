@@ -211,8 +211,8 @@ void readIMU(){
   if (!imuDriver.imuFound) return;
   // Check for new data in the FIFO
   if (!imuDriver.isDataAvail()) {
-    //mpu_reset_fifo; // causes cyclic shit sill
-    CONSOLE.println("INFO: NO IMU DATA");
+    //mpu_reset_fifo; // causes cyclic shit still
+    //CONSOLE.println("INFO: NO IMU DATA");
     return;
   }
   #ifdef ENABLE_TILT_DETECTION    //this needs to be adapted to cycletime
@@ -398,7 +398,7 @@ void computeRobotState(){
   if (imuDriver.imuFound) {
     // compute difference between IMU yaw rotation speed and wheels yaw rotation speed
     diffIMUWheelYawSpeed = stateDeltaSpeedIMU - stateDeltaSpeedWheels;
-    diffIMUWheelYawSpeedLP = lp01 * diffIMUWheelYawSpeedLP + (1 - lp01) * fabs(diffIMUWheelYawSpeed);  //MrTree changed from diffIMUWheelYawSpeedLP = diffIMUWheelYawSpeedLP * 0.95 + fabs(diffIMUWheelYawSpeed) * 0.05;
+    diffIMUWheelYawSpeedLP = lp1 * diffIMUWheelYawSpeedLP + (1 - lp1) * fabs(diffIMUWheelYawSpeed);  //MrTree changed from diffIMUWheelYawSpeedLP = diffIMUWheelYawSpeedLP * 0.95 + fabs(diffIMUWheelYawSpeed) * 0.05;
   }
 
   if (DEBUG_STATE_ESTIMATOR) {

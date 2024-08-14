@@ -135,7 +135,7 @@ float escapeLawnDistance = ESCAPELAWNDISTANCE; //MrTree
 bool escapeFinished = true; //MrTree
 unsigned long escapeLawnTriggerTime = 0; //MrTree
 bool RC_Mode = false; //MrTree
-
+const long watchdogTime = WATCHDOG_TIME;
 
 OperationType stateOp = OP_IDLE; // operation-mode
 Sensor stateSensor = SENS_NONE; // last triggered sensor
@@ -683,13 +683,18 @@ void start(){
     ntrip.begin();  
   #endif
   
-  watchdogEnable(15000L);   // 15 seconds  
+  watchdogEnable(watchdogTime);   // 15 seconds  
   
   startIMU(false);        
   
   buzzer.sound(SND_READY);  
   battery.resetIdle();        
   loadState();
+
+  if (WATCHDOG_CONTINUE) {
+    activeOp->checkStop();
+    activeOp->run();
+  } 
 
   #ifdef DRV_SIM_ROBOT
     robotDriver.setSimRobotPosState(stateX, stateY, stateDelta);
@@ -974,15 +979,14 @@ bool detectObstacleRotation(){
   }
   if (OVERLOAD_ROTATION){       
     if ((motor.motorLeftOverload || motor.motorRightOverload) && millis() > angularMotionStartTime + OVERLOAD_ROTATION_DEADTIME){
+      statMowRotationTimeoutCounter++;
       if (FREEWHEEL_IS_AT_BACKSIDE){
-        CONSOLE.println("Overload on traction motors while robot should rotate! Assuming obstacle in the back!");    
-        statMowRotationTimeoutCounter++;
+        CONSOLE.println("Overload on traction motors while robot should rotate! Assuming obstacle in the back!");           
         triggerObstacleRotation();
         maps.nextPoint(false, stateX, stateY);
         return true;
       } else {
         CONSOLE.println("Overload on traction motors while robot should rotate! Assuming obstacle in the front!");    
-        statMowRotationTimeoutCounter++;
         triggerObstacle();
         return true;
       }
