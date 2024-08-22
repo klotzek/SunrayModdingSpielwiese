@@ -444,13 +444,10 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // NOTE: due to a PCB1.3 bug GPS_RX pin is not working and you have to fix this by a wire:
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#PCB1.3_GPS_pin_fix_and_wire_fix   (see 'GPS wire fix')
 #define GPS_REBOOT_RECOVERY  true // allow GPS receiver rebooting (recommended - requires GPS wire fix above! otherwise firmware will stuck at boot!)
-//#define GPS_REBOOT_RECOVERY   false  // do not allow rebooting GPS receiver (no GPS wire fix required)
 
 #define GPS_CONFIG   true     // configure GPS receiver (recommended - requires GPS wire fix above! otherwise firmware will stuck at boot!)
-//#define GPS_CONFIG   false  // do not configure GPS receiver (no GPS wire fix required)
 
 #define GPS_CONFIG_FILTER   true     // use signal strength filter? (recommended to get rid of 'FIX jumps') - adjust filter settings below
-//#define GPS_CONFIG_FILTER   false     // use this if you have difficulties to get a FIX solution (uses ublox default filter settings)
 #define CPG_CONFIG_FILTER_MINELEV  3   // Min SV elevation degree: 14 (high elevation, less robust), 10 (low elevation, robust) 
 #define CPG_CONFIG_FILTER_NCNOTHRS 8   // C/N0 Threshold #SVs: 10 (robust), 6 (less robust)
 #define CPG_CONFIG_FILTER_CNOTHRS  17   // 30 dbHz (robust), 13 dbHz (less robust)
@@ -460,12 +457,10 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // ------ obstacle detection and avoidance  -------------------------
 
 #define ENABLE_PATH_FINDER  true     // path finder calculates routes around exclusions and obstacles 
-//#define ENABLE_PATH_FINDER  false
 #define ALLOW_ROUTE_OUTSIDE_PERI_METER 1.0   // max. distance (m) to allow routing from outside perimeter 
 // (increase if you get 'no map route' errors near perimeter)
 
 #define OBSTACLE_AVOIDANCE true   // try to find a way around obstacle
-//#define OBSTACLE_AVOIDANCE false  // stop robot on obstacle
 #define OBSTACLE_DIAMETER 1.2   // choose diameter of obstacles placed in front of robot (m) for obstacle avoidance
 
 #define DISABLE_MOW_MOTOR_AT_OBSTACLE false // switch off mow motor while escape at detected obstacle; set false if mow motor shall not be stopped at detected obstacles
@@ -473,7 +468,6 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // detect robot being kidnapped? robot will try GPS recovery if distance to tracked path is greater than a certain value
 // (false GPS fix recovery), and if that fails go into error 
 #define KIDNAP_DETECT true  // recommended
-//#define KIDNAP_DETECT false
 #define KIDNAP_DETECT_ALLOWED_PATH_TOLERANCE 2.0  // allowed path tolerance (m) 
 #define KIDNAP_DETECT_ALLOWED_PATH_TOLERANCE_DOCK_UNDOCK 2  // allowed path tolerance (m) 
 #define KIDNAP_DETECT_DISTANCE_DOCK_UNDOCK 5  // distance from dock in (m) to use KIDNAP_DETECT_ALLOWED_PATH_TOLERANCE_DOCK_UNDOCK
@@ -481,10 +475,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // ------ docking --------------------------------------
 // is a docking station available?
 #define DOCKING_STATION true   // use this if docking station available and mower should dock automatically
-//#define DOCKING_STATION false    // mower will just stop after mowing instead of docking automatically 
 
-//#define DOCK_IGNORE_GPS false     // use GPS fix in docking station and IMU for GPS float/invalid
-#define DOCK_IGNORE_GPS true     // ignore GPS fix in docking station and use IMU-only (use this if robot gets false GPS fixes in your docking station)
+#define DOCK_IGNORE_GPS false     // use GPS fix in docking station and IMU for GPS float/invalid
+//#define DOCK_IGNORE_GPS true     // ignore GPS fix in docking station and use IMU-only (use this if robot gets false GPS fixes in your docking station)
 
 //#define DOCK_AUTO_START true     // robot will automatically continue mowing after docked automatically
 #define DOCK_AUTO_START false      // robot will not automatically continue mowing after docked automatically
@@ -502,15 +495,15 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define TARGET_REACHED_TOLERANCE 0.07
 
 // stanley control for path tracking - determines gain how fast to correct for lateral path errors
-#define STANLEY_CONTROL_P_NORMAL  3.5   // 3.4 // 3.0 for path tracking control (angular gain) when mowing
-#define STANLEY_CONTROL_K_NORMAL  2.0  // 2.3 // 1.0 for path tracking control (lateral gain) when mowing
-#define STANLEY_FLOAT_P_NORMAL         1.5
-#define STANLEY_FLOAT_K_NORMAL         0.5
+#define STANLEY_CONTROL_P_NORMAL  3.5   // kk:0,6 for path tracking control (angular gain) when mowing
+#define STANLEY_CONTROL_K_NORMAL  2.0   // kk:0,4 for path tracking control (lateral gain) when mowing
+#define STANLEY_FLOAT_P_NORMAL    1.5
+#define STANLEY_FLOAT_K_NORMAL    0.5
 
-#define STANLEY_CONTROL_P_SLOW    1.0   // 1 // 3.0 for path tracking control (angular gain) when docking tracking
-#define STANLEY_CONTROL_K_SLOW    0.5  // 0.05 // 0.1 for path tracking control (lateral gain) when mowing or docking
-#define STANLEY_FLOAT_P_SLOW           0.5
-#define STANLEY_FLOAT_K_SLOW           0.1
+#define STANLEY_CONTROL_P_SLOW    1.0   // kk:0,8 for path tracking control (angular gain) when docking tracking
+#define STANLEY_CONTROL_K_SLOW    0.5   // kk:0,1 for path tracking control (lateral gain) when mowing or docking
+#define STANLEY_FLOAT_P_SLOW      0.5
+#define STANLEY_FLOAT_K_SLOW      0.1
 
 
 
@@ -520,10 +513,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // button control (turns on additional features via the POWER-ON button)
 #define BUTTON_CONTROL true      // additional features activated (press-and-hold button for specific beep count: 
                                  //  1 beep=stop, 6 beeps=start, 5 beeps=dock, 3 beeps=R/C mode ON/OFF, 9 beeps=shutdown, 12 beeps=WiFi WPS
-//#define BUTTON_CONTROL false   // additional features deactivated
 
 #define USE_TEMP_SENSOR true  // only activate if temp sensor (htu21d) connected
-//#define USE_TEMP_SENSOR false  
+#define USE_TEMP_SENSOR false  
 
 #define DOCK_OVERHEAT_TEMP 70    // if temperature above this degreeC, mower will dock (MrTree: CPU temp, if no Battempsensor found)
 #define DOCK_TOO_COLD_TEMP 5    // if temperature below this degreeC, mower will dock 
@@ -533,6 +525,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // also connect 5v and GND and activate model R/C control via PCB P20 start button for 3 sec.
 // more details: https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#R.2FC_model
 #define RCMODEL_ENABLE 1  // set to 1 to turn on R/C control, 0 = off
+#define RC_DEBUG       0  //kk: dbug Ausgaben im RC mode
 
 #define BUZZER_ENABLE 1 // uncomment to disable
 
@@ -560,12 +553,11 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 // ------- serial ports and baudrates---------------------------------
 #define CONSOLE_BAUDRATE    115200    // baudrate used for console
-//#define CONSOLE_BAUDRATE    921600  // baudrate used for console
 #define BLE_BAUDRATE    115200        // baudrate used for BLE
-#define BLE_NAME      "Ardumower"     // name for BLE module
-#define GPS_BAUDRATE  115200          // baudrate for GPS RTK module
-#define WIFI_BAUDRATE 115200          // baudrate for WIFI module
-#define ROBOT_BAUDRATE 115200         // baudrate for Linux serial robot (non-Ardumower)
+#define BLE_NAME        "Ardumower"     // name for BLE module
+#define GPS_BAUDRATE    115200          // baudrate for GPS RTK module
+#define WIFI_BAUDRATE   115200          // baudrate for WIFI module
+#define ROBOT_BAUDRATE  115200         // baudrate for Linux serial robot (non-Ardumower)
 
 #ifdef __SAM3X8E__                 // Arduino Due
   #define WIFI Serial1
@@ -647,7 +639,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
   #define pinLED 13                  // LED
   #define pinBuzzer 53               // Buzzer
-  //#define pinTilt 35                 // Tilt sensor (required for TC-G158 board)  
+  #define pinTilt 35                 // kk: Kanal 3 workaround Tilt sensor (required for TC-G158 board)
   #define pinLift 35                 // Lift sensor (marked as 'Tilt' on PCB1.3/1.4) 
   #define pinButton 51               // digital ON/OFF button
   #define pinBatteryVoltage A2       // battery voltage sensor
