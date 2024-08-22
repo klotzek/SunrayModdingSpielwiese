@@ -162,7 +162,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define MAP_STANLEY_CONTROL         true // if true, stanley values will be mapped linear from MOTOR_MIN_SPEED-->MOTOR_MAX_SPEED with SC_P_*|SC_K_* to actual speedset of mower (recommended if you use high operation speeds)
 #define STANLEYNORMALMUL            false // if true, StanleyNormal parameters in Sunray-App will be multiplied by 10! (0,1 = 1) (for testing)
 //svol0s GPS reboot option after undocking-->mowing
-#define GPS_REBOOT                  true  // if false and DOCK_POINT_GPS_REBOOT is not 0, mower will wait at the DOCK_POINT_GPS_REBOOT point for fix without rebooting GPS, if false and DOCK_POINT_GPS_REBOOT = 0 this function is off (hopefully)
+//#define GPS_REBOOT                  true  // if false and DOCK_POINT_GPS_REBOOT is not 0, mower will wait at the DOCK_POINT_GPS_REBOOT point for fix without rebooting GPS, if false and DOCK_POINT_GPS_REBOOT = 0 this function is off (hopefully)
+#define GPS_REBOOT                  false  // if false and DOCK_POINT_GPS_REBOOT is not 0, mower will wait at the DOCK_POINT_GPS_REBOOT point for fix without rebooting GPS, if false and DOCK_POINT_GPS_REBOOT = 0 this function is off (hopefully)
 #define GPSWAITREBOOT               15000 // (ms) time to wait after rebooting gps for response from ublox? 
 #define GPS_STABLETIME              30000 // (ms) GPS Time with fix solution, before continueing from DOCK_POINT_GPS_REBOOT after undock  
 #define DOCK_POINT_GPS_REBOOT       3     // (pt)(MrTree: Warning, you need 3 more dockpoints than this number, or there will be bugs! so, if there is 4 defined, you need 7 on the Map!) Svol0: dockingpoint number (counted from last dockingpoint) where the gps will be rebooted and waited for gps-fix by undocking. 0 = no gps reboot by undocking. MrTree: if not "0" and GPS_REBOOT = false, mower will wait at the point for fix without rebooting GPS
@@ -198,7 +199,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define PWM_GEAR                    1     // PWM for DRVFIX efforts..
 #define PWM_MOW                     1     // PWM for DRVFIX efforts..
 //try to fix 8308 driver with moving, only works reliable with "DOCK_RETRY_TOUCH = true"! tested and seems to be a valid workaround for the DRV8308 related dock stuck issue (keep FALSE if you have no issues or no DRV8308)
-#define MOVE_REGULARLY              true  // if true, mower will move in dock in given MOVE_AGAIN_AFTER time, kk: move mower to keep 8308 alive
+#define MOVE_REGULARLY              false  // if true, mower will move in dock in given MOVE_AGAIN_AFTER time, kk: move mower to keep 8308 alive
 #define MOVE_AGAIN_AFTER            10.0  // kk: move the mower every xx minutes
 #define MOVING_TIME                 400   // kk: time (ms) for moving back
 #define SWITCH_OFF_TRACTION_MOTORS  true  // should tractionmotors be disabled in dock?
@@ -221,9 +222,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 //  via 'File->Preferences->Full output during compile') - detailed steps here:  
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#SD_card_module
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#SD_card_logging
-#define ENABLE_SD      1                 // enable SD card services (resuming, logging)? (uncomment to activate)
+#define ENABLE_SD      0                 // enable SD card services (resuming, logging)? (uncomment to activate)
 //#define ENABLE_SD_LOG  1                 // enable SD card logging? uncomment to activate (not recommended - WARNING: may slow down system!)
-#define ENABLE_SD_RESUME  1              // enable SD card map load/resume on reset? (uncomment to activate)
+#define ENABLE_SD_RESUME  0              // enable SD card map load/resume on reset? (uncomment to activate)
 
 
 // ------ odometry -----------------------------------
@@ -239,49 +240,23 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // NOTE: if using non-default Ardumower chassis and your freewheel is at frontside (gear motors at backside), have may have to swap motor cables, 
 // more info here: https://wiki.ardumower.de/index.php?title=Ardumower_Chassis_%27mountain_mod%27)
 #define FREEWHEEL_IS_AT_BACKSIDE   true  // default Ardumower: true   (change to false, if your freewheel is at frontside) - this is used for obstacle avoidance
-#define WHEEL_BASE_CM         37.5       // standard: 36 ;wheel-to-wheel distance (cm)        
-#define WHEEL_DIAMETER        250        // (250) wheel diameter (mm)                 
+#define WHEEL_BASE_CM         40.5       // standard: 36 ;wheel-to-wheel distance (cm)        
+#define WHEEL_DIAMETER        264        // (250) wheel diameter (mm)                 
 
-#define ENABLE_ODOMETRY_ERROR_DETECTION  true    // use this to detect odometry erros
-//#define ENABLE_ODOMETRY_ERROR_DETECTION  false
+//#define ENABLE_ODOMETRY_ERROR_DETECTION  true    // use this to detect odometry erros
+#define ENABLE_ODOMETRY_ERROR_DETECTION  false
 
 // choose ticks per wheel revolution :
-// ...for the 36mm diameter motor (blue cap)  https://www.marotronics.de/2-x-36er-DC-Planeten-Getriebemotor-24-Volt-mit-HallIC-30-33-RPM-8mm-Welle
-//#define TICKS_PER_REVOLUTION  1310 /2   // odometry ticks per wheel revolution 
-
-// ...for the 36mm diameter motor (black cap)  https://www.marotronics.de/MA36-DC-Planeten-Getriebemotor-24-Volt-mit-HallIC-30-33-RPM-8mm-Welle-ab-2-Stueck-Staffelpreis
-// #define TICKS_PER_REVOLUTION 975 /2
-
-// ...for the newer 42mm diameter motor (green connector) https://www.marotronics.de/MA42-DC-Planeten-Getriebemotor-24-Volt-mit-HallIC-30-33-RPM-8mm-Welle-ab-2-Stueck-Staffelpreis
-// #define TICKS_PER_REVOLUTION  696 /2   // odometry ticks per wheel revolution 
-
-// ...for the older 42mm diameter motor (white connector)  https://wiki.ardumower.de/images/d/d6/Ardumower_chassis_inside_ready.jpg
-//#define TICKS_PER_REVOLUTION  1050 /2  // odometry ticks per wheel revolution 
-
 // ...for the brushless motor april 2021   https://wiki.ardumower.de/index.php?title=Datei:BLUnit.JPG
-#define TICKS_PER_REVOLUTION  640   // 1330/2 (1194/2)  odometry ticks per wheel revolution //MrTrees: 1210 
-
-// #define TICKS_PER_REVOLUTION  304 /2    // odometry ticks per wheel revolution (RM18)
+#define TICKS_PER_REVOLUTION  597   // 1194/2 odometry ticks per wheel revolution // 
 
 //... Mowmotor ticks per revolution:
 #define MOTOR_MOW_TICKS_PER_REVOLUTION 6 //ACT BLDC MOTOR from Shop = 6! (DRV8308/JYQD)
 
-//#define TICKS_PER_REVOLUTION  975     // odometry ticks per wheel revolution (owlRobotics platform)
-//#define TICKS_PER_REVOLUTION  90     // odometry ticks per wheel revolution (hoverboard motor)
-
 // ----- gear motors --------------------------------------------------
-// for brushless motors, study the sections (drivers, adapter, protection etc.) in the Wiki (https://wiki.ardumower.de/index.php?title=DIY_Brushless_Driver_Board)
 #define MOTOR_DRIVER_BRUSHLESS   1     // uncomment this for new brushless motor drivers
-//#define MOTOR_DRIVER_BRUSHLESS_MOW_DRV8308  1 // uncomment for brushless DRV8308 driver and mowing motor 
-//#define MOTOR_DRIVER_BRUSHLESS_MOW_A4931  1    // uncomment for brushless A3931 driver and mowing motor
-//#define MOTOR_DRIVER_BRUSHLESS_MOW_BLDC8015A 1  // uncomment for brushless BLDC8015A driver and mowing motor
-#define MOTOR_DRIVER_BRUSHLESS_MOW_JYQD 1  // uncomment for brushless JYQD driver and mowing motor (https://forum.ardumower.de/threads/jyqd-treiber-und-sunray.24811/)
-//#define MOTOR_DRIVER_BRUSHLESS_MOW_OWL 1  // uncomment for brushless owlDrive mowing motor 
+#define MOTOR_DRIVER_BRUSHLESS_MOW_BLDC8015A 1  // uncomment for brushless BLDC8015A driver and mowing motor
 #define MOTOR_DRIVER_BRUSHLESS_GEARS_DRV8308  1   // uncomment for brushless DRV8308 driver and gear/traction motors 
-//#define MOTOR_DRIVER_BRUSHLESS_GEARS_A4931  1    // uncomment for brushless A4931 driver and gear/traction motors
-//#define MOTOR_DRIVER_BRUSHLESS_GEARS_BLDC8015A 1   // uncomment for brushless BLDC8015A driver and gear/traction motors
-//#define MOTOR_DRIVER_BRUSHLESS_GEARS_JYQD 1   // uncomment for brushless JYQD driver and gears/traction motor
-//#define MOTOR_DRIVER_BRUSHLESS_GEARS_OWL 1   // uncomment for brushless owlDrive gears/traction motor
 
 #define MOTOR_FAULT_CURRENT     2.5    // gear motors fault current (amps)
 #define MOTOR_TOO_LOW_CURRENT   0.005   // gear motor too low current (amps)
@@ -319,11 +294,10 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 // should the direction of mowing motor toggle each start? (yes: true, no: false)
 #define MOW_TOGGLE_DIR       true
-//#define MOW_TOGGLE_DIR       false
 
 // should the error on motor overload detection be enabled?
-#define ENABLE_OVERLOAD_DETECTION  true    // robot will stop on overload
-//#define ENABLE_OVERLOAD_DETECTION  false    // robot will slow down on overload
+//#define ENABLE_OVERLOAD_DETECTION  true    // robot will stop on overload
+#define ENABLE_OVERLOAD_DETECTION  false    // robot will slow down on overload
 
 // should the motor fault (error) detection be enabled? 
 #define ENABLE_FAULT_DETECTION  true
@@ -344,9 +318,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#Bluetooth_BLE_UART_module
 
 #define START_AP  false             // should WIFI module start its own access point? 
-#define WIFI_IP   192,168,2,15      // choose IP e.g. 192,168,4,1  (comment out for dynamic IP/DHCP) - NOTE: use commans instead of points
-#define WIFI_SSID "myssid"            // choose WiFi network ID
-#define WIFI_PASS "mypassword"      // choose WiFi network password
+#define WIFI_IP   192,168,1,181      // choose IP e.g. 192,168,4,1  (comment out for dynamic IP/DHCP) - NOTE: use commans instead of points
+#define WIFI_SSID "SheepLAN"            // choose WiFi network ID
+#define WIFI_PASS "DidHvN13"      // choose WiFi network password
 
 // client (app) --->  server (robot)
 #define ENABLE_SERVER true          // must be enabled if robot should act as server (recommended)
@@ -392,20 +366,17 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#Ultrasonic_sensor
 
 #define SONAR_INSTALLED 1              // uncomment if ultrasonic sensors are installed
-#define SONAR_ENABLE true              // should ultrasonic sensor be used?
-//#define SONAR_ENABLE false
+#define SONAR_ENABLE false              // should ultrasonic sensor be used?
 #define SONAR_TRIGGER_OBSTACLES false     // should sonar be used to trigger obstacles? if not, mower will only slow down
 #define SONAR_LEFT_OBSTACLE_CM   30     // slow down or stop mowing operation below this distance (cm) 
 #define SONAR_CENTER_OBSTACLE_CM 30      // slow down or stop mowing operation below this distance (cm) 
 #define SONAR_RIGHT_OBSTACLE_CM  30      // slow down or stop mowing operation below this distance (cm) 
 
 // ------ rain sensor ----------------------------------------------------------
-#define RAIN_ENABLE true                 // if activated, mower will dock when rain sensor triggers
-//#define RAIN_ENABLE false
+#define RAIN_ENABLE false                 // if activated, mower will dock when rain sensor triggers
 
 // ------ time-of-flight distance sensor (VL53L0X) -----------------------------
 // do not use this sensor (not recommended)
-//#define TOF_ENABLE true
 #define TOF_ENABLE false
 #define TOF_OBSTACLE_CM 100      // stop mowing operation below this distance (cm) 
 
@@ -415,7 +386,6 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // https://wiki.ardumower.de/index.php?title=Bumper_sensor
 // https://wiki.ardumower.de/index.php?title=Free_wheel_sensor
 #define BUMPER_ENABLE true
-//#define BUMPER_ENABLE false
 #define BUMPER_DEADTIME 1000  // bumper dead-time (ms), when bumper has triggered it can not trigger again for BUMPER_DEADTIME --> give mower time to react to a bumper trigger and release the bumper
 #define BUMPER_TRIGGER_DELAY  0 // bumper must be active for (ms) to trigger (do only use if you have a weak bumper(springs)), Bumper has already a code iteration delay of some milliseconds
 #define BUMPER_MAX_TRIGGER_TIME 20  // if bumpersensor stays permanently triggered mower will stop with bumper error (time in seconds; 0 = disabled)
